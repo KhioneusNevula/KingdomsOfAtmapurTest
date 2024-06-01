@@ -64,7 +64,7 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 	public static final BodyPartType LEFT_OVARY = part("left_ovary", 0.02f).setParent(BODY).setSurrounding(BODY)
 			.setAbilities(BodyAbilities.STORE_EGGS).setSide(Side.LEFT).setCategory("ovary").setTissueTags("muscle");
 	public static final BodyPartType RIGHT_OVARY = LEFT_OVARY.thatIsOnRight().setName("right_ovary");
-	public static final BodyPartType BIRTHING = part("birthing_canal", 0.02f).setParent(BODY).setSurrounding(BODY)
+	public static final BodyPartType BIRTHING = part("birthing", 0.02f).setParent(BODY).setSurrounding(BODY)
 			.setHeight(Height.BELOW).setHole(true).setAbilities(BodyAbilities.GIVE_BIRTH).setTissueTags("muscle")
 			.setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.ORIFICE));
 	public static final BodyPartType WOMB = part("womb", 0.2f).setParent(BODY).setSurrounding(BODY)
@@ -125,8 +125,10 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 			.setTissueTags("muscle", "skin", "fat").setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.FACE,
 					SenseProperty.TEXTURE, BasicTexture.SMOOTH, SenseProperty.SIGNATURE_SHAPE, UUID.randomUUID()));
 	public static final BodyPartType LEFT_EYE = part("left_eye", 0.01f).setParent(FACE).setSide(Side.LEFT)
-			.setFace(Face.FRONT).setCategory("eye").setTissueTags("eye_fluid", "eye_muscle").setSensableProperties(
-					Map.of(SenseProperty.SHAPE, BasicShape.SPHERE, SenseProperty.TEXTURE, BasicTexture.SQUISHY));
+			.setFace(Face.FRONT).setCategory("eye").setTissueTags("eye_fluid", "eye_muscle")
+			.setSensableProperties(
+					Map.of(SenseProperty.SHAPE, BasicShape.SPHERE, SenseProperty.TEXTURE, BasicTexture.SQUISHY))
+			.setAbilities(BodyAbilities.SEE);
 	public static final BodyPartType RIGHT_EYE = LEFT_EYE.thatIsOnRight().setName("right_eye");
 	public static final BodyPartType MOUTH = part("mouth", 0.04f).setParent(FACE).setFace(Face.FRONT).setHole(true)
 			.setTissueTags("muscle").setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.ORIFICE))
@@ -138,7 +140,7 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 			.setTissueTags("muscle")
 			.setSensableProperties(
 					Map.of(SenseProperty.SHAPE, BasicShape.BLOB, SenseProperty.TEXTURE, BasicTexture.SQUISHY))
-			.setAbilities(BodyAbilities.SPEAK);
+			.setAbilities(BodyAbilities.SPEAK, BodyAbilities.TASTE);
 	public static final BodyPartType JAWBONE = part("jawbone", 0.06f).setParent(SKULL).setSurrounding(HEAD)
 			/* .setHasBlood(false) */.setTissueTags("bone").setSensableProperties(
 					Map.of(SenseProperty.SHAPE, BasicShape.BRACKET, SenseProperty.TEXTURE, BasicTexture.HARD));
@@ -147,7 +149,7 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 					Map.of(SenseProperty.SHAPE, BasicShape.NOSE, SenseProperty.TEXTURE, BasicTexture.CARTILAGIOUS));
 	public static final BodyPartType LEFT_NOSTRIL = part("left_nostril", 0.002f).setParent(NOSE).setSide(Side.LEFT)
 			.setHole(true).setHeight(Height.BELOW).setCategory("nostril").setTissueTags("hair")
-			.setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.ORIFICE));
+			.setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.ORIFICE)).setAbilities(BodyAbilities.SMELL);
 	public static final BodyPartType RIGHT_NOSTRIL = LEFT_NOSTRIL.thatIsOnRight().setName("right_nostril");
 	public static final BodyPartType MOUSTACHE = part("moustache", 0.01f).setParent(FACE).setFace(Face.FRONT)
 			.setTissueTags("hair").setSensableProperties(
@@ -160,7 +162,7 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 					Map.of(SenseProperty.SHAPE, BasicShape.EAR, SenseProperty.TEXTURE, BasicTexture.CARTILAGIOUS));
 	public static final BodyPartType LEFT_EAR_CANAL = part("left_ear_canal", 0.005f).setParent(LEFT_EAR)
 			.setSide(Side.LEFT).setHole(true).setCategory("ear_canal").setTissueTags("hair")
-			.setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.ORIFICE));
+			.setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.ORIFICE)).setAbilities(BodyAbilities.HEAR);
 	public static final BodyPartType RIGHT_EAR = LEFT_EAR.thatIsOnRight().setName("right_ear");
 	public static final BodyPartType RIGHT_EAR_CANAL = LEFT_EAR_CANAL.thatIsOnRight().setName("right_ear_canal")
 			.setParent(RIGHT_EAR);
@@ -195,7 +197,8 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 			.setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.THIN_STRAND));
 	public static final BodyPartType RIGHT_ANTENNA = LEFT_ANTENNA.thatIsOnRight().setName("right_antenna");
 	public static final BodyPartType TENTACLE = part("tentacle", 0.6f).setParent(BODY)
-			.setAbilities(BodyAbilities.PREHENSILE, BodyAbilities.GRASP).setCount(8).setTissueTags("muscle", "fat", "skin")
+			.setAbilities(BodyAbilities.PREHENSILE, BodyAbilities.GRASP).setCount(8)
+			.setTissueTags("muscle", "fat", "skin")
 			.setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.TAPERING_ROD));
 	public static final BodyPartType SUCKER = part("sucker", 0.004f).setParent(TENTACLE).setCount(20)
 			.setTissueTags("muscle", "fat", "sucker")

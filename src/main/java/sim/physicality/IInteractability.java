@@ -52,4 +52,64 @@ public interface IInteractability {
 		return false;
 	}
 
+	/**
+	 * For when two objects collide: what kind of collision occurred
+	 * 
+	 * @author borah
+	 *
+	 */
+	public static enum CollisionType {
+		/** for when no collision occurs */
+		NO_INTERSECTION,
+		/** for when a collision occurs in the same plane */
+		COLLISION,
+		/** for when an intersection occurs but not in the same plane */
+		CROSS_PLANE_INTERSECTION;
+
+		/**
+		 * if two objects are intersecting across planes
+		 * 
+		 * @return
+		 */
+		public boolean intersectingAcrossPlanes() {
+			return this == CROSS_PLANE_INTERSECTION;
+		}
+
+		/**
+		 * if objects neither collide nor intersect across planes
+		 * 
+		 * @return
+		 */
+		public boolean notIntersecting() {
+			return this == NO_INTERSECTION;
+		}
+
+		/**
+		 * if things are not touching, or in different planes
+		 * 
+		 * @return
+		 */
+		public boolean notColliding() {
+			return this == CROSS_PLANE_INTERSECTION || this == NO_INTERSECTION;
+		}
+
+		/**
+		 * if things are colliding in the same plane
+		 * 
+		 * @return
+		 */
+		public boolean colliding() {
+			return this == COLLISION;
+		}
+
+		/**
+		 * if things are intersecting (but may or may not be colliding)
+		 * 
+		 * @return
+		 */
+		public boolean intersecting() {
+			return this == COLLISION || this == CROSS_PLANE_INTERSECTION;
+		}
+	}
+
 }

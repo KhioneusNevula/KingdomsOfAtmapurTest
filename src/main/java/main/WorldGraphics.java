@@ -1,6 +1,11 @@
 package main;
 
+import java.awt.Color;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Line2D;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import actor.Actor;
 import actor.construction.IComponentPart;
@@ -10,8 +15,10 @@ import biology.anatomy.SenseProperty.BasicColor;
 import biology.systems.ESystem;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
+import sim.interfaces.IDynamicsObject.Force;
 import sim.interfaces.IRenderable;
 import sim.physicality.PhysicalState;
+import utilities.Pair;
 
 public class WorldGraphics extends PApplet {
 
@@ -20,6 +27,7 @@ public class WorldGraphics extends PApplet {
 	private IRenderable currentScreen;
 	private final float fps;
 	public static final int BORDER = 30;
+	private Set<Pair<Line2D.Float, Integer>> showLines = new HashSet<>();
 	// TODO allow interpreting the world using a culture as a 'lens,' i.e. using its
 	// language and stuff like that
 
@@ -96,23 +104,31 @@ public class WorldGraphics extends PApplet {
 
 	@Override
 	public void keyPressed(processing.event.KeyEvent event) {
+		int aMouseX = mouseX - BORDER;
+		int aMouseY = mouseY - BORDER;
 		if (event.getKeyCode() == KeyEvent.VK_W) {
 		} else if (event.getKeyCode() == KeyEvent.VK_SPACE) {
 		} else if (event.getKeyCode() == KeyEvent.VK_I) {
 		} else if (event.getKeyCode() == KeyEvent.VK_F) { // spawn food
 			world.spawnActor(new FoodActor(world.currentWorld, "food" + world.getActors().size(), mouseX - BORDER,
-					mouseY - BORDER, 10, 5f)
+					mouseY - BORDER, 10, 5f, 1f)
 							.setColor(BasicColor.values()[world.rand().nextInt(BasicColor.values().length)]));
 		} else if (event.getKeyCode() == KeyEvent.VK_T) {
 		} else if (event.getKeyCode() == KeyEvent.VK_R) {
 		} else if (event.getKeyCode() == KeyEvent.VK_X) { // strike/damage
 
-			Actor l = world.getActors().stream()
-					.filter((a) -> a.distance(mouseX - BORDER, mouseY - BORDER) <= a.getRadius() + 5).findAny()
-					.orElse(null);
+			Actor l = world.getActors().stream().filter((a) -> a.pointInHitbox(mouseX - BORDER, mouseY - BORDER))
+					.findAny().orElse(null);
 			if (l != null) {
 				IComponentPart part = l.getPhysical().getOutermostParts().values().iterator().next();
-				System.out.println("Strike " + l + " at " + part);
+				float angle = this.random(0, (float) (2 * Math.PI));
+				Force strikeForce = Force.fromAngleInRadians(angle, this.random(5, 100));
+				this.showLines.add(Pair.of(new Line2D.Float(mouseX, mouseY, mouseX + strikeForce.getXForce(),
+						mouseY + strikeForce.getYForce()), 30));
+				System.out.printf("Strike " + l + " on " + part + " with force " + strikeForce + " at %.2f°",
+						Math.toDegrees(angle));
+				System.out.println();
+				l.applyForce(strikeForce, false);
 				for (IMaterialLayer mat : part.getMaterials().values()) {
 					if (!mat.getState().gone()) {
 						mat.changeState(PhysicalState.GONE);
@@ -129,8 +145,7 @@ public class WorldGraphics extends PApplet {
 	public void mouseClicked(MouseEvent event) {
 		super.mouseClicked(event);
 
-		Actor l = world.getActors().stream()
-				.filter((a) -> a.distance(event.getX() - BORDER, event.getY() - BORDER) <= a.getRadius() + 5).findAny()
+		Actor l = world.getActors().stream().filter((a) -> a.pointInHitbox(mouseX - BORDER, mouseY - BORDER)).findAny()
 				.orElse(null);
 		if (l != null) {
 			System.out.print(l.report());
@@ -158,6 +173,19 @@ public class WorldGraphics extends PApplet {
 			this.currentScreen.draw(this);
 			g.popMatrix();
 		}
+		g.pushStyle();
+		g.stroke(Color.yellow.getRGB());
+		g.strokeWeight(5);
+		Iterator<Pair<Line2D.Float, Integer>> lines = this.showLines.iterator();
+		while (lines.hasNext()) {
+			Pair<Line2D.Float, Integer> line = lines.next();
+			line.setSecond(line.getSecond() - 1);
+			g.line((float) line.getKey().getX1(), (float) line.getKey().getY1(), (float) line.getKey().getX2(),
+					(float) line.getKey().getY2());
+			if (line.getSecond() <= 0)
+				lines.remove();
+		}
+		g.popStyle();
 
 	}
 

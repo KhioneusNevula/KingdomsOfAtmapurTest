@@ -44,14 +44,47 @@ public class Body implements IPhysicalActorObject {
 	private int visibilityPlane = ExistencePlane.ALL_PLANES.primeFactor();
 	private BodyPart onlyPart;
 	private int intactParts;
+	private int w, h;
+	private HitboxType hitbox;
+	private float mass;
 
-	public Body(Actor owner) {
+	public Body(Actor owner, int radius, float mass) {
 		this.owner = owner;
+		this.hitbox = HitboxType.CIRCLE;
+		this.w = radius;
+		this.mass = mass;
 	}
 
 	public Body(Actor owner, ISpeciesTemplate template) {
 		this.owner = owner;
 		this.species = template;
+		this.hitbox = HitboxType.CIRCLE;
+		this.w = 10; // TODO species specific radius
+		this.mass = 70; // TODO species specific mass
+	}
+
+	@Override
+	public int getHitboxHeight() {
+		return h;
+	}
+
+	@Override
+	public int getHitboxRadius() {
+		return w;
+	}
+
+	@Override
+	public HitboxType getHitboxType() {
+		return this.hitbox;
+	}
+
+	@Override
+	public int getHitboxWidth() {
+		return w;
+	}
+
+	public float getMass() {
+		return mass;
 	}
 
 	/**

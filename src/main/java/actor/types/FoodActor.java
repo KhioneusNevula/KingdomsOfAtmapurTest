@@ -1,5 +1,6 @@
 package actor.types;
 
+import java.awt.Color;
 import java.util.Set;
 
 import actor.Actor;
@@ -23,19 +24,27 @@ public class FoodActor extends Actor {
 	public static final SimpleActorType FOOD_TYPE = SimpleActorType.builder("food").setPartType(FOOD_PART_TYPE).build();
 
 	private SimpleActorPhysicalObject physical;
+	private IColor color;
 
-	public FoodActor(WorldDimension world, String name, int startX, int startY, int radius, Float nutrition) {
-		super(world, name, FOOD_TYPE, startX, startY, radius);
+	public FoodActor(WorldDimension world, String name, int startX, int startY, int radius, Float nutrition,
+			float mass) {
+		super(world, name, FOOD_TYPE, startX, startY);
 		physical = new SimpleActorPhysicalObject(this,
 				new SimpleMultilayerPart(FOOD_PART_TYPE, getUUID(),
 						Set.of(new SimpleMaterialLayer(SimpleMaterialType.VEGGIE_MATERIAL),
-								new SimpleMaterialLayer(SimpleMaterialType.MEATY_MATERIAL))).setNutrition(nutrition));
+								new SimpleMaterialLayer(SimpleMaterialType.MEATY_MATERIAL))).setNutrition(nutrition),
+				mass).makeRectangle(radius * 2, radius * 2);
 	}
 
 	public FoodActor setColor(IColor color) {
-		this.setOptionalColor(color.getColor().getRGB());
+		this.color = color;
 		this.physical.mainComponent().changeProperty(SenseProperty.COLOR, color);
 		return this;
+	}
+
+	@Override
+	public Color getOptionalColor() {
+		return this.color.getColor();
 	}
 
 	@Override

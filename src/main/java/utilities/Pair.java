@@ -17,8 +17,20 @@ public class Pair<A, B> implements Map.Entry<A, B> {
 	private String firstLabel;
 	private String secondLabel;
 
-	private static final Pair EMPTY = new Pair(null, null);
+	// private static final Pair EMPTY = new Pair(null, null);
 
+	/**
+	 * Labels are ignored when checking for equality; they purely exist for a nicer
+	 * toString representation
+	 * 
+	 * @param <A>
+	 * @param <B>
+	 * @param label1
+	 * @param first
+	 * @param label2
+	 * @param second
+	 * @return
+	 */
 	public static final <A, B> Pair<A, B> of(String label1, A first, String label2, B second) {
 		Pair<A, B> pair = of(first, second);
 		pair.firstLabel = label1;
@@ -27,9 +39,9 @@ public class Pair<A, B> implements Map.Entry<A, B> {
 	}
 
 	public static final <A, B> Pair<A, B> of(A first, B second) {
-		if (first == null && second == null) {
-			return (Pair<A, B>) EMPTY;
-		}
+		// if (first == null && second == null) {
+		// return (Pair<A, B>) EMPTY;
+		// }
 		return new Pair<>(first, second);
 	}
 
@@ -38,12 +50,36 @@ public class Pair<A, B> implements Map.Entry<A, B> {
 		this.second = second;
 	}
 
+	public String getFirstLabel() {
+		return firstLabel;
+	}
+
+	public String getSecondLabel() {
+		return secondLabel;
+	}
+
 	public A getFirst() {
 		return first;
 	}
 
 	public B getSecond() {
 		return second;
+	}
+
+	public A getX() {
+		return first;
+	}
+
+	public B getY() {
+		return second;
+	}
+
+	public void setX(A x) {
+		this.setFirst(x);
+	}
+
+	public void setY(B y) {
+		this.setSecond(y);
 	}
 
 	public void setFirst(A first) {

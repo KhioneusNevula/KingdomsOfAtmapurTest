@@ -7,9 +7,8 @@ public abstract class MultipartActor extends Actor {
 
 	protected IPhysicalActorObject body;
 
-	public MultipartActor(WorldDimension world, String name, IBlueprintTemplate template, int startX, int startY,
-			int radius) {
-		super(world, name, template, startX, startY, radius);
+	public MultipartActor(WorldDimension world, String name, IBlueprintTemplate template, int startX, int startY) {
+		super(world, name, template, startX, startY);
 	}
 
 	public IBlueprintTemplate getSpecies() {

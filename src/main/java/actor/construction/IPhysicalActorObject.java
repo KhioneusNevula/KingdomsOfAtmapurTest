@@ -12,6 +12,47 @@ import java.util.UUID;
  *
  */
 public interface IPhysicalActorObject extends IVisage {
+
+	public static enum HitboxType {
+		CIRCLE, RECTANGLE;
+
+		public boolean isCircle() {
+			return this == CIRCLE;
+		}
+
+		public boolean isRect() {
+			return this == RECTANGLE;
+		}
+	}
+
+	/**
+	 * Whether hitbox is circle or rect
+	 * 
+	 * @return
+	 */
+	public HitboxType getHitboxType();
+
+	/**
+	 * radius of hitbox, if circle. undefined behavior if not
+	 * 
+	 * @return
+	 */
+	public int getHitboxRadius();
+
+	/**
+	 * width if rectangle
+	 * 
+	 * @return
+	 */
+	public int getHitboxWidth();
+
+	public int getHitboxHeight();
+
+	/**
+	 * Mass of this object in kilgorams
+	 */
+	public float getMass();
+
 	/**
 	 * Get parts that are outermost (and usually sense-able)
 	 * 

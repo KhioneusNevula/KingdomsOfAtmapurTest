@@ -11,8 +11,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import actor.Actor;
+import actor.construction.IPhysicalActorObject.HitboxType;
 import phenomenon.IPhenomenon;
+import sim.physicality.IInteractability.CollisionType;
 import utilities.ImmutableCollection;
+import utilities.MathHelp;
 
 public class WorldDimension {
 
@@ -55,6 +58,53 @@ public class WorldDimension {
 
 	public UUID getId() {
 		return id;
+	}
+
+	/**
+	 * Coefficient of friction between given actor and ground. For now, just 0.5
+	 * 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public float getFrictionMu(Actor a, int x, int y) {
+		return 0.5f;
+	}
+
+	/**
+	 * Static friction. For now, 0.7
+	 * 
+	 * @param a
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public float getStaticFrictionMu(Actor a, int x, int y) {
+		return 0.7f;
+	}
+
+	/**
+	 * Coefficient of drag (density * CD) between actor and air. For now, same as
+	 * ground friction
+	 * 
+	 * @param a
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public float getDragCoefficient(Actor a, int x, int y) {
+		return 0.5f;
+	}
+
+	/**
+	 * Acceleration of gravity (m/s^2) .
+	 * 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public float getG(int x, int y) {
+		return 10f;
 	}
 
 	public synchronized <T extends Actor> T spawnActor(T a) {
@@ -116,17 +166,53 @@ public class WorldDimension {
 		// }
 	}
 
-	public boolean isColliding(Actor a, Actor other) {
-		return a.distance(other) <= (a.getRadius() + other.getRadius());
+	public CollisionType areColliding(Actor a, Actor other) {
+		CollisionType intersectType = MathHelp.findFirstPrimeFactor(a.physicality(), other.physicality()) != 1
+				? CollisionType.COLLISION
+				: CollisionType.CROSS_PLANE_INTERSECTION;
+		if (a.getPhysical().getHitboxType() == HitboxType.CIRCLE) {
+			if (other.getPhysical().getHitboxType() == HitboxType.CIRCLE) { // circle x circle
+				if (a.getRadius() + other.getRadius() >= a.distance(other)) {
+					return intersectType;
+				}
+			} else { // circle x rectangle
+				if (MathHelp.circleRectIntersects(a.getX(), a.getY(), a.getPhysical().getHitboxRadius(), other.getX(),
+						other.getY(), other.getPhysical().getHitboxWidth(), other.getPhysical().getHitboxHeight())) {
+					return intersectType;
+				}
+			}
+		} else {
+			if (other.getPhysical().getHitboxType() == HitboxType.RECTANGLE) { // rectangle x rectangle
+				if (MathHelp.rectsIntersect(a.getX(), a.getY(), a.getPhysical().getHitboxWidth(),
+						a.getPhysical().getHitboxHeight(), other.getX(), other.getY(),
+						other.getPhysical().getHitboxWidth(), other.getPhysical().getHitboxHeight())) {
+					return intersectType;
+				}
+			} else { // rectangle x circle
+				if (MathHelp.circleRectIntersects(other.getX(), other.getY(), other.getPhysical().getHitboxRadius(),
+						a.getX(), a.getY(), a.getPhysical().getHitboxWidth(), a.getPhysical().getHitboxHeight())) {
+					return intersectType;
+				}
+			}
+		}
+		return CollisionType.NO_INTERSECTION;
 	}
 
-	public Set<Actor> getCollisions(Actor for_, Predicate<Actor> pred) {
-		return actors.values().stream().filter(pred).filter((a) -> a != for_ && isColliding(for_, a))
+	/**
+	 * Get all actors which are colliding with the given one
+	 * 
+	 * @param for_
+	 * @param pred
+	 * @param allowCrossPlane whether to allow cross-plane collisions
+	 * @return
+	 */
+	public Set<Actor> getCollisions(Actor for_, Predicate<Actor> pred, CollisionType type) {
+		return actors.values().stream().filter(pred).filter((a) -> a != for_ && areColliding(for_, a) == type)
 				.collect(Collectors.toSet());
 	}
 
 	public Set<Actor> getAt(int x, int y) {
-		return actors.values().stream().filter((a) -> a.distance(x, y) <= a.getRadius()).collect(Collectors.toSet());
+		return actors.values().stream().filter((a) -> a.pointInHitbox(x, y)).collect(Collectors.toSet());
 	}
 
 	public int clampX(int x) {

@@ -21,8 +21,23 @@ import actor.construction.IPartAbility;
 public interface IBodyPartType extends IComponentType {
 
 	public static enum BodyAbilities implements IPartAbility {
-		THINK, PUMP_LIFE_ESSENCE, GESTATE, STORE_EGGS, GIVE_BIRTH, FERTILIZE, STORE_SEED, PREHENSILE, GRASP, WALK,
-		SPEAK, EAT, CAST_POWER, FLY;
+		SEE, SMELL, HEAR, TASTE,
+		/** typically a property of the brain */
+		THINK,
+		/** pump blood, usually */
+		PUMP_LIFE_ESSENCE,
+		/** typically a property of wombs */
+		GESTATE,
+		/** e.g. ovaries store eggs */
+		STORE_EGGS,
+		/** where eggs or offspring emerge */
+		GIVE_BIRTH,
+		/** puts sperm in eggs */
+		FERTILIZE,
+		/** e.g. testicles store seed */
+		STORE_SEED,
+		/** e.g. a tail is prehensile */
+		PREHENSILE, GRASP, WALK, SPEAK, EAT, CAST_POWER, FLY;
 
 		@Override
 		public String getName() {

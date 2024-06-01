@@ -22,16 +22,24 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	private int visi = ExistencePlane.ALL_PLANES.primeFactor();
 	private int planes = ExistencePlane.PHYSICAL.primeFactor();
 
+	private int w, h;
+	private HitboxType hitbox;
+
 	private IComponentPart part;
+
+	private float mass;
 
 	/**
 	 * If this entity has a specific "part ability" or whatever
 	 */
 	private IPartAbility ability;
 
-	public SimpleActorPhysicalObject(Actor owner, IComponentPart mainPart) {
+	public SimpleActorPhysicalObject(Actor owner, IComponentPart mainPart, float mass) {
 		this.owner = owner;
 		this.part = mainPart;
+		this.w = 10;
+		this.mass = mass;
+		this.hitbox = HitboxType.CIRCLE;
 	}
 
 	@Override
@@ -102,6 +110,10 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 		return this.planes;
 	}
 
+	public float getMass() {
+		return mass;
+	}
+
 	public SimpleActorPhysicalObject setPhysicality(IInteractability... ints) {
 		this.planes = IInteractability.combine(ints);
 		return this;
@@ -110,6 +122,39 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	public SimpleActorPhysicalObject setVisibility(IInteractability... ints) {
 		this.visi = IInteractability.combine(ints);
 		return this;
+	}
+
+	public SimpleActorPhysicalObject makeCircle(int radius) {
+		this.hitbox = HitboxType.CIRCLE;
+		this.w = radius;
+		return this;
+	}
+
+	public SimpleActorPhysicalObject makeRectangle(int width, int height) {
+		this.hitbox = HitboxType.RECTANGLE;
+		this.w = width;
+		this.h = height;
+		return this;
+	}
+
+	@Override
+	public int getHitboxHeight() {
+		return h;
+	}
+
+	@Override
+	public int getHitboxRadius() {
+		return w;
+	}
+
+	@Override
+	public HitboxType getHitboxType() {
+		return this.hitbox;
+	}
+
+	@Override
+	public int getHitboxWidth() {
+		return w;
 	}
 
 	@Override

@@ -4,16 +4,15 @@ import biology.anatomy.Body;
 import biology.anatomy.ISpeciesTemplate;
 import sim.WorldDimension;
 
-public class BodiedActor extends MultipartActor {
+public abstract class BodiedActor extends MultipartActor {
 
-	public BodiedActor(WorldDimension world, String name, ISpeciesTemplate template, int startX, int startY,
-			int radius) {
-		super(world, name, template, startX, startY, radius);
+	public BodiedActor(WorldDimension world, String name, ISpeciesTemplate template, int startX, int startY) {
+		super(world, name, template, startX, startY);
 	}
 
 	protected void initBody() {
 		if (species == null)
-			this.body = new Body(this);
+			this.body = new Body(this, 10, 70);
 		else {
 			this.body = new Body(this, (ISpeciesTemplate) species);
 
