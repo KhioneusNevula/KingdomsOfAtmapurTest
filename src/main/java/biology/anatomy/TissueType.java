@@ -4,15 +4,16 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import actor.construction.properties.SenseProperty;
+import actor.construction.properties.SenseProperty.BasicColor;
+import actor.construction.properties.SenseProperty.BasicShape;
 import actor.construction.simple.SimpleMaterialType;
-import biology.anatomy.SenseProperty.BasicColor;
-import biology.anatomy.SenseProperty.BasicShape;
 import sim.physicality.PhysicalState;
 
 public class TissueType extends SimpleMaterialType implements ITissueLayerType {
 
 	public static final TissueType BONE = layer("bone", 0).setHasBlood(false).setHasNerves(false)
-			.setInitialState(PhysicalState.SOLID_WHOLE);
+			.setInitialState(PhysicalState.HARD_SOLID_WHOLE);
 	public static final TissueType BLOOD = layer("blood", 0).setHasBlood(false).setIsBlood(true)
 			.setInitialState(PhysicalState.LIQUID)
 			.setSensableProperties(Map.of(SenseProperty.COLOR, BasicColor.RED, SenseProperty.SHAPE, BasicShape.LIQUID));
@@ -23,7 +24,7 @@ public class TissueType extends SimpleMaterialType implements ITissueLayerType {
 	public static final TissueType CARTILAGE = layer("cartilage", 0).setSublayers("nerves");
 	public static final TissueType SKIN = layer("skin", 5).setBundleNames("flesh").setSublayers("nerves");
 	public static final TissueType HAIR = layer("hair", 6).setHasBlood(false)
-			.setInitialState(PhysicalState.SOLID_FLEXIBLE);
+			.setInitialState(PhysicalState.FLEXIBLE_SOLID);
 	public static final TissueType GRAY_MATTER = layer("gray_matter", 1)
 			.setSensableProperties(Map.of(SenseProperty.COLOR, BasicColor.LIGHT_GRAY));
 	public static final TissueType WHITE_MATTER = FAT.atLayer(2).setName("white_matter").setBundleNames()
@@ -34,7 +35,7 @@ public class TissueType extends SimpleMaterialType implements ITissueLayerType {
 	// nonhuman
 	public static final TissueType SUCKER = layer("sucker", 0).setSublayers("nerves").setMuscular(true);
 	public static final TissueType WHISKER_HAIR = layer("hair", 6).thatHasNerves().setName("whisker_hair")
-			.setInitialState(PhysicalState.SOLID_FLEXIBLE);
+			.setInitialState(PhysicalState.FLEXIBLE_SOLID);
 	public static final TissueType ESSENCE = layer("essence", 0).setHasBlood(false).setIsBlood(true)
 			.setInitialState(PhysicalState.METAPHYSICAL);
 
@@ -50,7 +51,7 @@ public class TissueType extends SimpleMaterialType implements ITissueLayerType {
 	}
 
 	public static TissueType layer(String name, int layer) {
-		return new TissueType(name, layer).setInitialState(PhysicalState.SQUISHY_WHOLE);
+		return new TissueType(name, layer).setInitialState(PhysicalState.SQUISHY_SOLID_WHOLE);
 	}
 
 	public TissueType butNotLifeEssence() {

@@ -3,20 +3,26 @@ package actor;
 
 import java.awt.Color;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import actor.construction.IBlueprintTemplate;
-import actor.construction.IPhysicalActorObject;
-import actor.construction.IPhysicalActorObject.HitboxType;
-import actor.construction.MultipartActor;
+import actor.construction.ISystemHolder;
+import actor.construction.physical.IActorType;
+import actor.construction.physical.IComponentPart;
+import actor.construction.physical.IPhysicalActorObject;
+import actor.construction.physical.IPhysicalActorObject.HitboxType;
+import actor.types.abstract_classes.MultipartActor;
 import biology.systems.ESystem;
-import biology.systems.ISystemHolder;
 import biology.systems.SystemType;
 import biology.systems.types.LifeSystem;
 import main.WorldGraphics;
+import metaphysical.ISpiritObject;
+import metaphysical.ISpiritObject.SpiritType;
 import processing.core.PApplet;
 import sim.WorldDimension;
 import sim.interfaces.IDynamicsObject;
@@ -27,7 +33,7 @@ import sim.physicality.IInteractability.CollisionType;
 import utilities.Location;
 import utilities.MathHelp;
 
-public abstract class Actor implements IUniqueExistence, IRenderable, IDynamicsObject, ISystemHolder {
+public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObject, ISystemHolder {
 
 	private final static int STEP = 10;
 	private final static int REACH = 15;
@@ -57,14 +63,14 @@ public abstract class Actor implements IUniqueExistence, IRenderable, IDynamicsO
 
 	private UUID uuid = UUID.randomUUID();
 
-	protected IBlueprintTemplate species;
+	protected IActorType species;
 
 	/**
 	 * Amount of milliseconds it takes properties to fade
 	 */
 	// private long propertyDecayTime = 10000;// change this to 86400000L;
 
-	public Actor(WorldDimension world, String name, IBlueprintTemplate species, int startX, int startY) {
+	public Actor(WorldDimension world, String name, IActorType species, int startX, int startY) {
 		this.world = world;
 		this.name = name;
 		this.x = startX;
@@ -119,7 +125,7 @@ public abstract class Actor implements IUniqueExistence, IRenderable, IDynamicsO
 		return world;
 	}
 
-	public IBlueprintTemplate getSpecies() {
+	public IActorType getObjectType() {
 		return species;
 	}
 
@@ -201,10 +207,35 @@ public abstract class Actor implements IUniqueExistence, IRenderable, IDynamicsO
 
 	public void thinkTick(long tick) {
 		// TODO thinktick
+		List<ISpiritObject> toRemove = new LinkedList<>();
+		for (SpiritType stype : SpiritType.values()) {
+			Iterator<? extends ISpiritObject> iter = this.getPhysical().getContainedSpirits(stype).iterator();
+			while (iter.hasNext()) {
+				ISpiritObject spir = iter.next();
+				spir.tick(tick);
+				if (spir.shouldRemove(tick)) {
+					toRemove.add(spir);
+				}
+				if (!spir.isTetheredToWhole()) {
+					int count = spir.tetherCount();
+					for (IComponentPart part : spir.getTethers()) {
+						if (part.isGone())
+							count--;
+					}
+					if (count <= 0) {
+						toRemove.add(spir);
+					}
+				}
+			}
+		}
+		for (ISpiritObject s : toRemove) {
+			s.onRemove(tick);
+			this.getPhysical().removeSpirit(s);
+		}
 	}
 
 	public void actionTick(long tick) {
-		// TODO actiontick
+		// TODO actiontick (probably remove this)
 	}
 
 	/**
@@ -462,7 +493,8 @@ public abstract class Actor implements IUniqueExistence, IRenderable, IDynamicsO
 				+ "\nvisibility planes:"
 				+ ExistencePlane.decomposeCombinedValue(this.getVisage().visibilityMode(), true) + "\n"
 				+ (isStationary() ? "static friction: " + this.calculateStaticFriction() + "N"
-						: "dynamic friction: " + this.calculateDynamicFriction());
+						: "dynamic friction: " + this.calculateDynamicFriction())
+				+ (this.getSystems().isEmpty() ? "" : "\nsystems:" + this.getSystemsReport());
 	}
 
 	public Random rand() {

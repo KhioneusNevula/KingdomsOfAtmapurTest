@@ -1,5 +1,7 @@
 package biology.systems;
 
+import actor.construction.ISystemHolder;
+
 /**
  * a system of an entity which reflects its state
  * 

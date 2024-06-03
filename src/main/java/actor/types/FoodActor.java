@@ -4,16 +4,16 @@ import java.awt.Color;
 import java.util.Set;
 
 import actor.Actor;
-import actor.construction.IPhysicalActorObject;
-import actor.construction.IVisage;
+import actor.construction.physical.IPhysicalActorObject;
+import actor.construction.physical.IVisage;
+import actor.construction.properties.SenseProperty;
+import actor.construction.properties.SenseProperty.IColor;
 import actor.construction.simple.SimpleActorPhysicalObject;
 import actor.construction.simple.SimpleActorType;
 import actor.construction.simple.SimpleMaterialLayer;
 import actor.construction.simple.SimpleMaterialType;
 import actor.construction.simple.SimpleMultilayerPart;
 import actor.construction.simple.SimplePartType;
-import biology.anatomy.SenseProperty;
-import biology.anatomy.SenseProperty.IColor;
 import sim.WorldDimension;
 
 public class FoodActor extends Actor {

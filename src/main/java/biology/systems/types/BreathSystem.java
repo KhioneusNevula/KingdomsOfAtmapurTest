@@ -1,8 +1,8 @@
 package biology.systems.types;
 
+import actor.construction.ISystemHolder;
 import biology.systems.DoubleSystem;
 import biology.systems.ESystem;
-import biology.systems.ISystemHolder;
 import biology.systems.SystemType;
 
 /**

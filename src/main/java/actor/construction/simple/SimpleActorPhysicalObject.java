@@ -4,14 +4,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 
 import actor.Actor;
-import actor.IUniqueExistence;
-import actor.construction.IBlueprintTemplate;
-import actor.construction.IComponentPart;
-import actor.construction.IComponentType;
-import actor.construction.IPartAbility;
-import actor.construction.IPhysicalActorObject;
+import actor.IUniqueEntity;
+import actor.construction.physical.IActorType;
+import actor.construction.physical.IComponentPart;
+import actor.construction.physical.IComponentType;
+import actor.construction.physical.IPartAbility;
+import actor.construction.physical.IPhysicalActorObject;
+import metaphysical.ISpiritObject;
+import metaphysical.ISpiritObject.SpiritType;
 import sim.physicality.ExistencePlane;
 import sim.physicality.IInteractability;
 
@@ -34,6 +40,17 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	 */
 	private IPartAbility ability;
 
+	private Multimap<Boolean, ISpiritObject> tetheredSpirits = MultimapBuilder.treeKeys().hashSetValues().build(); // true
+																													// =
+																													// tethered
+																													// to
+																													// the
+																													// main
+																													// part,
+																													// false
+																													// =
+	// to whole
+
 	public SimpleActorPhysicalObject(Actor owner, IComponentPart mainPart, float mass) {
 		this.owner = owner;
 		this.part = mainPart;
@@ -48,13 +65,13 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	}
 
 	@Override
-	public IUniqueExistence getOwner() {
+	public IUniqueEntity getOwner() {
 		return owner;
 	}
 
 	@Override
-	public IBlueprintTemplate getSpecies() {
-		return owner.getSpecies();
+	public IActorType getObjectType() {
+		return owner.getObjectType();
 	}
 
 	@Override
@@ -86,7 +103,8 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 
 	@Override
 	public String report() {
-		return "single-part" + (this.completelyDestroyed() ? "#" : "") + "(" + this.part.report() + ")";
+		return "single-part" + (this.completelyDestroyed() ? "#" : "") + "(" + this.part.report() + ")"
+				+ (this.tetheredSpirits.isEmpty() ? "" : "(spirits:" + this.tetheredSpirits.values() + ")");
 
 	}
 
@@ -162,6 +180,7 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 		if (part != this.part) {
 			throw new IllegalArgumentException();
 		}
+		this.tetheredSpirits.get(true).forEach((s) -> s.onPartUpdate(part));
 		part.checkIfUsual();
 	}
 
@@ -176,6 +195,54 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 
 	public void changeVisibility(int newVisibility) {
 		this.visi = newVisibility;
+	}
+
+	@Override
+	public boolean isDead() {
+		return true;
+	}
+
+	@Override
+	public boolean containsSpirit(ISpiritObject spirit) {
+		return this.tetheredSpirits.values().contains(spirit);
+	}
+
+	@Override
+	public Collection<? extends ISpiritObject> getContainedSpirits(IComponentPart part) {
+		if (part != this.part)
+			throw new IllegalArgumentException();
+		return this.tetheredSpirits.get(true);
+	}
+
+	@Override
+	public Collection<? extends ISpiritObject> getContainedSpirits(SpiritType type) {
+
+		return this.tetheredSpirits.values().stream().filter((a) -> a.getSpiritType() == type)
+				.collect(Collectors.toSet());
+	}
+
+	@Override
+	public void removeSpirit(ISpiritObject spirit) {
+		this.tetheredSpirits.remove(true, spirit);
+		this.tetheredSpirits.remove(false, spirit);
+	}
+
+	@Override
+	public void tetherSpirit(ISpiritObject spirit, Collection<IComponentPart> tethers) {
+		if (tethers == null) {
+			this.tetheredSpirits.put(false, spirit);
+		} else {
+			if (tethers.size() != 1 || !tethers.contains(part)) {
+				throw new IllegalArgumentException();
+			}
+			this.tetheredSpirits.put(true, spirit);
+		}
+	}
+
+	@Override
+	public boolean containsSpirit(ISpiritObject spir, IComponentPart part) {
+
+		return part == this.part && this.tetheredSpirits.containsEntry(true, spir);
 	}
 
 }

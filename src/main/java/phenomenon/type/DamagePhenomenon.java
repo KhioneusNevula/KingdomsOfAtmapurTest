@@ -7,8 +7,8 @@ import java.util.Collections;
 import com.google.common.collect.ImmutableSet;
 
 import actor.Actor;
-import actor.IUniqueExistence;
-import actor.construction.IVisage;
+import actor.IUniqueEntity;
+import actor.construction.physical.IVisage;
 import biology.systems.SystemType;
 import main.WorldGraphics;
 import phenomenon.Phenomenon;
@@ -40,7 +40,7 @@ public class DamagePhenomenon extends Phenomenon {
 	}
 
 	@Override
-	public Collection<IUniqueExistence> cause() {
+	public Collection<IUniqueEntity> cause() {
 		if (cause == null)
 			return ImmutableSet.of();
 		return Collections.singleton(cause);
@@ -56,7 +56,7 @@ public class DamagePhenomenon extends Phenomenon {
 	}
 
 	@Override
-	public Collection<IUniqueExistence> source() {
+	public Collection<IUniqueEntity> source() {
 		if (cause == null)
 			return Collections.emptySet();
 		return Collections.singleton(cause);
@@ -68,7 +68,7 @@ public class DamagePhenomenon extends Phenomenon {
 	}
 
 	@Override
-	public Collection<IUniqueExistence> products() {
+	public Collection<IUniqueEntity> products() {
 		return Collections.emptySet();
 	}
 

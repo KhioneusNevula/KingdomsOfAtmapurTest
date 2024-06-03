@@ -12,12 +12,12 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
-import actor.construction.IComponentPart;
-import actor.construction.IComponentType;
-import actor.construction.IMaterialLayer;
-import actor.construction.IMaterialLayerType;
 import actor.construction.NutritionType;
-import biology.anatomy.SenseProperty;
+import actor.construction.physical.IComponentPart;
+import actor.construction.physical.IComponentType;
+import actor.construction.physical.IMaterialLayer;
+import actor.construction.physical.IMaterialLayerType;
+import actor.construction.properties.SenseProperty;
 
 /**
  * A simple part consisting of wrapped layers

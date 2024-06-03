@@ -1,5 +1,7 @@
 package actor.construction;
 
+import java.util.Set;
+
 /**
  * Interface to represent types of nutrition that material things can provide
  * when eaten
@@ -8,6 +10,12 @@ package actor.construction;
  *
  */
 public interface INutritionType {
+
+	public static final Set<INutritionType> VEGETARIAN = Set.of(NutritionType.VEGETABLE, NutritionType.FRUIT);
+	public static final Set<INutritionType> STANDARD_OMNIVORE = Set.of(NutritionType.VEGETABLE, NutritionType.FRUIT,
+			NutritionType.MEAT, NutritionType.SEAFOOD, NutritionType.INSECT);
+	public static final Set<INutritionType> CARNIVORE = Set.of(NutritionType.MEAT, NutritionType.SEAFOOD);
+
 	/**
 	 * The prime number used to index the edibility of this item, so it can be
 	 * multiplied with others

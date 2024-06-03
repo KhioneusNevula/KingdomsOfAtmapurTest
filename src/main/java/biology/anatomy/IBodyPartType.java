@@ -2,8 +2,7 @@ package biology.anatomy;
 
 import java.util.Collection;
 
-import actor.construction.IComponentType;
-import actor.construction.IPartAbility;
+import actor.construction.physical.IComponentType;
 
 /**
  * A generally static class representing the body parts of a creature. For any
@@ -19,31 +18,6 @@ import actor.construction.IPartAbility;
  */
 
 public interface IBodyPartType extends IComponentType {
-
-	public static enum BodyAbilities implements IPartAbility {
-		SEE, SMELL, HEAR, TASTE,
-		/** typically a property of the brain */
-		THINK,
-		/** pump blood, usually */
-		PUMP_LIFE_ESSENCE,
-		/** typically a property of wombs */
-		GESTATE,
-		/** e.g. ovaries store eggs */
-		STORE_EGGS,
-		/** where eggs or offspring emerge */
-		GIVE_BIRTH,
-		/** puts sperm in eggs */
-		FERTILIZE,
-		/** e.g. testicles store seed */
-		STORE_SEED,
-		/** e.g. a tail is prehensile */
-		PREHENSILE, GRASP, WALK, SPEAK, EAT, CAST_POWER, FLY;
-
-		@Override
-		public String getName() {
-			return name();
-		}
-	}
 
 	/**
 	 * If this part allows for thoughts and thereby anchors the consciousness and

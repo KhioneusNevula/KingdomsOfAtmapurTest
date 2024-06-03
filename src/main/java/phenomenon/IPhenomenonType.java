@@ -2,9 +2,9 @@ package phenomenon;
 
 import java.util.Collection;
 
-import sim.interfaces.ITemplate;
+import sim.interfaces.IObjectType;
 
-public interface IPhenomenonType extends ITemplate {
+public interface IPhenomenonType extends IObjectType {
 
 	public String name();
 

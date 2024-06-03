@@ -3,11 +3,11 @@ package phenomenon;
 import java.util.Collection;
 
 import actor.Actor;
-import actor.IUniqueExistence;
+import actor.IUniqueEntity;
 import sim.WorldDimension;
 import sim.interfaces.IRenderable;
 
-public interface IPhenomenon extends IUniqueExistence, IRenderable {
+public interface IPhenomenon extends IUniqueEntity, IRenderable {
 
 	/**
 	 * Gets the first cause(s) (if any) of this phenomenon. E.g. a fire phenomenon
@@ -18,7 +18,7 @@ public interface IPhenomenon extends IUniqueExistence, IRenderable {
 	 * 
 	 * @return
 	 */
-	public Collection<IUniqueExistence> cause();
+	public Collection<IUniqueEntity> cause();
 
 	/**
 	 * Gets the direct cause/source(s) (if any) of this phenomenon. This does not
@@ -27,7 +27,7 @@ public interface IPhenomenon extends IUniqueExistence, IRenderable {
 	 * 
 	 * @return
 	 */
-	public Collection<IUniqueExistence> source();
+	public Collection<IUniqueEntity> source();
 
 	/**
 	 * Gets the undergoer(s) (if any) of this phenomenon, if it is a phenomenon
@@ -43,7 +43,7 @@ public interface IPhenomenon extends IUniqueExistence, IRenderable {
 	 * 
 	 * @return
 	 */
-	public Collection<IUniqueExistence> products();
+	public Collection<IUniqueEntity> products();
 
 	/**
 	 * Gets the type of phenomenon this is

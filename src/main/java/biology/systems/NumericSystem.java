@@ -2,6 +2,8 @@ package biology.systems;
 
 import java.util.function.Function;
 
+import actor.construction.ISystemHolder;
+
 public class NumericSystem<T extends Number> extends ESystem {
 
 	protected T value;

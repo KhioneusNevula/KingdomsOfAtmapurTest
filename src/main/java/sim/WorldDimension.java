@@ -11,7 +11,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import actor.Actor;
-import actor.construction.IPhysicalActorObject.HitboxType;
+import actor.construction.physical.IPhysicalActorObject.HitboxType;
+import main.GameUniverse;
 import phenomenon.IPhenomenon;
 import sim.physicality.IInteractability.CollisionType;
 import utilities.ImmutableCollection;
@@ -28,11 +29,17 @@ public class WorldDimension {
 	private Random rand = new Random();
 	private String name;
 	private final int width, height;
+	private GameUniverse universe;
 
-	public WorldDimension(String name, int width, int height) {
+	public WorldDimension(String name, int width, int height, GameUniverse universe) {
 		this.width = width;
 		this.height = height;
 		this.name = name;
+		this.universe = universe;
+	}
+
+	public GameUniverse getUniverse() {
+		return universe;
 	}
 
 	public void setSeed(long seed) {
@@ -107,9 +114,21 @@ public class WorldDimension {
 		return 10f;
 	}
 
-	public synchronized <T extends Actor> T spawnActor(T a) {
+	/**
+	 * spawn actor. firstSpawn is true if this is the first time this actor is
+	 * spawned in (as opposed to being loaded in)
+	 * 
+	 * @param <T>
+	 * @param a
+	 * @param firstSpawn
+	 * @return
+	 */
+	public synchronized <T extends Actor> T spawnActor(T a, boolean firstSpawn) {
 		this.actors.put(a.getUUID(), a);
-		System.out.println("Spawned " + a + " in " + name);
+		if (firstSpawn) {
+			System.out.println("Spawned " + a + " in " + name);
+			this.universe.getSoulGen().onSpawn(a);
+		}
 		return a;
 	}
 
@@ -120,6 +139,16 @@ public class WorldDimension {
 
 	public Collection<Actor> getActors() {
 		return actorCollection;
+	}
+
+	/**
+	 * Get the weight of the given actor
+	 * 
+	 * @param a
+	 * @return
+	 */
+	public float getWeight(Actor a) {
+		return this.getG(a.getX(), a.getY()) * a.getMass();
 	}
 
 	public Collection<IPhenomenon> getPhenomena() {

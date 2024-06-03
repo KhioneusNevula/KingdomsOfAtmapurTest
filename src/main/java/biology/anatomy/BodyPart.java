@@ -11,7 +11,10 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
-import actor.construction.IComponentPart;
+import actor.construction.physical.IComponentPart;
+import actor.construction.properties.SenseProperty;
+import metaphysical.ISpiritObject;
+import metaphysical.ISpiritObject.SpiritType;
 
 public class BodyPart implements IComponentPart {
 	UUID id;
@@ -27,6 +30,8 @@ public class BodyPart implements IComponentPart {
 	private int nutritionTypes = 1;
 	private boolean gone;
 	private Tissue mainTissue;
+	private Multimap<SpiritType, ISpiritObject> tetheredSpirits = MultimapBuilder.enumKeys(SpiritType.class)
+			.hashSetValues().build();
 
 	public BodyPart(IBodyPartType type, Map<String, IBodyPartType> partTypes,
 			Map<String, ITissueLayerType> tissueTypes) {
@@ -158,6 +163,26 @@ public class BodyPart implements IComponentPart {
 		return sensables == null ? Set.of() : sensables.keySet();
 	}
 
+	public boolean containsSpirit(ISpiritObject spir) {
+		return this.tetheredSpirits.containsEntry(spir.getSpiritType(), spir);
+	}
+
+	public Collection<ISpiritObject> getSpirits() {
+		return this.tetheredSpirits.values();
+	}
+
+	public Collection<ISpiritObject> getSpirits(SpiritType spir) {
+		return this.tetheredSpirits.get(spir);
+	}
+
+	public boolean removeSpirit(ISpiritObject spiri) {
+		return this.tetheredSpirits.remove(spiri.getSpiritType(), spiri);
+	}
+
+	public void addSpirit(ISpiritObject spir) {
+		this.tetheredSpirits.put(spir.getSpiritType(), spir);
+	}
+
 	@Override
 	public boolean isUnusual() {
 		return usual;
@@ -167,7 +192,7 @@ public class BodyPart implements IComponentPart {
 	public String report() {
 		return this.type.getName() + (gone ? "#" : (usual ? "" : "*"))
 				+ (this.parent == null ? "" : "{p:" + this.parent.type.getName() + "}") + "," + this.tissue.keySet()
-				+ "," + this.sensables + "}";
+				+ "," + this.sensables + "," + this.tetheredSpirits.values() + "}";
 	}
 
 	@Override

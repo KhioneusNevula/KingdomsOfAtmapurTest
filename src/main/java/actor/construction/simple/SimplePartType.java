@@ -9,12 +9,9 @@ import java.util.TreeMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import actor.construction.IComponentType;
-import actor.construction.IPartAbility;
-import actor.construction.IComponentType.Face;
-import actor.construction.IComponentType.Height;
-import actor.construction.IComponentType.Side;
-import biology.anatomy.SenseProperty;
+import actor.construction.physical.IComponentType;
+import actor.construction.physical.IPartAbility;
+import actor.construction.properties.SenseProperty;
 
 /**
  * A simple part type for a simple part
@@ -57,6 +54,29 @@ public class SimplePartType implements IComponentType {
 
 	protected SimplePartType(String name, float size) {
 		this.name = name;
+	}
+
+	@Override
+	public int hashCode() {
+		return this.getName().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof SimplePartType spt) {
+			return this.name.equals(spt.name)
+					&& (this.parent == null ? spt.parent == null : spt.parent != null && this.parent.equals(spt.parent))
+					&& (this.surrounding == null ? spt.surrounding == null
+							: spt.surrounding != null && this.surrounding.equals(spt.surrounding))
+					&& this.isHole == spt.isHole && this.isRoot == spt.isRoot && this.abilities.equals(spt.abilities)
+					&& this.uncovered == spt.uncovered
+					&& (this.category == null ? spt.category == null
+							: spt.category != null && this.category.equals(spt.category))
+					&& this.size == spt.size && this.count == spt.count && this.side == spt.side
+					&& this.height == spt.height && this.face == spt.face && this.nutritionValue == spt.nutritionValue
+					&& this.sensables.equals(spt.sensables);
+		}
+		return super.equals(obj);
 	}
 
 	public SimplePartType withCategory(String cat) {

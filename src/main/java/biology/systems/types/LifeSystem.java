@@ -1,7 +1,7 @@
 package biology.systems.types;
 
+import actor.construction.ISystemHolder;
 import biology.systems.EnergySystem;
-import biology.systems.ISystemHolder;
 import biology.systems.SystemType;
 import energy.IEnergyUnit.EnergyUnit;
 import energy.IEnergyUser;

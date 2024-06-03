@@ -4,8 +4,11 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
-import actor.construction.IBlueprintTemplate;
-import actor.construction.IComponentType;
+import actor.Actor;
+import actor.construction.physical.IActorType;
+import actor.construction.physical.IComponentPart;
+import actor.construction.physical.IComponentType;
+import metaphysical.soul.AbstractSoul;
 
 /**
  * Use this for entities that have virtually zero individuality among them and
@@ -14,7 +17,7 @@ import actor.construction.IComponentType;
  * @author borah
  *
  */
-public class SimpleActorType implements IBlueprintTemplate {
+public class SimpleActorType implements IActorType {
 
 	private String name;
 
@@ -41,6 +44,14 @@ public class SimpleActorType implements IBlueprintTemplate {
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof SimpleActorType sat) {
+			return this.name.equals(sat.name) && this.partType.equals(sat.partType);
+		}
+		return super.equals(obj);
+	}
+
+	@Override
 	public String toString() {
 		return "ActorType(" + name + ")";
 	}
@@ -52,7 +63,7 @@ public class SimpleActorType implements IBlueprintTemplate {
 
 	@Override
 	public int hashCode() {
-		return getUniqueName().hashCode();
+		return getUniqueName().hashCode() + this.partType.hashCode();
 	}
 
 	@Override
@@ -68,6 +79,16 @@ public class SimpleActorType implements IBlueprintTemplate {
 	@Override
 	public IComponentType mainComponent() {
 		return this.partType;
+	}
+
+	@Override
+	public AbstractSoul generateSoul(Actor a, IComponentPart forPart) {
+		throw new UnsupportedOperationException(a.getPhysical().getObjectType() + " cannot gen soul for " + forPart);
+	}
+
+	@Override
+	public boolean mustBeGivenSoul() {
+		return false;
 	}
 
 	public static class Builder {

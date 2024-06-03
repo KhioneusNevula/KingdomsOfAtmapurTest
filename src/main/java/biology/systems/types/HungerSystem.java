@@ -5,11 +5,11 @@ import java.util.Set;
 import com.google.common.collect.ImmutableSet;
 
 import actor.Actor;
-import actor.construction.IComponentPart;
 import actor.construction.INutritionType;
+import actor.construction.ISystemHolder;
+import actor.construction.physical.IComponentPart;
 import biology.systems.ESystem;
 import biology.systems.EnergySystem;
-import biology.systems.ISystemHolder;
 import biology.systems.SystemType;
 import energy.IEnergyUnit.EnergyUnit;
 import sim.physicality.PhysicalState;

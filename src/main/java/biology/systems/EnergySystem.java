@@ -1,5 +1,6 @@
 package biology.systems;
 
+import actor.construction.ISystemHolder;
 import energy.EnergyStorage;
 import energy.IEnergyStorage;
 import energy.IEnergyUnit;

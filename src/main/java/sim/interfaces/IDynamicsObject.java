@@ -1,6 +1,6 @@
 package sim.interfaces;
 
-public interface IDynamicsObject extends IPhysicalExistence {
+public interface IDynamicsObject extends IPhysicalEntity {
 
 	/**
 	 * accelerate by given factor in x and y

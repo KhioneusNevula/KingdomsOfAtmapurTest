@@ -49,7 +49,7 @@ public abstract class Phenomenon implements IPhenomenon {
 	}
 
 	@Override
-	public IPhenomenonType getSpecies() {
+	public IPhenomenonType getObjectType() {
 		return type;
 	}
 

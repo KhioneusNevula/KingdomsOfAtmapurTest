@@ -1,6 +1,7 @@
 package biology.anatomy;
 
-import actor.construction.IMaterialLayerType;
+import actor.construction.physical.IMaterialLayerType;
+import actor.construction.properties.SenseProperty;
 
 /**
  * TODO materials, <br>

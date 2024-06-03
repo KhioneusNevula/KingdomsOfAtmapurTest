@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableMap;
@@ -14,9 +15,13 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Table;
 
 import actor.Actor;
-import actor.construction.IComponentPart;
-import actor.construction.IPartAbility;
-import actor.construction.IPhysicalActorObject;
+import actor.construction.physical.IComponentPart;
+import actor.construction.physical.IPartAbility;
+import actor.construction.physical.IPhysicalActorObject;
+import metaphysical.ISpiritObject;
+import metaphysical.ISpiritObject.SpiritType;
+import metaphysical.soul.AbstractSoul;
+import metaphysical.soul.SoulGenerator;
 import sim.physicality.ExistencePlane;
 
 /**
@@ -39,7 +44,7 @@ public class Body implements IPhysicalActorObject {
 	private Actor owner;
 	private boolean built;
 	private float lifePercent = 1f;
-	private ISpeciesTemplate species;
+	private ISpecies species;
 	private int existencePlane = ExistencePlane.PHYSICAL.primeFactor();
 	private int visibilityPlane = ExistencePlane.ALL_PLANES.primeFactor();
 	private BodyPart onlyPart;
@@ -47,6 +52,9 @@ public class Body implements IPhysicalActorObject {
 	private int w, h;
 	private HitboxType hitbox;
 	private float mass;
+	private Multimap<SpiritType, ISpiritObject> allSpirits = MultimapBuilder.enumKeys(SpiritType.class).hashSetValues()
+			.build();
+	private AbstractSoul soulReference;
 
 	public Body(Actor owner, int radius, float mass) {
 		this.owner = owner;
@@ -55,7 +63,7 @@ public class Body implements IPhysicalActorObject {
 		this.mass = mass;
 	}
 
-	public Body(Actor owner, ISpeciesTemplate template) {
+	public Body(Actor owner, ISpecies template) {
 		this.owner = owner;
 		this.species = template;
 		this.hitbox = HitboxType.CIRCLE;
@@ -103,7 +111,7 @@ public class Body implements IPhysicalActorObject {
 		this.lifePercent *= (1 - byPercent);
 	}
 
-	public ISpeciesTemplate getSpecies() {
+	public ISpecies getObjectType() {
 		return species;
 	}
 
@@ -412,6 +420,7 @@ public class Body implements IPhysicalActorObject {
 			throw new IllegalArgumentException();
 		}
 		BodyPart bpart = (BodyPart) part;
+		bpart.getSpirits().forEach((s) -> s.onPartUpdate(bpart));
 		bpart.checkIfUsual();
 		boolean gone = bpart.isGone();
 		if (gone) {
@@ -425,10 +434,88 @@ public class Body implements IPhysicalActorObject {
 	}
 
 	@Override
+	public boolean isDead() {
+		return this.soulReference == null;
+	}
+
+	@Override
 	public IComponentPart mainComponent() {
 		if (!hasSinglePart())
 			throw new UnsupportedOperationException();
 		return this.onlyPart;
+	}
+
+	/**
+	 * Gets the soul of this being, or null if it lacks a soul
+	 * 
+	 * @return
+	 */
+	public AbstractSoul getSoulReference() {
+		return soulReference;
+	}
+
+	@Override
+	public void onGiveFirstSoul(AbstractSoul soul, SoulGenerator soulgen) {
+		if (this.soulReference == null)
+			this.soulReference = soul;
+	}
+
+	@Override
+	public boolean containsSpirit(ISpiritObject spir, IComponentPart part) {
+		if (part instanceof BodyPart bpart) {
+			return bpart.containsSpirit(spir);
+		}
+		throw new IllegalArgumentException();
+	}
+
+	@Override
+	public boolean containsSpirit(ISpiritObject spirit) {
+		if (spirit == soulReference)
+			return true;
+		return this.allSpirits.containsEntry(spirit.getSpiritType(), spirit);
+	}
+
+	@Override
+	public Collection<? extends ISpiritObject> getContainedSpirits(IComponentPart part) {
+		if (part instanceof BodyPart bpart) {
+			return bpart.getSpirits();
+		}
+		throw new IllegalArgumentException();
+	}
+
+	@Override
+	public Collection<? extends ISpiritObject> getContainedSpirits(SpiritType type) {
+		return this.allSpirits.get(type);
+	}
+
+	@Override
+	public void removeSpirit(ISpiritObject spirit) {
+		if (!spirit.isTetheredToWhole()) {
+			for (IComponentPart pa : spirit.getTethers()) {
+				if (pa instanceof BodyPart part) {
+					part.removeSpirit(spirit);
+				} else {
+					throw new IllegalArgumentException();
+				}
+			}
+		}
+		this.allSpirits.remove(spirit.getSpiritType(), spirit);
+		if (soulReference == spirit)
+			soulReference = null;
+	}
+
+	@Override
+	public void tetherSpirit(ISpiritObject spirit, Collection<IComponentPart> tethers) {
+		if (tethers != null) {
+			for (IComponentPart pa : tethers) {
+				if (pa instanceof BodyPart part) {
+					part.addSpirit(spirit);
+				} else {
+					throw new IllegalArgumentException();
+				}
+			}
+		}
+		this.allSpirits.put(spirit.getSpiritType(), spirit);
 	}
 
 	@Override
@@ -440,7 +527,9 @@ public class Body implements IPhysicalActorObject {
 	public String report() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("Body " + (this.completelyDestroyed() ? "#" : "") + " of " + this.species + "(" + this.owner
-				+ "):\n\t parts:" + (bodyParts == null ? null : this.bodyParts.columnMap().values())
+				+ "):\n\t parts:"
+				+ (bodyParts == null ? null
+						: this.bodyParts.values().stream().map((a) -> a.report()).collect(Collectors.toSet()))
 				+ "\n\t tissuetypes:" + this.tissueTypes);
 
 		return builder.toString();

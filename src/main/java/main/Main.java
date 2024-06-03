@@ -6,8 +6,9 @@ import sim.WorldDimension;
 public class Main {
 
 	public static void main(String[] args) {
-		GameRunner world = new GameRunner(new WorldDimension("main world", 800, 500));
-		PApplet.runSketch(new String[] { "World" }, new WorldGraphics(world, 15f));
+		GameUniverse universe = new GameUniverse();
+		universe.setCurrentWorld(new WorldDimension("main world", 800, 500, universe));
+		PApplet.runSketch(new String[] { "World" }, new WorldGraphics(universe, 15f));
 	}
 
 }

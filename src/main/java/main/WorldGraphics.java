@@ -8,10 +8,10 @@ import java.util.Iterator;
 import java.util.Set;
 
 import actor.Actor;
-import actor.construction.IComponentPart;
-import actor.construction.IMaterialLayer;
+import actor.construction.physical.IComponentPart;
+import actor.construction.physical.IMaterialLayer;
+import actor.construction.properties.SenseProperty.BasicColor;
 import actor.types.FoodActor;
-import biology.anatomy.SenseProperty.BasicColor;
 import biology.systems.ESystem;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
@@ -22,7 +22,7 @@ import utilities.Pair;
 
 public class WorldGraphics extends PApplet {
 
-	private GameRunner world;
+	private GameUniverse world;
 	private Display currentDisplay = Display.WORLD;
 	private IRenderable currentScreen;
 	private final float fps;
@@ -31,14 +31,14 @@ public class WorldGraphics extends PApplet {
 	// TODO allow interpreting the world using a culture as a 'lens,' i.e. using its
 	// language and stuff like that
 
-	public WorldGraphics(GameRunner world, float fps) {
+	public WorldGraphics(GameUniverse world, float fps) {
 		this.fps = fps;
 		this.world = world;
 		this.randomSeed(world.rand().nextLong());
 
 	}
 
-	public GameRunner getWorld() {
+	public GameUniverse getWorld() {
 		return world;
 	}
 
@@ -112,7 +112,8 @@ public class WorldGraphics extends PApplet {
 		} else if (event.getKeyCode() == KeyEvent.VK_F) { // spawn food
 			world.spawnActor(new FoodActor(world.currentWorld, "food" + world.getActors().size(), mouseX - BORDER,
 					mouseY - BORDER, 10, 5f, 1f)
-							.setColor(BasicColor.values()[world.rand().nextInt(BasicColor.values().length)]));
+							.setColor(BasicColor.values()[world.rand().nextInt(BasicColor.values().length)]),
+					true);
 		} else if (event.getKeyCode() == KeyEvent.VK_T) {
 		} else if (event.getKeyCode() == KeyEvent.VK_R) {
 		} else if (event.getKeyCode() == KeyEvent.VK_X) { // strike/damage
@@ -125,8 +126,8 @@ public class WorldGraphics extends PApplet {
 				Force strikeForce = Force.fromAngleInRadians(angle, this.random(5, 100));
 				this.showLines.add(Pair.of(new Line2D.Float(mouseX, mouseY, mouseX + strikeForce.getXForce(),
 						mouseY + strikeForce.getYForce()), 30));
-				System.out.printf("Strike " + l + " on " + part + " with force " + strikeForce + " at %.2f°",
-						Math.toDegrees(angle));
+				System.out.printf("Strike " + l + " on " + part + " of weight " + l.getWorld().getWeight(l)
+						+ "N with force " + strikeForce + " at %.2f°", Math.toDegrees(angle));
 				System.out.println();
 				l.applyForce(strikeForce, false);
 				for (IMaterialLayer mat : part.getMaterials().values()) {

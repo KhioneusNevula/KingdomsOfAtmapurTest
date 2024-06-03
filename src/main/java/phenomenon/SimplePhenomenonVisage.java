@@ -1,7 +1,7 @@
 package phenomenon;
 
-import actor.construction.IVisage;
-import sim.interfaces.ITemplate;
+import actor.construction.physical.IVisage;
+import sim.interfaces.IObjectType;
 import sim.physicality.ExistencePlane;
 
 public class SimplePhenomenonVisage implements IVisage {
@@ -19,8 +19,8 @@ public class SimplePhenomenonVisage implements IVisage {
 	}
 
 	@Override
-	public ITemplate getSpecies() {
-		return owner.getSpecies();
+	public IObjectType getObjectType() {
+		return owner.getObjectType();
 	}
 
 	@Override

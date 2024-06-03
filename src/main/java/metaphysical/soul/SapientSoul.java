@@ -1,0 +1,31 @@
+package metaphysical.soul;
+
+import java.util.UUID;
+
+import civilization.mind.IMind;
+
+public abstract class SapientSoul extends AbstractSoul {
+
+	private IMind mind;
+
+	public SapientSoul(UUID id, IMind mind) {
+		super(id);
+		this.mind = mind;
+	}
+
+	@Override
+	public void tick(long worldTick) {
+		mind.tick(worldTick);
+	}
+
+	@Override
+	public boolean hasMind() {
+		return true;
+	}
+
+	@Override
+	public IMind getMind() {
+		return mind;
+	}
+
+}

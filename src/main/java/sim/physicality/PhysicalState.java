@@ -1,8 +1,8 @@
 package sim.physicality;
 
 public enum PhysicalState {
-	SOLID_WHOLE, SOLID_DAMAGED, SOLID_POWDER, SOLID_FLEXIBLE, SQUISHY_WHOLE, SQUISHY_DAMAGED, SQUISHY_PULPED,
-	SQUISHY_PASTE, LIQUID, GAS, PLASMA,
+	HARD_SOLID_WHOLE, HARD_SOLID_DAMAGED, HARD_SOLID_POWDER, FLEXIBLE_SOLID, RIPPED_FLEXIBLE_SOLID, SQUISHY_SOLID_WHOLE,
+	SQUISHY_SOLID_DAMAGED, SQUISHY_SOLID_PULPED, SQUISHY_SOLID_PASTE, LIQUID, GAS, PLASMA,
 	/** for things with multiple parts, to indicate it has missing parts */
 	GONE,
 	/**
@@ -11,12 +11,21 @@ public enum PhysicalState {
 	METAPHYSICAL;
 
 	/**
-	 * Whether this substance is a (hard) solid
+	 * If this is a hard solid
+	 * 
+	 * @return
+	 */
+	public boolean isHard() {
+		return this == HARD_SOLID_WHOLE || this == HARD_SOLID_DAMAGED || HARD_SOLID_POWDER == this;
+	}
+
+	/**
+	 * Whether this substance is solid
 	 * 
 	 * @return
 	 */
 	public boolean isSolid() {
-		return this == SOLID_WHOLE || this == SOLID_DAMAGED || SOLID_POWDER == this || SOLID_FLEXIBLE == this;
+		return this.isHard() || this.isFlexible() || this.isSquishy();
 	}
 
 	/**
@@ -25,7 +34,8 @@ public enum PhysicalState {
 	 * @return
 	 */
 	public boolean isSquishy() {
-		return this == SQUISHY_WHOLE || this == SQUISHY_DAMAGED || this == SQUISHY_PULPED || this == SQUISHY_PASTE;
+		return this == SQUISHY_SOLID_WHOLE || this == SQUISHY_SOLID_DAMAGED || this == SQUISHY_SOLID_PULPED
+				|| this == SQUISHY_SOLID_PASTE;
 	}
 
 	/**
@@ -79,8 +89,8 @@ public enum PhysicalState {
 	 * @return
 	 */
 	public boolean isDamaged() {
-		return this == SOLID_DAMAGED || this == SQUISHY_DAMAGED || this == SQUISHY_PULPED || this == SQUISHY_PASTE
-				|| this == SOLID_POWDER;
+		return this == HARD_SOLID_DAMAGED || this == SQUISHY_SOLID_DAMAGED || this == SQUISHY_SOLID_PULPED
+				|| this == SQUISHY_SOLID_PASTE || this == HARD_SOLID_POWDER || this == RIPPED_FLEXIBLE_SOLID;
 	}
 
 	/**
@@ -89,14 +99,14 @@ public enum PhysicalState {
 	 * @return
 	 */
 	public boolean isPulped() {
-		return this == SQUISHY_PULPED;
+		return this == SQUISHY_SOLID_PULPED;
 	}
 
 	/**
 	 * Whether this substance is paste
 	 */
 	public boolean isPaste() {
-		return this == SQUISHY_PASTE;
+		return this == SQUISHY_SOLID_PASTE;
 	}
 
 	/**
@@ -105,7 +115,7 @@ public enum PhysicalState {
 	 * @return
 	 */
 	public boolean isPowder() {
-		return this == SOLID_POWDER;
+		return this == HARD_SOLID_POWDER;
 	}
 
 	/**
@@ -114,6 +124,6 @@ public enum PhysicalState {
 	 * @return
 	 */
 	public boolean isFlexible() {
-		return this == SOLID_FLEXIBLE;
+		return this == FLEXIBLE_SOLID || this == RIPPED_FLEXIBLE_SOLID;
 	}
 }

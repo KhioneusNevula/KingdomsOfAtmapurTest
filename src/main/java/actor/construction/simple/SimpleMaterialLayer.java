@@ -2,8 +2,8 @@ package actor.construction.simple;
 
 import java.util.Map;
 
-import actor.construction.IMaterialLayer;
-import actor.construction.IMaterialLayerType;
+import actor.construction.physical.IMaterialLayer;
+import actor.construction.physical.IMaterialLayerType;
 import sim.physicality.PhysicalState;
 
 public class SimpleMaterialLayer implements IMaterialLayer {

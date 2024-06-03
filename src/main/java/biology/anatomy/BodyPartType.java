@@ -8,12 +8,13 @@ import java.util.UUID;
 
 import com.google.common.collect.ImmutableSet;
 
-import actor.construction.IComponentType;
-import actor.construction.IPartAbility;
+import actor.construction.physical.IComponentType;
+import actor.construction.physical.IPartAbility;
+import actor.construction.properties.SenseProperty;
+import actor.construction.properties.SenseProperty.BasicShape;
+import actor.construction.properties.SenseProperty.BasicSound;
+import actor.construction.properties.SenseProperty.BasicTexture;
 import actor.construction.simple.SimplePartType;
-import biology.anatomy.SenseProperty.BasicShape;
-import biology.anatomy.SenseProperty.BasicSound;
-import biology.anatomy.SenseProperty.BasicTexture;
 
 public class BodyPartType extends SimplePartType implements IBodyPartType, Cloneable {
 	public static final BodyPartType BODY = part("body", 0.4f).setRoot(true)
@@ -112,8 +113,8 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 	public static final BodyPartType SKULL = HEAD.makeBones(SPINE).setName("skull")
 			.addSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.SKULL));
 	public static final BodyPartType BRAIN = part("brain", 0.08f).setParent(HEAD).setSurrounding(SKULL)
-			/* .setHasNerves(false) */.setAbilities(BodyAbilities.THINK).setTissueTags("gray_matter", "white_matter")
-			.setSensableProperties(
+			/* .setHasNerves(false) */.setAbilities(BodyAbilities.HAVE_SOUL)
+			.setTissueTags("gray_matter", "white_matter").setSensableProperties(
 					Map.of(SenseProperty.SHAPE, BasicShape.BRAIN, SenseProperty.TEXTURE, BasicTexture.SQUISHY));
 	public static final BodyPartType SCALP = part("scalp", 0.04f).setParent(HEAD).setHeight(Height.ABOVE)
 			.setTissueTags("muscle", "skin", "fat").setSensableProperties(
@@ -212,6 +213,14 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 
 	private BodyPartType(String name, float size) {
 		super(name, size);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof BodyPartType tp) {
+			return super.equals(obj) && this.tissueTags.equals(tp.tissueTags);
+		}
+		return false;
 	}
 
 	/**
@@ -458,7 +467,7 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 
 	@Override
 	public boolean thinks() {
-		return this.hasAbility(BodyAbilities.THINK);
+		return this.hasAbility(BodyAbilities.HAVE_SOUL);
 	}
 
 	@Override

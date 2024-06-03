@@ -9,13 +9,13 @@ import java.util.TreeSet;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import actor.construction.IMaterialLayerType;
 import actor.construction.INutritionType;
 import actor.construction.NutritionType;
-import biology.anatomy.SenseProperty;
-import biology.anatomy.SenseProperty.BasicColor;
-import biology.anatomy.SenseProperty.BasicSmell;
-import biology.anatomy.SenseProperty.BasicTexture;
+import actor.construction.physical.IMaterialLayerType;
+import actor.construction.properties.SenseProperty;
+import actor.construction.properties.SenseProperty.BasicColor;
+import actor.construction.properties.SenseProperty.BasicSmell;
+import actor.construction.properties.SenseProperty.BasicTexture;
 import sim.physicality.PhysicalState;
 
 public class SimpleMaterialType implements IMaterialLayerType, Cloneable {
@@ -39,7 +39,7 @@ public class SimpleMaterialType implements IMaterialLayerType, Cloneable {
 	private String name;
 	private Set<String> bundleNames = Set.of();
 	private Set<String> sublayers = Set.of();
-	private PhysicalState initialState = PhysicalState.SOLID_WHOLE;
+	private PhysicalState initialState = PhysicalState.HARD_SOLID_WHOLE;
 	private Map<SenseProperty<?>, Object> sensables = Map.of();
 	private int nutrition = NutritionType.EATS_UNEATABLE.primeFactor();
 

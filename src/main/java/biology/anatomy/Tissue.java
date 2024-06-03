@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 
-import actor.construction.IMaterialLayer;
+import actor.construction.physical.IMaterialLayer;
 import sim.physicality.PhysicalState;
 
 public class Tissue implements IMaterialLayer {

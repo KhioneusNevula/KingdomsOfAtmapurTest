@@ -1,6 +1,6 @@
 package phenomenon;
 
-import sim.interfaces.IPhysicalExistence;
+import sim.interfaces.IPhysicalEntity;
 import utilities.Location;
 
 /**
@@ -9,7 +9,7 @@ import utilities.Location;
  * @author borah
  *
  */
-public abstract class WorldPhenomenon extends Phenomenon implements IPhysicalExistence {
+public abstract class WorldPhenomenon extends Phenomenon implements IPhysicalEntity {
 
 	public WorldPhenomenon(IPhenomenonType type) {
 		super(type);
