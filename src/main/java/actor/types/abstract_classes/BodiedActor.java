@@ -2,11 +2,11 @@ package actor.types.abstract_classes;
 
 import biology.anatomy.Body;
 import biology.anatomy.ISpecies;
-import sim.WorldDimension;
+import sim.GameMapTile;
 
 public abstract class BodiedActor extends MultipartActor {
 
-	public BodiedActor(WorldDimension world, String name, ISpecies template, int startX, int startY) {
+	public BodiedActor(GameMapTile world, String name, ISpecies template, int startX, int startY) {
 		super(world, name, template, startX, startY);
 	}
 

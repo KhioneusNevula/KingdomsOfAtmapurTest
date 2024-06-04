@@ -3,6 +3,7 @@ package phenomenon.type;
 import java.awt.Color;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -21,7 +22,7 @@ public class DamagePhenomenon extends Phenomenon {
 	private float amount;
 	private Actor cause;
 	private Actor object;
-	private IVisage visage = new SimplePhenomenonVisage(this);
+	private IVisage visage = new SimplePhenomenonVisage(this, Map.of());
 
 	/**
 	 * Cause can be null

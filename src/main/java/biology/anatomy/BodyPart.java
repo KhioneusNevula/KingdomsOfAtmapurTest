@@ -2,17 +2,24 @@ package biology.anatomy;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Table;
 
 import actor.construction.physical.IComponentPart;
+import actor.construction.physical.IPartAbility;
+import actor.construction.properties.IAbilityStat;
+import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
+import biology.sensing.ISense;
 import metaphysical.ISpiritObject;
 import metaphysical.ISpiritObject.SpiritType;
 
@@ -25,6 +32,8 @@ public class BodyPart implements IComponentPart {
 	private BodyPart surrounding;
 	private Multimap<String, BodyPart> surroundeds;
 	private Map<SenseProperty<?>, Object> sensables;
+	private Table<IPartAbility, IAbilityStat<?>, Object> senseStats;
+	private Set<ISense> senses;
 	private boolean usual = true;
 	private Float nutrition;
 	private int nutritionTypes = 1;
@@ -37,6 +46,8 @@ public class BodyPart implements IComponentPart {
 			Map<String, ITissueLayerType> tissueTypes) {
 		this.type = type;
 		this.id = UUID.randomUUID();
+		this.senses = new HashSet<>(type.getDefaultSenses());
+		this.senseStats = HashBasedTable.create();
 		if (!type.tissueTags().isEmpty()) {
 			tissue = new TreeMap<>(Comparator.reverseOrder());
 			for (String str : type.tissueTags()) {
@@ -60,6 +71,25 @@ public class BodyPart implements IComponentPart {
 			}
 		}
 
+	}
+
+	@Override
+	public Collection<ISense> getSenses() {
+		return this.senses;
+	}
+
+	@Override
+	public <T> T getAbilityStat(IPartAbility forab, IAbilityStat<T> type) {
+		T th = (T) this.senseStats.get(forab, type);
+		if (th == null) {
+			return this.type.getDefaultAbilityStat(forab, type);
+		}
+		return th;
+	}
+
+	@Override
+	public Collection<IAbilityStat<?>> getAbilityStatTypes(IPartAbility forab) {
+		return this.senseStats.row(forab).keySet();
 	}
 
 	public IBodyPartType getType() {
@@ -146,7 +176,7 @@ public class BodyPart implements IComponentPart {
 	}
 
 	@Override
-	public <T> T getProperty(SenseProperty<T> property, boolean ignoreType) {
+	public <T extends ISensableTrait> T getProperty(SenseProperty<T> property, boolean ignoreType) {
 		T obj = sensables == null ? null : (T) sensables.get(property);
 		if (obj == null && !ignoreType)
 			return this.type.getTrait(property);
@@ -154,7 +184,7 @@ public class BodyPart implements IComponentPart {
 	}
 
 	@Override
-	public <T> void changeProperty(SenseProperty<T> property, T value) {
+	public <T extends ISensableTrait> void changeProperty(SenseProperty<T> property, T value) {
 		this.setSensableProperty(property, value);
 	}
 

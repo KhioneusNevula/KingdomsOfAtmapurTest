@@ -2,8 +2,11 @@ package actor.construction.physical;
 
 import java.util.Collection;
 
+import actor.construction.properties.IAbilityStat;
+import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
 import biology.anatomy.IBodyPartType;
+import biology.sensing.ISense;
 
 /**
  * A type of a part of an actor
@@ -184,9 +187,33 @@ public interface IComponentType extends Comparable<IComponentType> {
 		return getName().compareTo(o.getName());
 	}
 
-	public <T> T getTrait(SenseProperty<T> prop);
+	public <T extends ISensableTrait> T getTrait(SenseProperty<T> prop);
 
 	public Collection<SenseProperty<?>> getSensableProperties();
+
+	/**
+	 * Return the default value of the given ability stat for component parts like
+	 * this for the specific ability
+	 * 
+	 * @param <T>
+	 * @param stat
+	 * @return
+	 */
+	public <T> T getDefaultAbilityStat(IPartAbility ability, IAbilityStat<T> stat);
+
+	/**
+	 * Gets all used ability stats for the given ability
+	 * 
+	 * @return
+	 */
+	public Collection<IAbilityStat<?>> getDefaultAbilityStats(IPartAbility ability);
+
+	/**
+	 * Gets default senses of a component part like this
+	 * 
+	 * @return
+	 */
+	public Collection<ISense> getDefaultSenses();
 
 	/**
 	 * The abilities this part has

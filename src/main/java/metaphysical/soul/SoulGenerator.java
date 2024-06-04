@@ -5,8 +5,7 @@ import java.util.Collections;
 
 import actor.Actor;
 import actor.construction.physical.IComponentPart;
-import biology.anatomy.BodyAbilities;
-import main.GameUniverse;
+import biology.anatomy.BodyAbility;
 
 /**
  * A class for generating souls for beings. <br>
@@ -15,12 +14,9 @@ import main.GameUniverse;
  * @author borah
  *
  */
-public class SoulGenerator {
+public class SoulGenerator implements ISoulGenerator {
 
-	private GameUniverse universe;
-
-	public SoulGenerator(GameUniverse runner) {
-		this.universe = runner;
+	public SoulGenerator() {
 	}
 
 	/**
@@ -29,9 +25,10 @@ public class SoulGenerator {
 	 * @param spawned
 	 * @param firstSpawn
 	 */
+	@Override
 	public void onSpawn(Actor spawned) {
 		Collection<? extends IComponentPart> souledParts = spawned.getPhysical()
-				.getPartsWithAbility(BodyAbilities.HAVE_SOUL);
+				.getPartsWithAbility(BodyAbility.HAVE_SOUL);
 		for (IComponentPart part : souledParts) {
 			AbstractSoul soul = spawned.getPhysical().getObjectType().generateSoul(spawned, part);
 			spawned.getPhysical().tetherSpirit(soul, Collections.singleton(part));

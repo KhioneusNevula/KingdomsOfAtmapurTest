@@ -1,7 +1,6 @@
 package biology.anatomy;
 
 import actor.construction.physical.IMaterialLayerType;
-import actor.construction.properties.SenseProperty;
 
 /**
  * TODO materials, <br>
@@ -39,8 +38,6 @@ public interface ITissueLayerType extends IMaterialLayerType {
 	 * @return
 	 */
 	public boolean isLifeEssence();
-
-	public <T> T getTrait(SenseProperty<T> prop);
 
 	/* TODO public Material material(); */
 }

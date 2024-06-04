@@ -16,6 +16,9 @@ import actor.construction.physical.IComponentPart;
 import actor.construction.physical.IComponentType;
 import actor.construction.physical.IPartAbility;
 import actor.construction.physical.IPhysicalActorObject;
+import actor.construction.properties.ISensableTrait;
+import actor.construction.properties.SenseProperty;
+import biology.sensing.ISense;
 import metaphysical.ISpiritObject;
 import metaphysical.ISpiritObject.SpiritType;
 import sim.physicality.ExistencePlane;
@@ -60,7 +63,7 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	}
 
 	@Override
-	public int visibilityMode() {
+	public int sensabilityMode(ISense toSense) {
 		return visi;
 	}
 
@@ -75,8 +78,8 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	}
 
 	@Override
-	public Map<UUID, ? extends IComponentPart> getOutermostParts() {
-		return Map.of(part.getId(), part);
+	public Collection<IComponentPart> getOutermostParts() {
+		return Collections.singleton(part);
 	}
 
 	@Override
@@ -193,7 +196,7 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 		this.planes = newPhysicality;
 	}
 
-	public void changeVisibility(int newVisibility) {
+	public void changeSensability(int newVisibility) {
 		this.visi = newVisibility;
 	}
 
@@ -243,6 +246,16 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	public boolean containsSpirit(ISpiritObject spir, IComponentPart part) {
 
 		return part == this.part && this.tetheredSpirits.containsEntry(true, spir);
+	}
+
+	@Override
+	public <A extends ISensableTrait> A getGeneralProperty(SenseProperty<A> property, boolean ignoreType) {
+		return null;
+	}
+
+	@Override
+	public Collection<SenseProperty<?>> getGeneralSensableProperties() {
+		return Collections.emptySet();
 	}
 
 }

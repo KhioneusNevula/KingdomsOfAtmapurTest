@@ -1,5 +1,10 @@
 package sim.interfaces;
 
+import java.util.Collection;
+import java.util.Collections;
+
+import actor.construction.properties.ISensableTrait;
+import actor.construction.properties.SenseProperty;
 import civilization.social.concepts.IConcept;
 
 /**
@@ -18,5 +23,21 @@ public interface IObjectType extends IConcept {
 	 * @return
 	 */
 	public float averageUniqueness();
+
+	/**
+	 * 
+	 * @param <A>
+	 * @param property
+	 * @param ignoreType whether to only get traits specific to the body part and
+	 *                   not the type as a whole
+	 * @return
+	 */
+	public default <A extends ISensableTrait> A getDefaultSensableProperty(SenseProperty<A> property) {
+		return null;
+	}
+
+	public default Collection<SenseProperty<?>> getDefaultSensableProperties() {
+		return Collections.emptySet();
+	}
 
 }

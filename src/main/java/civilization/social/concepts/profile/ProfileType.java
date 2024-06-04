@@ -1,23 +1,43 @@
 package civilization.social.concepts.profile;
 
+import civilization.social.concepts.IConcept.ConceptType;
+
 public enum ProfileType {
 	/**
 	 * A profile of a (real or imagined) individual being or creature
 	 */
-	INDIVIDUAL,
+	INDIVIDUAL(ConceptType.INDIVIDUAL_PROFILE),
 	/** A profile of a (real or imagined) group of beings */
-	GROUP,
+	GROUP(ConceptType.GROUP_PROFILE),
 	/**
 	 * A profile of an item, e.g. artifact, relic, etc, or an object such as a tree
 	 * or rock
 	 */
-	ITEM,
+	ITEM(ConceptType.ITEM_PROFILE),
 	/** A profile of a structure, e.g. a house, stockpile, etc */
-	STRUCTURE,
+	STRUCTURE(ConceptType.STRUCTURE_PROFILE),
 	/** A profile of a place of some kind, e.g. a landform */
-	PLACE,
+	PLACE(ConceptType.PLACE_PROFILE),
 	/** A profile of a language */
-	LANGUAGE, OTHER;
+	LANGUAGE(ConceptType.LANGUAGE_PROFILE),
+	/**
+	 * A profile of a tile on the map
+	 */
+	TILE(ConceptType.TILE_PROFILE),
+	/**
+	 * A profile for the world in its entirety
+	 */
+	WORLD(ConceptType.WORLD_PROFILE), OTHER(ConceptType.OTHER_PROFILE);
+
+	private ConceptType ctype;
+
+	private ProfileType(ConceptType type) {
+		this.ctype = type;
+	}
+
+	public ConceptType getConceptType() {
+		return ctype;
+	}
 
 	public boolean individual() {
 		return this == INDIVIDUAL;
@@ -54,7 +74,7 @@ public enum ProfileType {
 	 * @return
 	 */
 	public boolean isLocational() {
-		return this == STRUCTURE || this == PLACE;
+		return this == STRUCTURE || this == PLACE || this == TILE || this == WORLD;
 	}
 
 	public boolean language() {

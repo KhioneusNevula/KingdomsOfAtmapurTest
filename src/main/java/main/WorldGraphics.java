@@ -110,7 +110,7 @@ public class WorldGraphics extends PApplet {
 		} else if (event.getKeyCode() == KeyEvent.VK_SPACE) {
 		} else if (event.getKeyCode() == KeyEvent.VK_I) {
 		} else if (event.getKeyCode() == KeyEvent.VK_F) { // spawn food
-			world.spawnActor(new FoodActor(world.currentWorld, "food" + world.getActors().size(), mouseX - BORDER,
+			world.spawnActor(new FoodActor(world.currentTile, "food" + world.getActors().size(), mouseX - BORDER,
 					mouseY - BORDER, 10, 5f, 1f)
 							.setColor(BasicColor.values()[world.rand().nextInt(BasicColor.values().length)]),
 					true);
@@ -121,7 +121,7 @@ public class WorldGraphics extends PApplet {
 			Actor l = world.getActors().stream().filter((a) -> a.pointInHitbox(mouseX - BORDER, mouseY - BORDER))
 					.findAny().orElse(null);
 			if (l != null) {
-				IComponentPart part = l.getPhysical().getOutermostParts().values().iterator().next();
+				IComponentPart part = l.getPhysical().getOutermostParts().iterator().next();
 				float angle = this.random(0, (float) (2 * Math.PI));
 				Force strikeForce = Force.fromAngleInRadians(angle, this.random(5, 100));
 				this.showLines.add(Pair.of(new Line2D.Float(mouseX, mouseY, mouseX + strikeForce.getXForce(),

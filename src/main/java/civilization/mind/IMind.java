@@ -1,6 +1,11 @@
 package civilization.mind;
 
-import civilization.IDecisionAgent;
+import java.util.stream.Stream;
+
+import actor.Actor;
+import civilization.IIntelligent;
+import civilization.group.agents.IGroupAgent;
+import metaphysical.soul.ISoul;
 
 /**
  * For complex souls which have more than just standard AI, we need a mind
@@ -8,20 +13,40 @@ import civilization.IDecisionAgent;
  * @author borah
  *
  */
-public interface IMind extends IDecisionAgent {
+public interface IMind extends IIntelligent {
+
+	@Override
+	public IMemoryKnowledge getKnowledge();
 
 	/**
-	 * Update the mind each cycle
-	 * 
-	 * @param ticks
-	 */
-	public void tick(long ticks);
-
-	/**
-	 * Get memory of this agent
+	 * If this mind has any subgroups which is not necessarily its full parent (i.e.
+	 * its actual culture), such as adventurers in a party, workers with multiple
+	 * roles, or something similar, get those entities's agents.
 	 * 
 	 * @return
 	 */
-	public IMemory getMemory();
+	public Stream<? extends IGroupAgent> getImmediateGroups();
+
+	/**
+	 * If this individual is a member of the ggiven group
+	 * 
+	 * @param group
+	 * @return
+	 */
+	public boolean memberOf(IGroupAgent group);
+
+	/**
+	 * Gets the soul which contains this mind
+	 * 
+	 * @return
+	 */
+	public ISoul getContainingSoul();
+
+	/**
+	 * Gets the actor containing this mind
+	 * 
+	 * @return
+	 */
+	public Actor getContainingActor();
 
 }

@@ -6,7 +6,10 @@ import java.util.UUID;
 
 import com.google.common.collect.Multimap;
 
+import actor.construction.properties.IAbilityStat;
+import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
+import biology.sensing.ISense;
 
 /**
  * Component parts should sort their layers (if applicable) with the highest
@@ -85,12 +88,30 @@ public interface IComponentPart extends Comparable<IComponentPart> {
 	 *                   not the type as a whole
 	 * @return
 	 */
-	public <A> A getProperty(SenseProperty<A> property, boolean ignoreType);
+	public <A extends ISensableTrait> A getProperty(SenseProperty<A> property, boolean ignoreType);
 
 	public Collection<SenseProperty<?>> getSensableProperties();
 
 	/**
-	 * Gets materials constituting this part
+	 * Gets ability statistics for a component part which can use abilities. Results
+	 * can be defaulted to type class
+	 * 
+	 * @param <T>
+	 * @param type
+	 * @return
+	 */
+	public <T> T getAbilityStat(IPartAbility forab, IAbilityStat<T> type);
+
+	/**
+	 * Return all senses of this component
+	 * 
+	 * @return
+	 */
+	public Collection<ISense> getSenses();
+
+	/**
+	 * Gets materials constituting this part. Expected to be in order of outermost
+	 * at first position and innermost at last
 	 * 
 	 * @return
 	 */
@@ -116,6 +137,13 @@ public interface IComponentPart extends Comparable<IComponentPart> {
 
 	public String report();
 
-	public <T> void changeProperty(SenseProperty<T> property, T value);
+	public <T extends ISensableTrait> void changeProperty(SenseProperty<T> property, T value);
+
+	/**
+	 * Return all types of ability stats this part uses
+	 * 
+	 * @return
+	 */
+	Collection<IAbilityStat<?>> getAbilityStatTypes(IPartAbility forPart);
 
 }

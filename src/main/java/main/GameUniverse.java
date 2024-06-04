@@ -2,12 +2,16 @@ package main;
 
 import java.util.Collection;
 import java.util.Random;
+import java.util.UUID;
 
 import actor.Actor;
 import civilization.Noosphere;
+import metaphysical.soul.ISoulGenerator;
 import metaphysical.soul.SoulGenerator;
 import phenomenon.IPhenomenon;
-import sim.WorldDimension;
+import sim.GameMapTile;
+import sim.interfaces.IObjectType;
+import sim.interfaces.IUniqueThing;
 
 /**
  * TODO complete knowledge layer of world
@@ -15,18 +19,39 @@ import sim.WorldDimension;
  * @author borah
  *
  */
-public class GameUniverse {
+public class GameUniverse implements IUniqueThing {
 
-	protected WorldDimension currentWorld;
+	public static enum WorldType implements IObjectType {
+		INSTANCE;
+
+		@Override
+		public String getUniqueName() {
+			return "worldtype";
+		}
+
+		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.WORLD_TYPE;
+		}
+
+		@Override
+		public float averageUniqueness() {
+			return 1.0f;
+		}
+	}
+
+	protected GameMapTile currentTile;
 	private Actor testActor;
 	private Random rand = new Random();
 	protected long ticks = 0;
-	private SoulGenerator soulGen;
+	private ISoulGenerator soulGen;
 	private Noosphere noosphere;
+	private UUID id;
 
-	public GameUniverse() {
-		this.soulGen = new SoulGenerator(this);
+	public GameUniverse(UUID id) {
+		this.soulGen = new SoulGenerator();
 		this.noosphere = new Noosphere(this);
+		this.id = id;
 	}
 
 	/**
@@ -38,48 +63,57 @@ public class GameUniverse {
 		return noosphere;
 	}
 
-	public SoulGenerator getSoulGen() {
+	/**
+	 * If this game has a main generator of soulss
+	 * 
+	 * @return
+	 */
+	public boolean hasSoulGenerator() {
+		return this.soulGen != null;
+	}
+
+	public ISoulGenerator getMainSoulGenerator() {
 		return soulGen;
 	}
 
-	public void setSoulGen(SoulGenerator soulGen) {
+	public void setMainSoulGenerator(ISoulGenerator soulGen) {
 		this.soulGen = soulGen;
 	}
 
-	public void setCurrentWorld(WorldDimension currentWorld) {
-		this.currentWorld = currentWorld;
+	public void setCurrentTile(GameMapTile currentWorld) {
+		this.currentTile = currentWorld;
 	}
 
-	public WorldDimension getCurrentWorld() {
-		return currentWorld;
+	public GameMapTile getCurrentTile() {
+		return currentTile;
 	}
 
 	public int getWidth() {
-		return currentWorld.getWidth();
+		return currentTile.getWidth();
 	}
 
 	public int getHeight() {
-		return currentWorld.getHeight();
+		return currentTile.getHeight();
 	}
 
 	public synchronized <T extends Actor> T spawnActor(T a, boolean firstSpawn) {
-		this.currentWorld.spawnActor(a, firstSpawn);
+		this.currentTile.spawnActor(a, firstSpawn);
 		if (a == testActor && a.isMultipart())
 			System.out.println(a.getAsMultipart().getBody().report());
 		return a;
 	}
 
 	public synchronized <T extends IPhenomenon> T createPhenomenon(T a) {
-		this.currentWorld.createPhenomenon(a);
+		this.currentTile.createPhenomenon(a);
 		return a;
 	}
 
 	public Collection<Actor> getActors() {
-		return this.currentWorld.getActors();
+		return this.currentTile.getActors();
 	}
 
 	public Collection<IPhenomenon> getPhenomena() {
-		return this.currentWorld.getPhenomena();
+		return this.currentTile.getPhenomena();
 	}
 
 	private Actor makeTestActor() {
@@ -96,7 +130,7 @@ public class GameUniverse {
 	}
 
 	public void worldSetup() {
-		this.currentWorld.load();
+		this.currentTile.load();
 		System.out.println("setting up");
 		this.makeTestActor();
 		// Actor idk = null;
@@ -130,7 +164,7 @@ public class GameUniverse {
 	public synchronized void worldTick() {
 		if (this.testActor != null && this.testActor.isRemoved())
 			makeTestActor();
-		this.currentWorld.worldTick(ticks);
+		this.currentTile.worldTick(ticks);
 		ticks++;
 	}
 
@@ -142,13 +176,13 @@ public class GameUniverse {
 		graphics.rect(0, 0, getWidth(), getHeight());
 		graphics.stroke(graphics.color(255, 255, 255));
 
-		for (Actor e : currentWorld.getActors()) {
+		for (Actor e : currentTile.getActors()) {
 
 			if (e.canRender()) {
 				e.draw(graphics);
 			}
 		}
-		for (IPhenomenon e : currentWorld.getPhenomena()) {
+		for (IPhenomenon e : currentTile.getPhenomena()) {
 			if (e.canRender()) {
 				e.draw(graphics);
 			}
@@ -167,6 +201,21 @@ public class GameUniverse {
 
 	public Random rand() {
 		return rand;
+	}
+
+	@Override
+	public UUID getUUID() {
+		return id;
+	}
+
+	@Override
+	public IObjectType getObjectType() {
+		return WorldType.INSTANCE;
+	}
+
+	@Override
+	public String getUniqueName() {
+		return "game" + id;
 	}
 
 }

@@ -2,6 +2,7 @@ package actor.construction.physical;
 
 import java.util.Collection;
 
+import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
 import sim.physicality.PhysicalState;
 
@@ -55,7 +56,15 @@ public interface IMaterialLayerType extends Comparable<IMaterialLayerType> {
 	 */
 	public PhysicalState initialState();
 
-	public Collection<SenseProperty<?>> getSensableProperties();
+	/**
+	 * 
+	 * @param <A>
+	 * @param property
+	 * @return
+	 */
+	public <A extends ISensableTrait> A getProperty(SenseProperty<A> property);
+
+	public Collection<SenseProperty<? extends ISensableTrait>> getSensableProperties();
 
 	/**
 	 * Gets the combined integer of nutrition types
@@ -64,5 +73,5 @@ public interface IMaterialLayerType extends Comparable<IMaterialLayerType> {
 	 */
 	public int getNutritionTypes();
 
-	<T> T getTrait(SenseProperty<T> prop);
+	<T extends ISensableTrait> T getTrait(SenseProperty<T> prop);
 }

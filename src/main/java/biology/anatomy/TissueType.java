@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
 import actor.construction.properties.SenseProperty.BasicColor;
 import actor.construction.properties.SenseProperty.BasicShape;
@@ -44,8 +45,6 @@ public class TissueType extends SimpleMaterialType implements ITissueLayerType {
 	private boolean muscular = false;
 	private boolean isBlood = false;
 
-	/** TODO add materials */
-
 	private TissueType(String name, int layer) {
 		super(name, layer);
 	}
@@ -66,7 +65,7 @@ public class TissueType extends SimpleMaterialType implements ITissueLayerType {
 		return (TissueType) super.withoutSensableProperties(props);
 	}
 
-	public TissueType withSensableProperties(Map<SenseProperty<?>, Object> map) {
+	public TissueType withSensableProperties(Map<SenseProperty<?>, ? extends ISensableTrait> map) {
 		return (TissueType) super.withSensableProperties(map);
 	}
 
@@ -222,7 +221,7 @@ public class TissueType extends SimpleMaterialType implements ITissueLayerType {
 	}
 
 	@Override
-	protected TissueType setSensableProperties(Map<SenseProperty<?>, Object> map) {
+	protected TissueType setSensableProperties(Map<SenseProperty<?>, ? extends ISensableTrait> map) {
 		// method stub
 		return (TissueType) super.setSensableProperties(map);
 	}
@@ -239,7 +238,8 @@ public class TissueType extends SimpleMaterialType implements ITissueLayerType {
 	}
 
 	@Override
-	protected TissueType addSensableProperties(Map<SenseProperty<?>, Object> map) {
+	protected TissueType addSensableProperties(Map<SenseProperty<?>, ? extends ISensableTrait> map) {
 		return (TissueType) super.addSensableProperties(map);
 	}
+
 }

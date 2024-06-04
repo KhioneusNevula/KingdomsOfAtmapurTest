@@ -1,6 +1,6 @@
 package sim.interfaces;
 
-import sim.WorldDimension;
+import sim.GameMapTile;
 
 public interface IExistsInWorld {
 
@@ -9,5 +9,5 @@ public interface IExistsInWorld {
 	 * 
 	 * @return
 	 */
-	public WorldDimension getWorld();
+	public GameMapTile getWorld();
 }

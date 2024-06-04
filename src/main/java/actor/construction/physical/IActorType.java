@@ -72,4 +72,10 @@ public interface IActorType extends IObjectType {
 	 * @return
 	 */
 	public AbstractSoul generateSoul(Actor a, IComponentPart forPart);
+
+	@Override
+	default ConceptType getConceptType() {
+		return ConceptType.ACTOR_TYPE;
+	}
+
 }

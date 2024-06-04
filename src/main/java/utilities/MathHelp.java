@@ -3,7 +3,9 @@ package utilities;
 import java.io.InputStream;
 import java.util.Scanner;
 
-public class MathHelp {
+public final class MathHelp {
+	private MathHelp() {
+	}
 
 	private static final int primeCount = 2000;
 

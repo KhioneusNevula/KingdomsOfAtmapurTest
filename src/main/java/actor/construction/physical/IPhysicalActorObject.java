@@ -7,7 +7,7 @@ import java.util.UUID;
 import metaphysical.ISpiritObject;
 import metaphysical.ISpiritObject.SpiritType;
 import metaphysical.soul.AbstractSoul;
-import metaphysical.soul.SoulGenerator;
+import metaphysical.soul.ISoulGenerator;
 
 /**
  * Used to represent an objct or visage of a physical actor, with multiple parts
@@ -59,13 +59,6 @@ public interface IPhysicalActorObject extends IVisage {
 	public float getMass();
 
 	/**
-	 * Get parts that are outermost (and usually sense-able)
-	 * 
-	 * @return
-	 */
-	public Map<UUID, ? extends IComponentPart> getOutermostParts();
-
-	/**
 	 * Whether all the necessary steps have been performed to properly make this
 	 * body
 	 * 
@@ -104,23 +97,6 @@ public interface IPhysicalActorObject extends IVisage {
 	 */
 	public String report();
 
-	public Collection<? extends IComponentPart> getParts();
-
-	/**
-	 * If this template consists only of one main part. For example, a rock. s
-	 * 
-	 * @return
-	 */
-	public boolean hasSinglePart();
-
-	/**
-	 * For single-part actors, the component encompassing its entire entity. Throw
-	 * exception if not single-part
-	 * 
-	 * @return
-	 */
-	public IComponentPart mainComponent();
-
 	/**
 	 * What physicality this body has
 	 * 
@@ -134,13 +110,6 @@ public interface IPhysicalActorObject extends IVisage {
 	 * @param newPhysicality
 	 */
 	public void changePhysicality(int newPhysicality);
-
-	/**
-	 * Change the visibility of this thing
-	 * 
-	 * @param newVisibility
-	 */
-	public void changeVisibility(int newVisibility);
 
 	/**
 	 * Return true if this actor is compltely destroyed and ought to be removed
@@ -220,7 +189,7 @@ public interface IPhysicalActorObject extends IVisage {
 	 * @param soul
 	 * @return
 	 */
-	public default void onGiveFirstSoul(AbstractSoul soul, SoulGenerator soulgen) {
+	public default void onGiveFirstSoul(AbstractSoul soul, ISoulGenerator soulgen) {
 
 	}
 

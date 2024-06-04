@@ -3,21 +3,28 @@ package actor.construction.simple;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Table;
 
 import actor.construction.NutritionType;
 import actor.construction.physical.IComponentPart;
 import actor.construction.physical.IComponentType;
 import actor.construction.physical.IMaterialLayer;
 import actor.construction.physical.IMaterialLayerType;
+import actor.construction.physical.IPartAbility;
+import actor.construction.properties.IAbilityStat;
+import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
+import biology.sensing.ISense;
 
 /**
  * A simple part consisting of wrapped layers
@@ -41,6 +48,8 @@ public class SimpleMultilayerPart implements IComponentPart {
 	private Float nutrition;
 	private int nutritionTypes = 1;
 	private boolean gone;
+	private Table<IPartAbility, IAbilityStat<?>, Object> senseStats;
+	private Set<ISense> senses;
 
 	public SimpleMultilayerPart(IComponentType type, UUID id, Iterable<IMaterialLayer> materials) {
 		this.type = type;
@@ -67,6 +76,14 @@ public class SimpleMultilayerPart implements IComponentPart {
 		}
 
 		sensables = senseMap;
+		this.senses = new HashSet<>(type.getDefaultSenses());
+		this.senseStats = HashBasedTable.create();
+		for (IPartAbility abil : type.abilities()) {
+			for (IAbilityStat<?> stat : type.getDefaultAbilityStats(abil)) {
+				senseStats.put(abil, stat, type.getDefaultAbilityStat(abil, stat));
+			}
+		}
+
 	}
 
 	public SimpleMultilayerPart addProperties(Map.Entry<SenseProperty<?>, Object>... props) {
@@ -77,8 +94,31 @@ public class SimpleMultilayerPart implements IComponentPart {
 	}
 
 	@Override
-	public <T> void changeProperty(SenseProperty<T> property, T value) {
+	public <T extends ISensableTrait> void changeProperty(SenseProperty<T> property, T value) {
 		sensables.put(property, value);
+	}
+
+	public <T> SimpleMultilayerPart changeAbilityStat(IPartAbility abil, IAbilityStat<T> stat, T val) {
+		this.senseStats.put(abil, stat, val);
+		return this;
+	}
+
+	@Override
+	public Collection<ISense> getSenses() {
+		return this.senses;
+	}
+
+	@Override
+	public <T> T getAbilityStat(IPartAbility abil, IAbilityStat<T> type) {
+		T o = (T) this.senseStats.get(abil, type);
+		if (o == null)
+			return this.type.getDefaultAbilityStat(abil, type);
+		return o;
+	}
+
+	@Override
+	public Collection<IAbilityStat<?>> getAbilityStatTypes(IPartAbility abil) {
+		return this.senseStats.row(abil).keySet();
 	}
 
 	public IComponentType getType() {
@@ -158,7 +198,7 @@ public class SimpleMultilayerPart implements IComponentPart {
 	}
 
 	@Override
-	public <T> T getProperty(SenseProperty<T> property, boolean ignoreType) {
+	public <T extends ISensableTrait> T getProperty(SenseProperty<T> property, boolean ignoreType) {
 		T obj = sensables == null ? null : (T) sensables.get(property);
 		if (obj == null && !ignoreType)
 			return this.getType().getTrait(property);

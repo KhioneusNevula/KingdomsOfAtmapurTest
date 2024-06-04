@@ -5,8 +5,8 @@ import java.util.Random;
 import actor.construction.physical.IVisage;
 import phenomenon.IPhenomenon;
 import sim.interfaces.IExistsInWorld;
-import sim.interfaces.IObjectType;
-import sim.interfaces.IUnique;
+import sim.interfaces.IPhysicalEntity;
+import sim.interfaces.IUniqueThing;
 
 /**
  * Thing which can be perceived and assigned properties
@@ -14,10 +14,10 @@ import sim.interfaces.IUnique;
  * @author borah
  *
  */
-public interface IUniqueEntity extends IUnique, IExistsInWorld {
+public interface IUniqueEntity extends IUniqueThing, IExistsInWorld {
 
 	/**
-	 * Return the primary vessel of sensing this thing. <br>
+	 * Return the primary way of sensing this thing. <br>
 	 * TODO Later, change this to also depend on the sense? maybe
 	 * 
 	 * @return
@@ -25,19 +25,17 @@ public interface IUniqueEntity extends IUnique, IExistsInWorld {
 	public IVisage getVisage();
 
 	/**
-	 * Gets the type/species of actor, phenomenon, etc that this is
+	 * Whether this entity has a physical position, i.e. is instanceof
+	 * {@link IPhysicalEntity} and not a world phenomenon
 	 * 
 	 * @return
 	 */
-	public IObjectType getObjectType();
+	public default boolean isPhysical() {
+		return this instanceof IPhysicalEntity;
+	}
 
-	/**
-	 * How different this thing is from the 'prototypical' example of its template.
-	 * 
-	 * @return
-	 */
-	public default float uniqueness() {
-		return this.getObjectType().averageUniqueness();
+	public default IPhysicalEntity getAsPhysical() {
+		return (IPhysicalEntity) this;
 	}
 
 	public default boolean isActor() {

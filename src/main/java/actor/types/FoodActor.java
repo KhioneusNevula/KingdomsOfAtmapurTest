@@ -14,7 +14,7 @@ import actor.construction.simple.SimpleMaterialLayer;
 import actor.construction.simple.SimpleMaterialType;
 import actor.construction.simple.SimpleMultilayerPart;
 import actor.construction.simple.SimplePartType;
-import sim.WorldDimension;
+import sim.GameMapTile;
 
 public class FoodActor extends Actor {
 
@@ -26,7 +26,7 @@ public class FoodActor extends Actor {
 	private SimpleActorPhysicalObject physical;
 	private IColor color;
 
-	public FoodActor(WorldDimension world, String name, int startX, int startY, int radius, Float nutrition,
+	public FoodActor(GameMapTile world, String name, int startX, int startY, int radius, Float nutrition,
 			float mass) {
 		super(world, name, FOOD_TYPE, startX, startY);
 		physical = new SimpleActorPhysicalObject(this,

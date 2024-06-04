@@ -24,7 +24,7 @@ import main.WorldGraphics;
 import metaphysical.ISpiritObject;
 import metaphysical.ISpiritObject.SpiritType;
 import processing.core.PApplet;
-import sim.WorldDimension;
+import sim.GameMapTile;
 import sim.interfaces.IDynamicsObject;
 import sim.interfaces.ILocatable;
 import sim.interfaces.IRenderable;
@@ -57,7 +57,7 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 	 */
 	private String name;
 
-	private WorldDimension world;
+	private GameMapTile world;
 
 	private Location location;
 
@@ -70,7 +70,7 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 	 */
 	// private long propertyDecayTime = 10000;// change this to 86400000L;
 
-	public Actor(WorldDimension world, String name, IActorType species, int startX, int startY) {
+	public Actor(GameMapTile world, String name, IActorType species, int startX, int startY) {
 		this.world = world;
 		this.name = name;
 		this.x = startX;
@@ -121,7 +121,12 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 		return name;
 	}
 
-	public WorldDimension getWorld() {
+	@Override
+	public String getUniqueName() {
+		return this.name + this.uuid;
+	}
+
+	public GameMapTile getWorld() {
 		return world;
 	}
 
@@ -489,9 +494,7 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 	public String report() {
 
 		return "actor:" + this.name + " of mass " + this.getMass() + "kg" + "\nbody:" + this.getPhysical().report()
-				+ "\nphysical planes:" + ExistencePlane.decomposeCombinedValue(this.physicality(), true)
-				+ "\nvisibility planes:"
-				+ ExistencePlane.decomposeCombinedValue(this.getVisage().visibilityMode(), true) + "\n"
+				+ "\nphysical planes:" + ExistencePlane.decomposeCombinedValue(this.physicality(), true) + "\n"
 				+ (isStationary() ? "static friction: " + this.calculateStaticFriction() + "N"
 						: "dynamic friction: " + this.calculateDynamicFriction())
 				+ (this.getSystems().isEmpty() ? "" : "\nsystems:" + this.getSystemsReport());

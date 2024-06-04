@@ -1,6 +1,7 @@
 package biology.anatomy;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -18,10 +19,13 @@ import actor.Actor;
 import actor.construction.physical.IComponentPart;
 import actor.construction.physical.IPartAbility;
 import actor.construction.physical.IPhysicalActorObject;
+import actor.construction.properties.ISensableTrait;
+import actor.construction.properties.SenseProperty;
+import biology.sensing.ISense;
 import metaphysical.ISpiritObject;
 import metaphysical.ISpiritObject.SpiritType;
 import metaphysical.soul.AbstractSoul;
-import metaphysical.soul.SoulGenerator;
+import metaphysical.soul.ISoulGenerator;
 import sim.physicality.ExistencePlane;
 
 /**
@@ -121,7 +125,7 @@ public class Body implements IPhysicalActorObject {
 	}
 
 	@Override
-	public int visibilityMode() {
+	public int sensabilityMode(ISense toSense) {
 		return this.visibilityPlane;
 	}
 
@@ -141,7 +145,7 @@ public class Body implements IPhysicalActorObject {
 	}
 
 	@Override
-	public void changeVisibility(int newVisibility) {
+	public void changeSensability(int newVisibility) {
 		this.visibilityPlane = newVisibility;
 	}
 
@@ -166,8 +170,18 @@ public class Body implements IPhysicalActorObject {
 	}
 
 	@Override
-	public Map<UUID, BodyPart> getOutermostParts() {
-		return outermostParts == null ? Map.of() : outermostParts;
+	public Collection<BodyPart> getOutermostParts() {
+		return outermostParts == null ? Set.of() : outermostParts.values();
+	}
+
+	@Override
+	public <A extends ISensableTrait> A getGeneralProperty(SenseProperty<A> property, boolean ignoreType) {
+		return null;
+	}
+
+	@Override
+	public Collection<SenseProperty<?>> getGeneralSensableProperties() {
+		return Collections.emptySet();
 	}
 
 	private void initializeBody() {
@@ -455,7 +469,7 @@ public class Body implements IPhysicalActorObject {
 	}
 
 	@Override
-	public void onGiveFirstSoul(AbstractSoul soul, SoulGenerator soulgen) {
+	public void onGiveFirstSoul(AbstractSoul soul, ISoulGenerator soulgen) {
 		if (this.soulReference == null)
 			this.soulReference = soul;
 	}

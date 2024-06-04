@@ -22,6 +22,11 @@ public class Profile implements IConcept {
 	}
 
 	@Override
+	public ConceptType getConceptType() {
+		return type.getConceptType();
+	}
+
+	@Override
 	public String getUniqueName() {
 		return "profile_" + id.getMostSignificantBits() + "_" + id.getLeastSignificantBits();
 	}

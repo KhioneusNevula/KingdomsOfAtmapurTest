@@ -2,21 +2,28 @@ package actor.construction.simple;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Table;
 
 import actor.construction.NutritionType;
 import actor.construction.physical.IComponentPart;
 import actor.construction.physical.IComponentType;
 import actor.construction.physical.IMaterialLayer;
 import actor.construction.physical.IMaterialLayerType;
+import actor.construction.physical.IPartAbility;
+import actor.construction.properties.IAbilityStat;
+import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
+import biology.sensing.ISense;
 
 /**
  * A basic part for a basic entity: one materrial, etc
@@ -35,6 +42,8 @@ public class SimplePart implements IComponentPart {
 	private IComponentPart surrounding;
 	private Multimap<String, IComponentPart> surroundeds;
 	private Map<SenseProperty<?>, Object> sensables;
+	private Table<IPartAbility, IAbilityStat<?>, Object> senseStats;
+	private Set<ISense> senses;
 	private boolean usual = true;
 	private Float nutrition;
 
@@ -42,7 +51,13 @@ public class SimplePart implements IComponentPart {
 		this.type = type;
 		this.id = id;
 		sensables = new HashMap<>();
-
+		this.senses = new HashSet<>(type.getDefaultSenses());
+		this.senseStats = HashBasedTable.create();
+		for (IPartAbility abil : type.abilities()) {
+			for (IAbilityStat<?> stat : type.getDefaultAbilityStats(abil)) {
+				senseStats.put(abil, stat, type.getDefaultAbilityStat(abil, stat));
+			}
+		}
 		this.material = material;
 		this.materialmap = ImmutableMap.of(material.getType(), material);
 		for (SenseProperty<?> sep : material.getType().getSensableProperties()) {
@@ -57,8 +72,31 @@ public class SimplePart implements IComponentPart {
 		return this;
 	}
 
+	public <T> SimplePart changeSenseStat(IPartAbility abil, IAbilityStat<T> stat, T val) {
+		this.senseStats.put(abil, stat, val);
+		return this;
+	}
+
 	@Override
-	public <T> void changeProperty(SenseProperty<T> property, T value) {
+	public Collection<ISense> getSenses() {
+		return this.senses;
+	}
+
+	@Override
+	public <T> T getAbilityStat(IPartAbility abil, IAbilityStat<T> type) {
+		T o = (T) this.senseStats.get(abil, type);
+		if (o == null)
+			return this.type.getDefaultAbilityStat(abil, type);
+		return o;
+	}
+
+	@Override
+	public Collection<IAbilityStat<?>> getAbilityStatTypes(IPartAbility abil) {
+		return this.senseStats.row(abil).keySet();
+	}
+
+	@Override
+	public <T extends ISensableTrait> void changeProperty(SenseProperty<T> property, T value) {
 		sensables.put(property, value);
 	}
 
@@ -139,7 +177,7 @@ public class SimplePart implements IComponentPart {
 	}
 
 	@Override
-	public <T> T getProperty(SenseProperty<T> property, boolean ignoreType) {
+	public <T extends ISensableTrait> T getProperty(SenseProperty<T> property, boolean ignoreType) {
 		T obj = sensables == null ? null : (T) sensables.get(property);
 		if (obj == null && !ignoreType)
 			return this.getType().getTrait(property);

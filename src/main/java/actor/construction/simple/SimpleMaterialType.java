@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableSet;
 import actor.construction.INutritionType;
 import actor.construction.NutritionType;
 import actor.construction.physical.IMaterialLayerType;
+import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
 import actor.construction.properties.SenseProperty.BasicColor;
 import actor.construction.properties.SenseProperty.BasicSmell;
@@ -40,7 +41,7 @@ public class SimpleMaterialType implements IMaterialLayerType, Cloneable {
 	private Set<String> bundleNames = Set.of();
 	private Set<String> sublayers = Set.of();
 	private PhysicalState initialState = PhysicalState.HARD_SOLID_WHOLE;
-	private Map<SenseProperty<?>, Object> sensables = Map.of();
+	private Map<SenseProperty<?>, ISensableTrait> sensables = Map.of();
 	private int nutrition = NutritionType.EATS_UNEATABLE.primeFactor();
 
 	protected SimpleMaterialType(String name, int layer) {
@@ -56,16 +57,17 @@ public class SimpleMaterialType implements IMaterialLayerType, Cloneable {
 		return new MaterialLayerBuilder(name, layer);
 	}
 
-	public SimpleMaterialType withoutSensableProperties(Collection<SenseProperty<?>> props) {
-		Map<SenseProperty<?>, Object> sebs = new TreeMap<>(this.sensables);
+	public SimpleMaterialType withoutSensableProperties(Collection<SenseProperty<? extends ISensableTrait>> props) {
+		Map<SenseProperty<?>, ISensableTrait> sebs = new TreeMap<>(this.sensables);
 		for (SenseProperty<?> prop : props) {
 			sebs.remove(prop);
 		}
 		return this.copy().setSensableProperties(sebs);
 	}
 
-	public SimpleMaterialType withSensableProperties(Map<SenseProperty<?>, Object> map) {
-		Map<SenseProperty<?>, Object> mapa = new TreeMap<>(sensables);
+	public SimpleMaterialType withSensableProperties(
+			Map<SenseProperty<? extends ISensableTrait>, ? extends ISensableTrait> map) {
+		Map<SenseProperty<?>, ISensableTrait> mapa = new TreeMap<>(sensables);
 		mapa.putAll(map);
 		return this.copy().setSensableProperties(mapa);
 	}
@@ -178,16 +180,16 @@ public class SimpleMaterialType implements IMaterialLayerType, Cloneable {
 		return this;
 	}
 
-	protected SimpleMaterialType addSensableProperties(Map<SenseProperty<?>, Object> map) {
-		Map<SenseProperty<?>, Object> mapa = new TreeMap<>(sensables);
+	protected SimpleMaterialType addSensableProperties(Map<SenseProperty<?>, ? extends ISensableTrait> map) {
+		Map<SenseProperty<?>, ISensableTrait> mapa = new TreeMap<>(sensables);
 		mapa.putAll(map);
 		return this.setSensableProperties(mapa);
 	}
 
-	protected SimpleMaterialType setSensableProperties(Map<SenseProperty<?>, Object> map) {
+	protected SimpleMaterialType setSensableProperties(Map<SenseProperty<?>, ? extends ISensableTrait> map) {
 		sensables = new TreeMap<>();
 
-		for (Map.Entry<SenseProperty<?>, Object> entry : map.entrySet()) {
+		for (Map.Entry<SenseProperty<?>, ? extends ISensableTrait> entry : map.entrySet()) {
 			if (!entry.getKey().getType().isAssignableFrom(entry.getValue().getClass())) {
 				throw new IllegalArgumentException("Illegal sense property added " + entry.getKey().getName()
 						+ " for value " + entry.getValue() + " when building " + this.getName());
@@ -223,6 +225,11 @@ public class SimpleMaterialType implements IMaterialLayerType, Cloneable {
 	}
 
 	@Override
+	public <A extends ISensableTrait> A getProperty(SenseProperty<A> property) {
+		return (A) this.sensables.get(property);
+	}
+
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -252,12 +259,12 @@ public class SimpleMaterialType implements IMaterialLayerType, Cloneable {
 	}
 
 	@Override
-	public Collection<SenseProperty<?>> getSensableProperties() {
+	public Collection<SenseProperty<? extends ISensableTrait>> getSensableProperties() {
 		return this.sensables.keySet();
 	}
 
 	@Override
-	public <T> T getTrait(SenseProperty<T> prop) {
+	public <T extends ISensableTrait> T getTrait(SenseProperty<T> prop) {
 		return (T) sensables.get(prop);
 	}
 
@@ -312,12 +319,12 @@ public class SimpleMaterialType implements IMaterialLayerType, Cloneable {
 			return this;
 		}
 
-		public MaterialLayerBuilder addSensableProperties(Map<SenseProperty<?>, Object> map) {
+		public MaterialLayerBuilder addSensableProperties(Map<SenseProperty<?>, ISensableTrait> map) {
 			at.addSensableProperties(map);
 			return this;
 		}
 
-		public MaterialLayerBuilder setSensableProperties(Map<SenseProperty<?>, Object> map) {
+		public MaterialLayerBuilder setSensableProperties(Map<SenseProperty<?>, ISensableTrait> map) {
 			at.setSensableProperties(map);
 			return this;
 		}

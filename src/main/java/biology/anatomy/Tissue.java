@@ -1,21 +1,30 @@
 package biology.anatomy;
 
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
 import actor.construction.physical.IMaterialLayer;
+import actor.construction.properties.ISensableTrait;
+import actor.construction.properties.SenseProperty;
 import sim.physicality.PhysicalState;
 
 public class Tissue implements IMaterialLayer {
 	private ITissueLayerType type;
 	private TreeMap<ITissueLayerType, Tissue> subLayers;
+	private Map<SenseProperty<?>, Object> sensables;
 	private PhysicalState state;
 	private boolean usual = true;
 
 	public Tissue(ITissueLayerType type, Map<String, ITissueLayerType> tissueTypes) {
 		this.type = type;
 		state = type.initialState();
+		sensables = new HashMap<>();
+		for (SenseProperty<?> prop : type.getSensableProperties()) {
+			sensables.put(prop, type.getProperty(prop));
+		}
 		if (!type.getSublayers().isEmpty()) {
 			subLayers = new TreeMap<>(Comparator.reverseOrder());
 			for (String sublayer : type.getSublayers()) {
@@ -28,6 +37,19 @@ public class Tissue implements IMaterialLayer {
 			}
 
 		}
+	}
+
+	@Override
+	public <A extends ISensableTrait> A getProperty(SenseProperty<A> property, boolean ignoreType) {
+		A obj = sensables == null ? null : (A) sensables.get(property);
+		if (obj == null && !ignoreType)
+			return this.type.getTrait(property);
+		return obj;
+	}
+
+	@Override
+	public Collection<SenseProperty<?>> getSensableProperties() {
+		return this.sensables.keySet();
 	}
 
 	public ITissueLayerType getType() {

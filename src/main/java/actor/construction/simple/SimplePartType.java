@@ -6,12 +6,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Table;
 
 import actor.construction.physical.IComponentType;
 import actor.construction.physical.IPartAbility;
+import actor.construction.properties.IAbilityStat;
+import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
+import biology.sensing.ISense;
 
 /**
  * A simple part type for a simple part
@@ -27,6 +32,8 @@ public class SimplePartType implements IComponentType {
 	private boolean isHole = false;
 	private boolean isRoot = false;
 	private Set<IPartAbility> abilities = Set.of();
+	private Set<ISense> senses = Set.of();
+	private Table<IPartAbility, IAbilityStat<?>, Object> senseStats = HashBasedTable.create();
 	/*
 	 * // private boolean eats = false; private boolean thinks = false; private
 	 * boolean pumpsBlood = false; private boolean fertilizes = false; private
@@ -108,6 +115,14 @@ public class SimplePartType implements IComponentType {
 		set.removeAll(Set.of(abs));
 		return this.copy().setAbilities(Set.copyOf(set));
 
+	}
+
+	public <T> SimplePartType withDefaultStat(IPartAbility abil, IAbilityStat<T> stat, T value) {
+		return this.copy().setAbilityStat(abil, stat, value);
+	}
+
+	public <T> SimplePartType withoutDefaultStat(IPartAbility abil, IAbilityStat<T> stat) {
+		return this.copy().removeAbilityStat(abil, stat);
 	}
 
 	public SimplePartType withoutSensableProperties(Collection<SenseProperty<?>> props) {
@@ -372,6 +387,19 @@ public class SimplePartType implements IComponentType {
 
 	protected SimplePartType setAbilities(Set<IPartAbility> abs) {
 		this.abilities = ImmutableSet.copyOf(abs);
+		this.senses = ImmutableSet.<ISense>builder()
+				.addAll(abs.stream().filter((a) -> a.isSensingAbility()).<ISense>map((a) -> (ISense) a).iterator())
+				.build();
+		return this;
+	}
+
+	protected <T> SimplePartType setAbilityStat(IPartAbility abiliy, IAbilityStat<T> stat, T value) {
+		senseStats.put(abiliy, stat, value);
+		return this;
+	}
+
+	protected <T> SimplePartType removeAbilityStat(IPartAbility ability, IAbilityStat<T> stat) {
+		senseStats.remove(ability, stat);
 		return this;
 	}
 
@@ -483,12 +511,30 @@ public class SimplePartType implements IComponentType {
 	}
 
 	@Override
+	public Collection<ISense> getDefaultSenses() {
+		return this.senses;
+	}
+
+	@Override
+	public Collection<IAbilityStat<?>> getDefaultAbilityStats(IPartAbility forab) {
+		return this.senseStats.row(forab).keySet();
+	}
+
+	@Override
+	public <T> T getDefaultAbilityStat(IPartAbility forab, IAbilityStat<T> stat) {
+		T o = (T) this.senseStats.get(forab, stat);
+		if (o == null)
+			return stat.defaultValue();
+		return o;
+	}
+
+	@Override
 	public Collection<SenseProperty<?>> getSensableProperties() {
 		return sensables.keySet();
 	}
 
 	@Override
-	public <T> T getTrait(SenseProperty<T> prop) {
+	public <T extends ISensableTrait> T getTrait(SenseProperty<T> prop) {
 		return (T) sensables.get(prop);
 	}
 
@@ -605,6 +651,11 @@ public class SimplePartType implements IComponentType {
 
 		public PartTypeBuilder setDefaultNutrition(float def) {
 			at.setNutritionValue(def);
+			return this;
+		}
+
+		public <T> PartTypeBuilder setAbilityStat(IPartAbility abil, IAbilityStat<T> stat, T value) {
+			at.setAbilityStat(abil, stat, value);
 			return this;
 		}
 

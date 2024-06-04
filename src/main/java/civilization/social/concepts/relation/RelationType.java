@@ -9,6 +9,17 @@ package civilization.social.concepts.relation;
  *
  */
 public enum RelationType implements IConceptRelationType<RelationType> {
+	/**
+	 * LEFT is in the set described by RIGHT. purely technical relationship. LEFT is
+	 * active, though this is irrelevant. inverse of {@link #CONTAINS}
+	 */
+	IN_SET(prop()),
+	/**
+	 * LEFT is the containing set of RIGHT. purely technical relationship. LEFT is
+	 * passive, though irrelevant. inverse of {@link #IN_SET}
+	 */
+	CONTAINS(IN_SET, prop(), false),
+
 	/** relation involving LEFT giving ARG to RIGHT. LEFT is active role. */
 	GIVES(prop().transfers().requireArgument().requireAction()),
 	/**
@@ -97,20 +108,31 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * LEFT dominates RIGHT, e.g. LEFT is a ruler who rules over or controls RIGHT.
 	 * LEFT is active role. inverse of {@link #SUBMITS_TO}
 	 */
-	DOMINATES(prop().dominates()),
+	DOMINATES(prop().dominates().social()),
 	/**
 	 * LEFT submits to and is dominated by RIGHT, e.g. LEFT is a subject to the
 	 * rulership of RIGHT. LEFT is passvie role. inverse of {@link #DOMINATES}
 	 */
-	SUBMITS_TO(DOMINATES, prop().dominates(), false);
+	SUBMITS_TO(DOMINATES, prop().dominates().social(), false),
+
+	/**
+	 * LEFT is a danger to RIGHT. LEFT is the active role. inverse of
+	 * {@link #ENDANGERED_BY}
+	 */
+	ENDANGERS(prop().damages()),
+	/**
+	 * LEFT considers RIGHT to be dangerous. LEFT is passive role. inverse of
+	 * {@link #ENDANGERS}
+	 */
+	ENDANGERED_BY(ENDANGERS, prop().damages(), false);
 
 	private RelationType inverse;
 	private Properties properties;
-	private boolean actor = true;
+	private boolean leftIsAgent = true;
 
 	private RelationType(Properties properties) {
 		this.properties = properties;
-		this.actor = true;
+		this.leftIsAgent = true;
 	}
 
 	private RelationType(RelationType inverseOf, Properties props) {
@@ -125,34 +147,38 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @param inverseOf
 	 * @param props
-	 * @param actor
+	 * @param leftIsAgent
 	 */
 	private RelationType(RelationType inverseOf, Properties props, boolean agent) {
 		this(props);
-		this.actor = agent;
+		this.leftIsAgent = agent;
 		this.inverse = inverseOf;
 		inverseOf.inverse = this;
-		inverseOf.actor = !agent;
+		inverseOf.leftIsAgent = !agent;
 	}
 
 	/**
-	 * If true, then this party is the agent or initial stage of the relational
-	 * action of this relation. Result is undefined if bidirectional.
+	 * If true, then the LEFT party is the agent or initial stage of the relational
+	 * action of this relation; whereas RIGHT is the object or result stage. Result
+	 * is undefined if bidirectional.
 	 * 
 	 * @return
 	 */
-	public boolean isAgent() {
-		return actor;
+	@Override
+	public boolean leftIsAgent() {
+		return leftIsAgent;
 	}
 
 	/**
-	 * If true, then this is the object or result stage of the relational action of
-	 * this relation. Result is undefined if bidirectional.
+	 * If true, then LEFT is the object or result stage of the relational action of
+	 * this relation; whereas RIGHT is the agent or initial stage. Result is
+	 * undefined if bidirectional.
 	 * 
 	 * @return
 	 */
-	public boolean isObject() {
-		return !actor;
+	@Override
+	public boolean leftIsObject() {
+		return !leftIsAgent;
 	}
 
 	@Override
@@ -175,6 +201,7 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean creates() {
 		return properties.creates;
 	}
@@ -185,6 +212,7 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean transfers() {
 		return properties.transfers;
 	}
@@ -195,6 +223,7 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean transforms() {
 		return properties.transforms;
 	}
@@ -205,6 +234,7 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean requiresArgument() {
 		return properties.requireArgument;
 	}
@@ -215,6 +245,7 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean requiresAction() {
 		return properties.requireAction;
 	}
@@ -224,6 +255,7 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean consumes() {
 		return properties.consumes;
 	}
@@ -234,6 +266,7 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean atLocation() {
 		return properties.at;
 	}
@@ -244,6 +277,7 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean madeOf() {
 		return properties.madeOf;
 	}
@@ -254,6 +288,7 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean tradeWorth() {
 		return properties.tradeWorth;
 	}
@@ -264,8 +299,50 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public boolean dominates() {
 		return properties.dominates;
+	}
+
+	/**
+	 * IF this relation represents something linguistic
+	 * 
+	 * @return
+	 */
+	@Override
+	public boolean linguistic() {
+		return properties.linguistic;
+	}
+
+	/**
+	 * Whether this relationship constitutes a social or personal relationship
+	 * 
+	 * @return
+	 */
+	@Override
+	public boolean social() {
+		return properties.social;
+	}
+
+	/**
+	 * Whether this constitutes a relation where the agent has the object as a
+	 * specific property of its being.
+	 * 
+	 * @return
+	 */
+	@Override
+	public boolean isProperty() {
+		return properties.isProperty;
+	}
+
+	/**
+	 * Whether this relation involves the agent damaging the object.
+	 * 
+	 * @return
+	 */
+	@Override
+	public boolean damages() {
+		return properties.damages;
 	}
 
 	private static Properties prop() {
@@ -273,6 +350,8 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 	}
 
 	private static class Properties {
+		public boolean social;
+		public boolean linguistic;
 		private boolean creates;
 		private boolean transfers;
 		private boolean transforms;
@@ -283,6 +362,8 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 		private boolean at;
 		private boolean tradeWorth;
 		private boolean dominates;
+		private boolean isProperty;
+		private boolean damages;
 
 		private Properties() {
 		}
@@ -334,6 +415,26 @@ public enum RelationType implements IConceptRelationType<RelationType> {
 
 		Properties dominates() {
 			this.dominates = true;
+			return this;
+		}
+
+		Properties isProperty() {
+			this.isProperty = true;
+			return this;
+		}
+
+		Properties linguistic() {
+			this.linguistic = true;
+			return this;
+		}
+
+		Properties damages() {
+			this.damages = true;
+			return this;
+		}
+
+		Properties social() {
+			this.social = true;
 			return this;
 		}
 

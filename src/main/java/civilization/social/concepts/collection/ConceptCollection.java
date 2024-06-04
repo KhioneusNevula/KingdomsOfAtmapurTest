@@ -27,4 +27,22 @@ public abstract class ConceptCollection<T extends IConcept> implements IConcept 
 		return concepts;
 	}
 
+	@Override
+	public ConceptType getConceptType() {
+		return ConceptType.COLLECTION;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof ConceptCollection othercol) {
+			return this.concepts.equals(othercol.concepts);
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return this.concepts.hashCode();
+	}
+
 }

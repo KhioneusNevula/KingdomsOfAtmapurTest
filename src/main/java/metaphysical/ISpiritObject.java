@@ -5,7 +5,7 @@ import java.util.Collection;
 import actor.Actor;
 import actor.construction.physical.IComponentPart;
 import civilization.mind.IMind;
-import sim.interfaces.IUnique;
+import sim.interfaces.IUniqueThing;
 
 /**
  * A "Spirit Object" is something which cannot exist independently like an
@@ -16,7 +16,7 @@ import sim.interfaces.IUnique;
  * @author borah
  *
  */
-public interface ISpiritObject extends IUnique {
+public interface ISpiritObject extends IUniqueThing {
 
 	public static enum SpiritType {
 		/** souls, for living things */

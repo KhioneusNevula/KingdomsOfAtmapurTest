@@ -53,6 +53,23 @@ public interface IInteractability {
 	}
 
 	/**
+	 * Non-varargs implementation of
+	 * {@link #interactibleWith(int, IInteractability...)}
+	 * 
+	 * @param factor
+	 * @param interactabilities
+	 * @return
+	 */
+	public static boolean interactibleWith(int interactedTo, Iterable<IInteractability> interactibilities) {
+		for (IInteractability in : interactibilities) {
+			if (interactedTo % in.primeFactor() == 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * For when two objects collide: what kind of collision occurred
 	 * 
 	 * @author borah

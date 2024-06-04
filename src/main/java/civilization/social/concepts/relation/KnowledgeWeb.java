@@ -1,18 +1,33 @@
 package civilization.social.concepts.relation;
 
 import civilization.social.concepts.IConcept;
+import civilization.social.concepts.profile.Profile;
 import utilities.RelationalGraph;
 
 /**
- * A graph storage of knowledge in a mind(?), culture, etc
+ * A graph storage of knowledge in a mind(?), culture, etc. Does not allow bare
+ * nodes, since a concept with no connections is fundamentally unknown.
  * 
  * @author borah
  *
  */
-public class KnowledgeWeb extends RelationalGraph<IConcept, RelationType, IConcept> {
+public class KnowledgeWeb
+		extends RelationalGraph<IConcept, IConceptRelationType<? extends IConceptRelationType<?>>, IConcept> {
 
-	public KnowledgeWeb() {
-		super(true);
+	private Profile selfProfile;
+
+	/**
+	 * 
+	 * @param selfProfile the profile representing the self of the owner of this
+	 *                    knowledge, made into a root node
+	 */
+	public KnowledgeWeb(Profile selfProfile) {
+		super(selfProfile);
+		this.selfProfile = selfProfile;
+	}
+
+	public Profile getSelfProfile() {
+		return selfProfile;
 	}
 
 }

@@ -9,6 +9,24 @@ public interface IPhenomenonType extends IObjectType {
 	public String name();
 
 	public static enum Properties {
+
+		/**
+		 * If this is a world phenomenon, i.e. present in the environment, not
+		 * physically in the gameplay arena
+		 */
+		WORLD_PHENOMENON,
+		/**
+		 * If this phenomenon makes ambient darkness
+		 */
+		AMBIENT_DARK,
+		/**
+		 * If this phenomenon makes ambient light
+		 */
+		AMBIENT_LIGHT,
+		/**
+		 * If this phenomenon is visible in the sky
+		 */
+		IN_SKY,
 		/**
 		 * if this phenomenon always has a direct, clear source entity that generated
 		 * it. This does not apply to things which have a more indirect source.
@@ -54,5 +72,10 @@ public interface IPhenomenonType extends IObjectType {
 	public boolean isEvent();
 
 	Collection<Properties> getProperties();
+
+	@Override
+	default ConceptType getConceptType() {
+		return ConceptType.PHENOMENON_TYPE;
+	}
 
 }

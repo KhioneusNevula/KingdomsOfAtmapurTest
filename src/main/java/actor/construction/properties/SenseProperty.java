@@ -1,34 +1,69 @@
 package actor.construction.properties;
 
 import java.awt.Color;
+import java.util.Collection;
 import java.util.UUID;
 
-public class SenseProperty<T> implements Comparable<SenseProperty<?>> {
+import com.google.common.collect.ImmutableSet;
 
-	public static final SenseProperty<IColor> COLOR = new SenseProperty<>("color", IColor.class);
-	public static final SenseProperty<IShape> SHAPE = new SenseProperty<>("shape", IShape.class);
-	public static final SenseProperty<ITexture> TEXTURE = new SenseProperty<>("texture", ITexture.class);
-	public static final SenseProperty<ISmell> SMELL = new SenseProperty<>("smell", ISmell.class);
-	public static final SenseProperty<ISound> SOUND = new SenseProperty<>("sound", ISound.class);
-	public static final SenseProperty<Boolean> TRANSLUCENCE = new SenseProperty<>("translucence", Boolean.class);
-	public static final UniqueProperty SIGNATURE_SHAPE = new UniqueProperty("signature_shape");
+import actor.construction.properties.SenseProperty.WrapperSensableTrait.FloatTrait;
+import biology.sensing.ISense;
+
+/**
+ * Sense properties are properties that can be sensed about an object.
+ * 
+ * @author borah
+ *
+ * @param <T>
+ */
+public class SenseProperty<T extends ISensableTrait> implements Comparable<SenseProperty<?>> {
+
+	public static final SenseProperty<IColor> COLOR = new SenseProperty<>("color", IColor.class, BasicColor.COLORLESS);
+	public static final SenseProperty<IShape> SHAPE = new SenseProperty<>("shape", IShape.class, BasicShape.FORMLESS);
+	public static final SenseProperty<ITexture> TEXTURE = new SenseProperty<>("texture", ITexture.class,
+			BasicTexture.IMMATERIAL);
+	public static final SenseProperty<ISmell> SMELL = new SenseProperty<>("smell", ISmell.class, BasicSmell.NONE);
+	public static final SenseProperty<ISound> SOUND = new SenseProperty<>("sound", ISound.class, BasicSound.NONE);
+	/**
+	 * 1.0f is opaque, 0.0f is transparent
+	 */
+	public static final SenseProperty<FloatTrait> OPACITY = new SenseProperty<>("opacity", FloatTrait.class,
+			FloatTrait.ONE);
 
 	private Class<T> type;
 
 	private String name;
+	private Collection<ISense> expressedToSenses;
+	private T defaultValue;
 
-	public SenseProperty(String name, Class<T> type) {
+	public SenseProperty(String name, Class<T> type, T defaultValue, ISense... toSenses) {
 		this.type = type;
 		this.name = name;
+		this.expressedToSenses = ImmutableSet.copyOf(toSenses);
+		this.defaultValue = defaultValue;
 
+	}
+
+	/**
+	 * The default value of this property, if not set in an entity's visage
+	 * 
+	 * @return
+	 */
+	public T getDefaultValue() {
+		return defaultValue;
+	}
+
+	/**
+	 * What senses this property is expressed to
+	 * 
+	 * @return
+	 */
+	public Collection<ISense> getSensesExpressedTo() {
+		return expressedToSenses;
 	}
 
 	public Class<T> getType() {
 		return type;
-	}
-
-	public boolean isUnique() {
-		return this instanceof UniqueProperty;
 	}
 
 	public String getName() {
@@ -54,20 +89,87 @@ public class SenseProperty<T> implements Comparable<SenseProperty<?>> {
 		return this.getUniqueName();
 	}
 
-	public static class UniqueProperty extends SenseProperty<UUID> {
-		public UniqueProperty(String name) {
-			super(name, UUID.class);
+	public static abstract class WrapperSensableTrait<T> implements ISensableTrait {
+
+		private T wrapped;
+
+		public WrapperSensableTrait(T wrapped) {
+			this.wrapped = wrapped;
+		}
+
+		public T getValue() {
+			return wrapped;
+		}
+
+		@Override
+		public boolean isUnique() {
+			return false;
+		}
+
+		public static class FloatTrait extends WrapperSensableTrait<Float> {
+
+			public static final FloatTrait ONE = new FloatTrait(1f);
+			public static final FloatTrait ZERO = new FloatTrait(0f);
+
+			public FloatTrait(Float wrapped) {
+				super(wrapped);
+			}
+		}
+
+		public static class IntegerTrait extends WrapperSensableTrait<Integer> {
+			public static final IntegerTrait ZERO = new IntegerTrait(1);
+
+			public IntegerTrait(Integer wrapped) {
+				super(wrapped);
+			}
+		}
+
+		public static class BooleanTrait extends WrapperSensableTrait<Boolean> {
+			public static final BooleanTrait FALSE = new BooleanTrait(false);
+			public static final BooleanTrait TRUE = new BooleanTrait(true);
+
+			private BooleanTrait(Boolean wrapped) {
+				super(wrapped);
+			}
 		}
 	}
 
-	public static interface ISound {
+	public static interface ISound extends ISensableTrait {
 		public String getName();
 
 		public boolean repetitive();
+
+	}
+
+	public static class UniqueSound implements ISound {
+		private UUID id;
+		private boolean repetitive;
+
+		public UniqueSound(UUID id, boolean repetitive) {
+			this.id = id;
+			this.repetitive = repetitive;
+		}
+
+		@Override
+		public String getName() {
+			return "usound" + this.id;
+		}
+
+		@Override
+		public boolean isUnique() {
+			return true;
+		}
+
+		@Override
+		public boolean repetitive() {
+			return repetitive;
+		}
 	}
 
 	public static enum BasicSound implements ISound {
-		HEARTBEAT(true), SMACK, CHEW, CRACK, CRACKLING(true), ROAR;
+		HEARTBEAT(true), SMACK, CHEW, CRACK, CRACKLING(true), BOOM, ROAR, RAIN(true),
+		/** lack of sound */
+		NONE;
 
 		private boolean repetitive;
 
@@ -92,9 +194,19 @@ public class SenseProperty<T> implements Comparable<SenseProperty<?>> {
 		public boolean repetitive() {
 			return repetitive;
 		}
+
+		@Override
+		public boolean canBeSensed() {
+			return this != NONE;
+		}
+
+		@Override
+		public boolean isUnique() {
+			return false;
+		}
 	}
 
-	public static interface ISmell {
+	public static interface ISmell extends ISensableTrait {
 		public String getName();
 
 		public boolean isAcrid();
@@ -102,9 +214,43 @@ public class SenseProperty<T> implements Comparable<SenseProperty<?>> {
 		public boolean isSweet();
 	}
 
+	public static class UniqueSmell implements ISmell {
+		private UUID id;
+		private boolean sweet;
+		private boolean acrid;
+
+		public UniqueSmell(UUID id, boolean sweet, boolean acrid) {
+			this.id = id;
+			this.sweet = sweet;
+			this.acrid = acrid;
+		}
+
+		@Override
+		public String getName() {
+			return "usmell" + this.id;
+		}
+
+		@Override
+		public boolean isAcrid() {
+			return acrid;
+		}
+
+		@Override
+		public boolean isSweet() {
+			return sweet;
+		}
+
+		@Override
+		public boolean isUnique() {
+			return true;
+		}
+	}
+
 	public static enum BasicSmell implements ISmell {
 		FOODY, WATERY, SWEATY, EARTHY, FLOWER(false, true), BAKED(false, true), TRASH(true, false),
-		EXCREMENT(true, false), SICKLY_SWEET(true, true);
+		EXCREMENT(true, false), SICKLY_SWEET(true, true), BURNING(true, false),
+		/** lack of smell */
+		NONE;
 
 		boolean acrid;
 		boolean sweet;
@@ -136,14 +282,26 @@ public class SenseProperty<T> implements Comparable<SenseProperty<?>> {
 		public boolean isSweet() {
 			return sweet;
 		}
+
+		@Override
+		public boolean isUnique() {
+			return false;
+		}
+
+		@Override
+		public boolean canBeSensed() {
+			return this != NONE;
+		}
 	}
 
-	public static interface ITexture {
+	public static interface ITexture extends ISensableTrait {
 		public String getName();
 	}
 
 	public static enum BasicTexture implements ITexture {
-		SMOOTH, STICKY, LEATHERY, SOFT, SPIKY, BUMPY, POWDERY, SILKY, FIRM, SQUISHY, COARSE, ROUGH, HARD, CARTILAGIOUS;
+		/** for things that are not physical and have no texture */
+		IMMATERIAL, SMOOTH, WET, SMOKY, STICKY, LEATHERY, SOFT, SPIKY, BUMPY, POWDERY, SILKY, FIRM, SQUISHY, COARSE,
+		ROUGH, HARD, CARTILAGIOUS;
 
 		@Override
 		public String getName() {
@@ -154,10 +312,46 @@ public class SenseProperty<T> implements Comparable<SenseProperty<?>> {
 		public String toString() {
 			return getName();
 		}
+
+		@Override
+		public boolean isUnique() {
+			return false;
+		}
+
+		@Override
+		public boolean canBeSensed() {
+			return this != IMMATERIAL;
+		}
 	}
 
-	public static interface IShape {
+	public static interface IShape extends ISensableTrait {
 		public String getName();
+
+	}
+
+	public static class UniqueShape implements IShape {
+		private UUID id;
+		private IShape alike;
+
+		public UniqueShape(UUID id, IShape alikeTo) {
+			this.id = id;
+			this.alike = alikeTo;
+		}
+
+		@Override
+		public ISensableTrait resembles() {
+			return alike;
+		}
+
+		@Override
+		public String getName() {
+			return "ushape" + id;
+		}
+
+		@Override
+		public boolean isUnique() {
+			return true;
+		}
 	}
 
 	public static enum BasicShape implements IShape {
@@ -165,7 +359,7 @@ public class SenseProperty<T> implements Comparable<SenseProperty<?>> {
 		LIMB, HAND, ORIFICE, FOOT, PAW, HOOF, TAIL, FACE, TOOTH, FANG, EAR, MOUSTACHE, BEARD, BOWL, BRACKET, POINTY_EAR,
 		ANIMAL_EAR, ELEPHANT_EAR, FLOWER, BRANCH, LEAF, TRUNK, ROCKY, MOUNTAIN, CRYSTALLINE, POWDER, BLOB, PASTE,
 		TAPERING_ROD, HAIR_MASS, THIN_STRAND, PILLOW, MINUS_EIGHT, PELVIS, BRAIN, HEART, SKULL, SHORT_NECK, STRINGY,
-		LIQUID, FORMLESS;
+		LIQUID, FORMLESS, CIRCLE;
 
 		@Override
 		public String getName() {
@@ -176,9 +370,14 @@ public class SenseProperty<T> implements Comparable<SenseProperty<?>> {
 		public String toString() {
 			return getName();
 		}
+
+		@Override
+		public boolean isUnique() {
+			return false;
+		}
 	}
 
-	public static interface IColor {
+	public static interface IColor extends ISensableTrait {
 		/**
 		 * may be null for colors beyond natural colors or no color
 		 * 
@@ -219,6 +418,11 @@ public class SenseProperty<T> implements Comparable<SenseProperty<?>> {
 
 		public String getName() {
 			return "color_" + name();
+		}
+
+		@Override
+		public boolean isUnique() {
+			return false;
 		}
 
 		@Override

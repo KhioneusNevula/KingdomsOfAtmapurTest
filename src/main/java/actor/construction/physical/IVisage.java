@@ -1,17 +1,73 @@
 package actor.construction.physical;
 
+import java.util.Collection;
+
 import actor.IUniqueEntity;
+import actor.construction.properties.ISensableTrait;
+import actor.construction.properties.SenseProperty;
+import biology.sensing.ISense;
 import sim.interfaces.IObjectType;
 import sim.physicality.IInteractability;
 
 public interface IVisage {
 
 	/**
-	 * Using {@link IInteractability} to indicate visibility
+	 * Using {@link IInteractability} to indicate sensability mode to the given
+	 * sense
 	 * 
 	 * @return
 	 */
-	public int visibilityMode();
+	public int sensabilityMode(ISense toSense);
+
+	public Collection<? extends IComponentPart> getParts();
+
+	/**
+	 * Get parts that are outermost (and usually sense-able)
+	 * 
+	 * @return
+	 */
+	public Collection<? extends IComponentPart> getOutermostParts();
+
+	/**
+	 * Get a salient general property of this entity, if it has properties which are
+	 * not localized to specific parts
+	 * 
+	 * @param <A>
+	 * @param property
+	 * @param ignoreType whether to only get traits specific to the body part and
+	 *                   not the type as a whole
+	 * @return
+	 */
+	public <A extends ISensableTrait> A getGeneralProperty(SenseProperty<A> property, boolean ignoreType);
+
+	/**
+	 * Get all general properties that are not tied to specific parts
+	 * 
+	 * @return
+	 */
+	public Collection<SenseProperty<?>> getGeneralSensableProperties();
+
+	/**
+	 * If this template consists only of one main part. For example, a rock. s
+	 * 
+	 * @return
+	 */
+	public boolean hasSinglePart();
+
+	/**
+	 * For single-part actors, the component encompassing its entire entity. Throw
+	 * exception if not single-part
+	 * 
+	 * @return
+	 */
+	public IComponentPart mainComponent();
+
+	/**
+	 * Change the sensability of this thing
+	 * 
+	 * @param newVisibility
+	 */
+	public void changeSensability(int newVisibility);
 
 	/**
 	 * gets the "type" of this visage, the species, etc
@@ -21,11 +77,11 @@ public interface IVisage {
 	public IObjectType getObjectType();
 
 	/**
-	 * If this visage is a multipart entity
+	 * If this visage is an actor
 	 * 
 	 * @return
 	 */
-	default boolean isMultipart() {
+	default boolean isActorObject() {
 		return this instanceof IPhysicalActorObject;
 	}
 
@@ -37,7 +93,7 @@ public interface IVisage {
 	 * @param <C>
 	 * @return
 	 */
-	default <A extends IComponentType, B extends IMaterialLayerType, C extends IComponentPart> IPhysicalActorObject getAsMultipart() {
+	default IPhysicalActorObject getAsActorObject() {
 		return (IPhysicalActorObject) this;
 	}
 

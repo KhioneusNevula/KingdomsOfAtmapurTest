@@ -1,9 +1,12 @@
 package actor.construction.simple;
 
+import java.util.Collection;
 import java.util.Map;
 
 import actor.construction.physical.IMaterialLayer;
 import actor.construction.physical.IMaterialLayerType;
+import actor.construction.properties.ISensableTrait;
+import actor.construction.properties.SenseProperty;
 import sim.physicality.PhysicalState;
 
 public class SimpleMaterialLayer implements IMaterialLayer {
@@ -32,6 +35,16 @@ public class SimpleMaterialLayer implements IMaterialLayer {
 		} else {
 			throw new IllegalArgumentException();
 		}
+	}
+
+	@Override
+	public <T extends ISensableTrait> T getProperty(SenseProperty<T> property, boolean ignoreType) {
+		return ignoreType ? null : this.type.getTrait(property);
+	}
+
+	@Override
+	public Collection<SenseProperty<?>> getSensableProperties() {
+		return type.getSensableProperties();
 	}
 
 	public Map<IMaterialLayerType, SimpleMaterialLayer> getSubLayers() {

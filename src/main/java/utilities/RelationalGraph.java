@@ -22,7 +22,7 @@ import com.google.common.collect.Table;
  * @param <EdgeType> organizing datatype for edges
  * @param <EdgeData> what kind of data is stored in edges
  */
-public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<EdgeType>, EdgeData> {
+public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<? extends EdgeType>, EdgeData> {
 
 	/**
 	 * Represents a single node in the graph. Nodes store all their connections for
@@ -35,7 +35,14 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * @param <EdgeType>
 	 * @param <EdgeData>
 	 */
-	public static interface INode<NodeData, EdgeType extends IInvertibleRelationType<EdgeType>, EdgeData> {
+	public static interface INode<NodeData, EdgeType extends IInvertibleRelationType<? extends EdgeType>, EdgeData> {
+
+		/**
+		 * IF this node is a root node, i.e. it does not get deleted in any circumstance
+		 * 
+		 * @return
+		 */
+		public boolean isRoot();
 
 		/**
 		 * Whether this node is still in the graph. Intended for ensuring that
@@ -127,6 +134,34 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 		 */
 		public boolean hasEdge(IEdge<NodeData, EdgeType, EdgeData> edge);
 
+		/**
+		 * Returns all nodes connected to this one
+		 * 
+		 * @return
+		 */
+		public Collection<INode<NodeData, EdgeType, EdgeData>> getAllConnectedNodes();
+
+		/**
+		 * Returns all nodes connected to this one of the given type
+		 * 
+		 * @return
+		 */
+		public Collection<INode<NodeData, EdgeType, EdgeData>> getAllConnectedNodes(EdgeType type);
+
+		/**
+		 * Return types of all relations connected to this node
+		 * 
+		 * @return
+		 */
+		public Collection<EdgeType> getAllConnectedRelationTypes();
+
+		/**
+		 * Return types of all relations between this node and the given other node
+		 * 
+		 * @return
+		 */
+		public Collection<EdgeType> getAllConnectedRelationTypes(INode<NodeData, EdgeType, EdgeData> node);
+
 	}
 
 	/**
@@ -140,7 +175,7 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * @param <EdgeType>
 	 * @param <EdgeData>
 	 */
-	public interface IEdge<NodeData, EdgeType extends IInvertibleRelationType<EdgeType>, EdgeData> {
+	public interface IEdge<NodeData, EdgeType extends IInvertibleRelationType<? extends EdgeType>, EdgeData> {
 
 		/**
 		 * Whether this edge is still in the graph. Intended for ensuring that
@@ -206,11 +241,17 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	private class Node implements INode<NodeData, EdgeType, EdgeData> {
 
 		private NodeData data;
+		private boolean isRoot;
 		private Table<INode<NodeData, EdgeType, EdgeData>, EdgeType, IEdge<NodeData, EdgeType, EdgeData>> edges;
 		private boolean active = true;
 
-		private Node(NodeData data) {
+		private Node(NodeData data, boolean isRoot) {
 			this.data = data;
+		}
+
+		@Override
+		public boolean isRoot() {
+			return isRoot;
 		}
 
 		public boolean inGraph() {
@@ -337,6 +378,26 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 			return Iterables.concat(iters);
 		}
 
+		@Override
+		public Collection<INode<NodeData, EdgeType, EdgeData>> getAllConnectedNodes() {
+			return this.edges == null ? Collections.emptySet() : this.edges.rowKeySet();
+		}
+
+		@Override
+		public Collection<INode<NodeData, EdgeType, EdgeData>> getAllConnectedNodes(EdgeType type) {
+			return this.edges == null ? Collections.emptySet() : this.edges.column(type).keySet();
+		}
+
+		@Override
+		public Collection<EdgeType> getAllConnectedRelationTypes() {
+			return this.edges == null ? Collections.emptySet() : this.edges.columnKeySet();
+		}
+
+		@Override
+		public Collection<EdgeType> getAllConnectedRelationTypes(INode<NodeData, EdgeType, EdgeData> node) {
+			return this.edges == null ? Collections.emptySet() : this.edges.row(node).keySet();
+		}
+
 	}
 
 	private class Edge implements IEdge<NodeData, EdgeType, EdgeData> {
@@ -399,7 +460,7 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 
 		@Override
 		public void setData(EdgeData data) {
-			this.setData(data);
+			this.data = data;
 		}
 
 		@Override
@@ -507,8 +568,6 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 
 	}
 
-	private boolean allowBareNodes;
-
 	private HashMap<NodeData, Node> nodes;
 	private HashSet<Edge> edges;
 	private ImmutableCollection<Node> iNodes;
@@ -518,12 +577,14 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * @param allowBareNodes Whether this graph should allow nodes with no
 	 *                       connections
 	 */
-	public RelationalGraph(boolean allowBareNodes) {
-		this.allowBareNodes = allowBareNodes;
+	public RelationalGraph(NodeData... rootNodes) {
 		nodes = new HashMap<>();
 		iNodes = new ImmutableCollection<>(nodes.values());
 		edges = new HashSet<>();
 		iEdges = new ImmutableCollection<>(edges);
+		for (NodeData nd : rootNodes) {
+			this.addNewRootNode(nd);
+		}
 
 	}
 
@@ -532,7 +593,7 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * 
 	 * @return
 	 */
-	public Collection<Node> getNodeSet() {
+	public Collection<? extends INode<NodeData, EdgeType, EdgeData>> getNodeSet() {
 		return iNodes;
 	}
 
@@ -541,17 +602,18 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * 
 	 * @return
 	 */
-	public Collection<Edge> getEdgeSet() {
+	public Collection<? extends IEdge<NodeData, EdgeType, EdgeData>> getEdgeSet() {
 		return iEdges;
 	}
 
 	/**
-	 * Whether this graph allows nodes with no connections
+	 * Gets the node of this data, or null if it doesn't exist
 	 * 
+	 * @param concept
 	 * @return
 	 */
-	public boolean allowsBareNodes() {
-		return allowBareNodes;
+	public INode<NodeData, EdgeType, EdgeData> getNode(NodeData concept) {
+		return this.nodes.get(concept);
 	}
 
 	/**
@@ -562,6 +624,15 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 */
 	public boolean containsNode(NodeData data) {
 		return this.nodes.containsKey(data);
+	}
+
+	/**
+	 * Make a certain node a root node
+	 * 
+	 * @param node
+	 */
+	public void setAsRootNode(Node node) {
+		node.isRoot = true;
 	}
 
 	/**
@@ -583,8 +654,8 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * @return
 	 */
 	public boolean edgeExists(NodeData one, NodeData two, EdgeType type) {
-		Node o = this.getNode(one);
-		Node t = this.getNode(two);
+		Node o = this.getExistingNode(one);
+		Node t = this.getExistingNode(two);
 		if (o == null || t == null)
 			return false;
 		return o.getEdgeOfTypeWith(t, type) != null;
@@ -598,8 +669,8 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * @return
 	 */
 	public int countEdgesBetween(NodeData from, NodeData to) {
-		Node o = this.getNode(from);
-		Node t = this.getNode(to);
+		Node o = this.getExistingNode(from);
+		Node t = this.getExistingNode(to);
 		if (o == null || t == null)
 			return 0;
 		return o.countEdgesWith(t);
@@ -614,23 +685,20 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * @return
 	 */
 	public IEdge<NodeData, EdgeType, EdgeData> getEdge(NodeData one, NodeData two, EdgeType type) {
-		Node o = this.getNode(one);
-		Node t = this.getNode(two);
+		Node o = this.getExistingNode(one);
+		Node t = this.getExistingNode(two);
 		if (o == null || t == null)
 			return null;
 		return o.getEdgeOfTypeWith(t, type);
 	}
 
 	/**
-	 * Create a new node in the graph with no connections. If the graph doesn't
-	 * allow bare nodes, throw exception. Return the node
+	 * Create a new <em> root </em> node in the graph with no connections.
 	 * 
 	 * @param data
 	 */
-	public INode<NodeData, EdgeType, EdgeData> addNewNode(NodeData data) {
-		if (!this.allowBareNodes)
-			throw new UnsupportedOperationException();
-		Node a = new Node(data);
+	public INode<NodeData, EdgeType, EdgeData> addNewRootNode(NodeData data) {
+		Node a = new Node(data, true);
 		this.nodes.put(data, a);
 		return a;
 	}
@@ -653,7 +721,7 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * @return
 	 */
 	public Node removeNode(NodeData node) {
-		Node o = this.getNode(node);
+		Node o = this.getExistingNode(node);
 		if (o == null)
 			return null;
 		this.removeNode(o);
@@ -673,7 +741,7 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 		for (IEdge<NodeData, EdgeType, EdgeData> edge : node.edges.values()) {
 			Node right = (Node) edge.getRightNode();
 			right.removeEdge(edge.inverse());
-			if (right.countEdges() == 0 && !allowBareNodes)
+			if (right.countEdges() == 0 && !right.isRoot)
 				this.deleteNode(right);
 			this.edges.remove(edge);
 		}
@@ -688,8 +756,8 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	 * @return
 	 */
 	public IEdge<NodeData, EdgeType, EdgeData> removeEdge(NodeData one, NodeData two, EdgeType type) {
-		Node a = getNode(one);
-		Node b = getNode(two);
+		Node a = getExistingNode(one);
+		Node b = getExistingNode(two);
 		if (a == null || b == null)
 			return null;
 		return removeEdge(a, b, type);
@@ -715,14 +783,13 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 		} else if (edge instanceof Edge.InverseEdge ie) {
 			ie.setActive(false);
 		}
-		if (!allowBareNodes) {
-			if (one.countEdges() <= 0) {
-				deleteNode(one);
-			}
-			if (two.countEdges() <= 0) {
-				deleteNode(two);
-			}
+		if (!one.isRoot && one.countEdges() <= 0) {
+			deleteNode(one);
 		}
+		if (!two.isRoot && two.countEdges() <= 0) {
+			deleteNode(two);
+		}
+
 		return edge;
 	}
 
@@ -764,10 +831,10 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	}
 
 	private Node getOrCreateNode(NodeData dat) {
-		return this.nodes.computeIfAbsent(dat, (a) -> new Node(a));
+		return this.nodes.computeIfAbsent(dat, (a) -> new Node(a, false));
 	}
 
-	private Node getNode(NodeData dat) {
+	private Node getExistingNode(NodeData dat) {
 		return this.nodes.get(dat);
 	}
 

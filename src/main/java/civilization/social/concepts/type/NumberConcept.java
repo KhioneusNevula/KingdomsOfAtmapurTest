@@ -23,6 +23,11 @@ public abstract class NumberConcept<E extends Number> implements IConcept {
 	}
 
 	@Override
+	public ConceptType getConceptType() {
+		return ConceptType.NUMBER;
+	}
+
+	@Override
 	public int hashCode() {
 		return 1 + this.value.hashCode();
 	}

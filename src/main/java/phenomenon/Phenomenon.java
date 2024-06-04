@@ -3,7 +3,7 @@ package phenomenon;
 import java.util.Random;
 import java.util.UUID;
 
-import sim.WorldDimension;
+import sim.GameMapTile;
 
 /**
  * TODO someday do phenomenon
@@ -13,7 +13,7 @@ import sim.WorldDimension;
  */
 public abstract class Phenomenon implements IPhenomenon {
 
-	private WorldDimension world;
+	private GameMapTile world;
 	private UUID id = UUID.randomUUID();
 	private IPhenomenonType type;
 	protected int maxLifeTime = -1;
@@ -34,13 +34,18 @@ public abstract class Phenomenon implements IPhenomenon {
 	}
 
 	@Override
-	public WorldDimension getWorld() {
+	public GameMapTile getWorld() {
 		return world;
 	}
 
 	@Override
 	public UUID getUUID() {
 		return id;
+	}
+
+	@Override
+	public String getUniqueName() {
+		return "phen_" + type.name().toLowerCase() + this.id;
 	}
 
 	@Override

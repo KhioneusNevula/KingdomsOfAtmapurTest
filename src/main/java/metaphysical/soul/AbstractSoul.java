@@ -6,32 +6,36 @@ import java.util.UUID;
 
 import actor.Actor;
 import actor.construction.physical.IComponentPart;
-import metaphysical.ISpiritObject;
-import metaphysical.ISpiritObject.SpiritType;
 
-public abstract class AbstractSoul implements ISpiritObject {
+public abstract class AbstractSoul implements ISoul {
 
 	private UUID id;
 	private Actor owner;
 	private IComponentPart container;
 	private Collection<IComponentPart> containerSingleton = Collections.emptySet();
-	private SoulGenerator soulgen;
+	private ISoulGenerator soulgen;
 
 	public AbstractSoul(UUID id) {
 		this.id = id;
 	}
 
-	public SoulGenerator getSoulGenerator() {
+	@Override
+	public ISoulGenerator getSoulGenerator() {
 		return soulgen;
 	}
 
-	public void setSoulGenerator(SoulGenerator soulgen) {
+	public void setSoulGenerator(ISoulGenerator soulgen) {
 		this.soulgen = soulgen;
 	}
 
 	@Override
 	public UUID getUUID() {
 		return id;
+	}
+
+	@Override
+	public String getUniqueName() {
+		return "soul" + this.id;
 	}
 
 	@Override

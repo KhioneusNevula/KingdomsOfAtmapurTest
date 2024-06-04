@@ -3,13 +3,13 @@ package actor.types.abstract_classes;
 import actor.Actor;
 import actor.construction.physical.IActorType;
 import actor.construction.physical.IPhysicalActorObject;
-import sim.WorldDimension;
+import sim.GameMapTile;
 
 public abstract class MultipartActor extends Actor {
 
 	protected IPhysicalActorObject body;
 
-	public MultipartActor(WorldDimension world, String name, IActorType template, int startX, int startY) {
+	public MultipartActor(GameMapTile world, String name, IActorType template, int startX, int startY) {
 		super(world, name, template, startX, startY);
 	}
 

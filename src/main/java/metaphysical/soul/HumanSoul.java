@@ -36,4 +36,9 @@ public class HumanSoul extends SapientSoul {
 		return wantsToDie;
 	}
 
+	@Override
+	public SoulType getObjectType() {
+		return SoulType.SAPIENT;
+	}
+
 }

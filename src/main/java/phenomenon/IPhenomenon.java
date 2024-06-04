@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import actor.Actor;
 import actor.IUniqueEntity;
-import sim.WorldDimension;
+import sim.GameMapTile;
 import sim.interfaces.IRenderable;
 
 public interface IPhenomenon extends IUniqueEntity, IRenderable {
@@ -64,7 +64,7 @@ public interface IPhenomenon extends IUniqueEntity, IRenderable {
 	 */
 	public void tick();
 
-	public WorldDimension getWorld();
+	public GameMapTile getWorld();
 
 	public boolean isRelational();
 }
