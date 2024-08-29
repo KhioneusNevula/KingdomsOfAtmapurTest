@@ -5,7 +5,7 @@ import energy.EnergyStorage;
 import energy.IEnergyStorage;
 import energy.IEnergyUnit;
 
-public class EnergySystem extends ESystem implements IEnergyStorage {
+public abstract class EnergySystem extends ESystem implements IEnergyStorage {
 
 	private EnergyStorage storage;
 

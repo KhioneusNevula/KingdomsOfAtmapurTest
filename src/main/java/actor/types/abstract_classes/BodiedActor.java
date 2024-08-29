@@ -1,33 +1,35 @@
 package actor.types.abstract_classes;
 
-import biology.anatomy.Body;
+import biology.anatomy.AbstractBody;
 import biology.anatomy.ISpecies;
+import biology.anatomy.MainBody;
 import sim.GameMapTile;
 
 public abstract class BodiedActor extends MultipartActor {
 
 	public BodiedActor(GameMapTile world, String name, ISpecies template, int startX, int startY) {
 		super(world, name, template, startX, startY);
+		this.initBody();
 	}
 
 	protected void initBody() {
 		if (species == null)
-			this.body = new Body(this, 10, 70);
+			throw new IllegalStateException("species is null");
 		else {
-			this.body = new Body(this, (ISpecies) species);
+			this.body = new MainBody(this, (ISpecies) species);
 
 		}
-		((Body) this.body).buildBody();
+		((MainBody) this.body).buildBody();
 	}
 
 	@Override
-	public Body getBody() {
-		return (Body) super.getBody();
+	public AbstractBody getBody() {
+		return (AbstractBody) super.getBody();
 	}
 
 	@Override
-	public Body getPhysical() {
-		return (Body) super.getPhysical();
+	public AbstractBody getPhysical() {
+		return (AbstractBody) super.getPhysical();
 	}
 
 	@Override
@@ -36,8 +38,8 @@ public abstract class BodiedActor extends MultipartActor {
 	}
 
 	@Override
-	public Body getVisage() {
-		return (Body) super.getVisage();
+	public AbstractBody getVisage() {
+		return (AbstractBody) super.getVisage();
 	}
 
 	@Override

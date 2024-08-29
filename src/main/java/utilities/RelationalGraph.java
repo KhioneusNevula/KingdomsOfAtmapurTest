@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.HashBasedTable;
@@ -247,6 +248,7 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 
 		private Node(NodeData data, boolean isRoot) {
 			this.data = data;
+			this.isRoot = isRoot;
 		}
 
 		@Override
@@ -363,7 +365,7 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 
 		@Override
 		public String toString() {
-			return "(" + this.data + ")";
+			return (this.isRoot ? "[" : "(") + this.data + (this.isRoot ? "]" : ")");
 		}
 
 		@Override
@@ -573,15 +575,19 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 	private ImmutableCollection<Node> iNodes;
 	private ImmutableCollection<Edge> iEdges;
 
+	public RelationalGraph() {
+		nodes = new HashMap<>();
+		iNodes = new ImmutableCollection<>(nodes.values());
+		edges = new HashSet<>();
+		iEdges = new ImmutableCollection<>(edges);
+	}
+
 	/**
 	 * @param allowBareNodes Whether this graph should allow nodes with no
 	 *                       connections
 	 */
 	public RelationalGraph(NodeData... rootNodes) {
-		nodes = new HashMap<>();
-		iNodes = new ImmutableCollection<>(nodes.values());
-		edges = new HashSet<>();
-		iEdges = new ImmutableCollection<>(edges);
+		this();
 		for (NodeData nd : rootNodes) {
 			this.addNewRootNode(nd);
 		}
@@ -836,6 +842,12 @@ public class RelationalGraph<NodeData, EdgeType extends IInvertibleRelationType<
 
 	private Node getExistingNode(NodeData dat) {
 		return this.nodes.get(dat);
+	}
+
+	@Override
+	public String toString() {
+		return "{roots=" + this.nodes.values().stream().filter(Node::isRoot).collect(Collectors.toSet()) + ", edges="
+				+ this.edges + "}";
 	}
 
 }

@@ -3,7 +3,7 @@ package actor.construction.physical;
 import java.util.Map;
 
 import actor.Actor;
-import metaphysical.soul.AbstractSoul;
+import metaphysical.soul.ISoul;
 import sim.interfaces.IObjectType;
 
 /**
@@ -71,7 +71,7 @@ public interface IActorType extends IObjectType {
 	 * @param gen
 	 * @return
 	 */
-	public AbstractSoul generateSoul(Actor a, IComponentPart forPart);
+	public ISoul generateSoul(Actor a, IComponentPart forPart);
 
 	@Override
 	default ConceptType getConceptType() {

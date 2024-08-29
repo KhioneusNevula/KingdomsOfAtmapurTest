@@ -1,6 +1,7 @@
 package metaphysical.soul;
 
 import metaphysical.ISpiritObject;
+import metaphysical.soul.generator.ISoulGenerator;
 
 public interface ISoul extends ISpiritObject {
 
@@ -10,5 +11,12 @@ public interface ISoul extends ISpiritObject {
 	 * @return
 	 */
 	ISoulGenerator getSoulGenerator();
+
+	/**
+	 * return info about this soul
+	 * 
+	 * @return
+	 */
+	String report();
 
 }

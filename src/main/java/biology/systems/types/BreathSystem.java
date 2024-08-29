@@ -1,9 +1,13 @@
 package biology.systems.types;
 
+import java.util.Collections;
+import java.util.stream.Stream;
+
 import actor.construction.ISystemHolder;
 import biology.systems.DoubleSystem;
 import biology.systems.ESystem;
 import biology.systems.SystemType;
+import civilization_and_minds.mind.goals.INeed;
 
 /**
  * TODO have a way to check the medium the entity is in
@@ -87,5 +91,17 @@ public class BreathSystem extends DoubleSystem {
 	 */
 	public boolean isUnableToBreathe() {
 		return !this.canBreathe || this.isSuffocating();
+	}
+
+	@Override
+	public boolean changedStateSinceLastUpdatedNeeds() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Stream<? extends INeed> generateNeeds() {
+		// TODO Auto-generated method stub
+		return Collections.<INeed>emptySet().stream();
 	}
 }

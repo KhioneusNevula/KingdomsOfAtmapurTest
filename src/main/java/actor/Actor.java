@@ -65,6 +65,8 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 
 	protected IActorType species;
 
+	private Actor holder;
+
 	/**
 	 * Amount of milliseconds it takes properties to fade
 	 */
@@ -158,29 +160,37 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 	public void movementTick(long tick) {
 
 		if (this.getPhysical().completelyDestroyed()) {
+			System.out.println("Removing " + this + " due to physical being destroyed. \nPhysical report: "
+					+ this.getPhysical().report());
 			this.remove();
 		}
+		if (!this.isHeld()) {
+			if (!this.isStationary() && !this.removed) {
+				this.x += xVelocity;
+				this.y += yVelocity;
+				Force fricForce = this.calculateDynamicFriction();
 
-		if (!this.isStationary() && !this.removed) {
-			this.x += xVelocity;
-			this.y += yVelocity;
-			Force fricForce = this.calculateDynamicFriction();
+				// System.out.println("dynamic friction: x=" + fricForce.getXForce() + "N,y=" +
+				// fricForce.getYForce() + "N");
+				// System.out.println("velocity: x=" + xVelocity + "m/s,y=" + yVelocity +
+				// "m/s");
 
-			System.out.println("dynamic friction: x=" + fricForce.getXForce() + "N,y=" + fricForce.getYForce() + "N");
-			System.out.println("velocity: x=" + xVelocity + "m/s,y=" + yVelocity + "m/s");
-
-			float xacc = fricForce.getXForce() / this.getMass();
-			float yacc = fricForce.getYForce() / this.getMass();
-			if (Math.abs(xacc) > Math.abs(xVelocity)) {
-				xVelocity = 0;
-			} else {
-				xVelocity += xacc;
+				float xacc = fricForce.getXForce() / this.getMass();
+				float yacc = fricForce.getYForce() / this.getMass();
+				if (Math.abs(xacc) > Math.abs(xVelocity)) {
+					xVelocity = 0;
+				} else {
+					xVelocity += xacc;
+				}
+				if (Math.abs(yacc) > Math.abs(yVelocity)) {
+					yVelocity = 0;
+				} else {
+					yVelocity += yacc;
+				}
 			}
-			if (Math.abs(yacc) > Math.abs(yVelocity)) {
-				yVelocity = 0;
-			} else {
-				yVelocity += yacc;
-			}
+		} else {
+			this.applyForce(Force.fromVectorAndMagnitude(holder.x - this.x, holder.y - this.y,
+					world.getStaticFrictionMu(this, getX(), getY()) * 1.5f));
 		}
 
 		world.getActors().forEach((act) -> {
@@ -197,7 +207,7 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 
 		for (ESystem sys : this.getSystems()) {
 			if (sys instanceof LifeSystem && ((LifeSystem) sys).isDead()) {
-				this.remove(); // TODO make some corpse feature idk idfk
+				// this.remove(); // TODO make some corpse feature idk idfk
 			}
 			if (sys.canUpdate()) {
 				sys._update(tick);
@@ -278,6 +288,33 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 
 	protected void setDragActive(boolean dragActive) {
 		this.dragActive = dragActive;
+	}
+
+	/**
+	 * Whether this actor is held
+	 * 
+	 * @return
+	 */
+	public boolean isHeld() {
+		return holder != null;
+	}
+
+	/**
+	 * Get the actor holding this one, if any
+	 * 
+	 * @return
+	 */
+	public Actor getHolder() {
+		return holder;
+	}
+
+	/**
+	 * Set the actor holding this one
+	 * 
+	 * @param holder
+	 */
+	public void setHolder(Actor holder) {
+		this.holder = holder;
 	}
 
 	@Override
@@ -386,6 +423,10 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 
 	public boolean reachable(ILocatable other) {
 		return this.distance(other) <= REACH;
+	}
+
+	public boolean reachable(int x, int y) {
+		return this.distance(x, y) <= REACH;
 	}
 
 	public int getReach() {
@@ -561,6 +602,13 @@ public abstract class Actor implements IUniqueEntity, IRenderable, IDynamicsObje
 			return MathHelp.pointInRect(x, y, this.getX(), this.getY(), this.getPhysical().getHitboxWidth(),
 					this.getPhysical().getHitboxHeight());
 		}
+	}
+
+	/**
+	 * Do things when actor is spawned
+	 */
+	public void onSpawn() {
+
 	}
 
 }

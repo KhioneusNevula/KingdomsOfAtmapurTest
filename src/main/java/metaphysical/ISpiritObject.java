@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import actor.Actor;
 import actor.construction.physical.IComponentPart;
-import civilization.mind.IMind;
+import civilization_and_minds.mind.IMind;
 import sim.interfaces.IUniqueThing;
 
 /**
@@ -94,14 +94,15 @@ public interface ISpiritObject extends IUniqueThing {
 	public boolean isTethered();
 
 	/**
-	 * Reattach this spirit to a new entity. Can have undefined behavior, and should
-	 * only be used in specific interactions. Put null for newparts if tethering to
-	 * whole
+	 * Reattach this spirit to a new entity and give it new tethers. Can have
+	 * undefined behavior, and should only be used in specific interactions. Put
+	 * null for newparts if tethering to whole. Updating tether references in
+	 * component part is responsibility of caller
 	 * 
 	 * @param newActor
 	 * @param newPart
 	 */
-	public void moveToNew(Actor newActor, Collection<IComponentPart> newParts);
+	public void tetherSpirit(Actor newActor, Collection<IComponentPart> newParts);
 
 	/**
 	 * Update this spirit per tick
@@ -112,6 +113,7 @@ public interface ISpiritObject extends IUniqueThing {
 
 	/**
 	 * Called when a part of the containing being is updated, e.g. state change.
+	 * Recheck tethers if needed.
 	 * 
 	 * @param part
 	 */

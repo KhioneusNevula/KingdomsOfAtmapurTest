@@ -5,19 +5,28 @@ import java.awt.event.KeyEvent;
 import java.awt.geom.Line2D;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import actor.Actor;
 import actor.construction.physical.IComponentPart;
 import actor.construction.physical.IMaterialLayer;
 import actor.construction.properties.SenseProperty.BasicColor;
 import actor.types.FoodActor;
+import actor.types.HumanoidActor;
+import actor.types.SeveredBodyPartActor;
+import biology.Species;
+import biology.anatomy.AbstractBody;
+import biology.anatomy.BodyPart;
 import biology.systems.ESystem;
+import civilization_and_minds.group.IGroup;
+import metaphysical.soul.HumanSoul;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
+import sim.GameUniverse;
 import sim.interfaces.IDynamicsObject.Force;
 import sim.interfaces.IRenderable;
-import sim.physicality.PhysicalState;
 import utilities.Pair;
 
 public class WorldGraphics extends PApplet {
@@ -106,37 +115,85 @@ public class WorldGraphics extends PApplet {
 	public void keyPressed(processing.event.KeyEvent event) {
 		int aMouseX = mouseX - BORDER;
 		int aMouseY = mouseY - BORDER;
-		if (event.getKeyCode() == KeyEvent.VK_W) {
-		} else if (event.getKeyCode() == KeyEvent.VK_SPACE) {
-		} else if (event.getKeyCode() == KeyEvent.VK_I) {
-		} else if (event.getKeyCode() == KeyEvent.VK_F) { // spawn food
-			world.spawnActor(new FoodActor(world.currentTile, "food" + world.getActors().size(), mouseX - BORDER,
-					mouseY - BORDER, 10, 5f, 1f)
-							.setColor(BasicColor.values()[world.rand().nextInt(BasicColor.values().length)]),
-					true);
-		} else if (event.getKeyCode() == KeyEvent.VK_T) {
-		} else if (event.getKeyCode() == KeyEvent.VK_R) {
-		} else if (event.getKeyCode() == KeyEvent.VK_X) { // strike/damage
+		synchronized (world) {
+			if (event.getKeyCode() == KeyEvent.VK_W) {
+			} else if (event.getKeyCode() == KeyEvent.VK_SPACE) {
 
-			Actor l = world.getActors().stream().filter((a) -> a.pointInHitbox(mouseX - BORDER, mouseY - BORDER))
-					.findAny().orElse(null);
-			if (l != null) {
-				IComponentPart part = l.getPhysical().getOutermostParts().iterator().next();
-				float angle = this.random(0, (float) (2 * Math.PI));
-				Force strikeForce = Force.fromAngleInRadians(angle, this.random(5, 100));
-				this.showLines.add(Pair.of(new Line2D.Float(mouseX, mouseY, mouseX + strikeForce.getXForce(),
-						mouseY + strikeForce.getYForce()), 30));
-				System.out.printf("Strike " + l + " on " + part + " of weight " + l.getWorld().getWeight(l)
-						+ "N with force " + strikeForce + " at %.2f°", Math.toDegrees(angle));
-				System.out.println();
-				l.applyForce(strikeForce, false);
-				for (IMaterialLayer mat : part.getMaterials().values()) {
-					if (!mat.getState().gone()) {
-						mat.changeState(PhysicalState.GONE);
-						break;
+				HumanoidActor l = (HumanoidActor) world.getActors().stream()
+						.filter((a) -> a instanceof HumanoidActor && a.pointInHitbox(mouseX - BORDER, mouseY - BORDER))
+						.findAny().orElse(null);
+				if (l != null) {
+					HumanSoul soul = (HumanSoul) l.getPhysical().getSoulReference();
+					IGroup gro = this.world.getGroups().values().stream().findFirst().orElse(null);
+					if (gro != null) {
+						soul.getMind().setParentCulture(gro.getAgentRepresentation(), gro.getKnowledge());
+					}
+				} else {
+					this.world.getGroups().values()
+							.forEach((a) -> System.out.println(a.getKnowledge().report() + "\n"));
+				}
+			} else if (event.getKeyCode() == KeyEvent.VK_I) {
+				HumanoidActor actor = new HumanoidActor(world.getCurrentTile(), "bobby" + world.getActors().size(),
+						Species.HUMAN, aMouseX, aMouseY);
+
+				world.spawnActor(actor, true);
+			} else if (event.getKeyCode() == KeyEvent.VK_F) { // spawn food
+				world.spawnActor(new FoodActor(world.getCurrentTile(), "food" + world.getActors().size(),
+						mouseX - BORDER, mouseY - BORDER, 10, 5f, 1f)
+								.setColor(BasicColor.values()[world.rand().nextInt(BasicColor.values().length)]),
+						true);
+			} else if (event.getKeyCode() == KeyEvent.VK_T) {
+			} else if (event.getKeyCode() == KeyEvent.VK_R) {
+			} else if (event.getKeyCode() == KeyEvent.VK_X) { // strike/damage
+
+				Actor l = world.getActors().stream().filter((a) -> a.pointInHitbox(mouseX - BORDER, mouseY - BORDER))
+						.findAny().orElse(null);
+				if (l != null) {
+					Stream<? extends IComponentPart> stream = l.getPhysical().getExposedParts();
+					Optional<? extends IComponentPart> opart = stream
+							.sorted((a, b) -> a.getMaterials().hashCode() - a.getMaterials().hashCode()).findAny();
+					if (!opart.isEmpty()) {
+						IComponentPart part = opart.get();
+						float angle = this.random(0, (float) (2 * Math.PI));
+						Force strikeForce = Force.fromAngleInRadians(angle,
+								this.random(l.getWorld().getWeight(l) * 0.5f, l.getWorld().getWeight(l) * 2f));
+						this.showLines.add(Pair.of(new Line2D.Float(mouseX, mouseY, mouseX + strikeForce.getXForce(),
+								mouseY + strikeForce.getYForce()), 30));
+						System.out.printf(
+								"Strike " + l + " of weight " + l.getWorld().getWeight(l) + "N with force "
+										+ strikeForce + " at %.2f°" + "\n\ton part " + part.report() + "\n",
+								Math.toDegrees(angle));
+						l.applyForce(strikeForce, false);
+						for (IMaterialLayer mat : part.getMaterials().values()) {
+							if (!mat.getState().gone()) {
+								int randomIters = (int) this.random(1, 3);
+								for (int i = 0; i < randomIters; i++)
+									mat.changeState(mat.getState().applyDamage());
+								break;
+							}
+						}
+						l.getPhysical().updatePart(part);
+						if (!part.getType().isHole() && !l.getPhysical().hasSinglePart()
+								&& (part.isGone() || this.random(12) < 4)
+								&& l.getPhysical() instanceof AbstractBody body) {
+							System.out.println("Severing " + part.toString());
+							body.severPart((BodyPart) part).forEach((a) -> {
+								SeveredBodyPartActor bp = new SeveredBodyPartActor(l.getWorld(), a, l.getX(), l.getY());
+								a.setOwner(bp);
+								System.out.println("Spawned severed part " + bp + " of " + bp.getPhysical().report());
+								l.getWorld().spawnActor(bp, true);
+								float angle2 = this.random(0, (float) (2 * Math.PI));
+								Force strikeForce2 = Force.fromAngleInRadians(angle2, bp.getWorld().getWeight(bp));
+								l.applyForce(strikeForce2, false);
+							});
+						}
+						System.out.println("\tresult:" + part.report());
 					}
 				}
-				l.getPhysical().updatePart(part);
+			} else if (event.getKeyCode() == KeyEvent.VK_TAB) {
+				System.out.println("=======================");
+				this.world.getActors().forEach((a) -> System.out.println(a.report() + "\n+++++++++"));
+				System.out.println("=======================");
 			}
 		}
 		super.keyPressed(event);
@@ -149,7 +206,7 @@ public class WorldGraphics extends PApplet {
 		Actor l = world.getActors().stream().filter((a) -> a.pointInHitbox(mouseX - BORDER, mouseY - BORDER)).findAny()
 				.orElse(null);
 		if (l != null) {
-			System.out.print(l.report());
+			System.out.println(l.report());
 
 			for (ESystem sys : l.getSystems()) {
 				System.out.print(";" + sys.report());

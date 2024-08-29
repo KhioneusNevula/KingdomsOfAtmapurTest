@@ -11,6 +11,64 @@ public enum PhysicalState {
 	METAPHYSICAL;
 
 	/**
+	 * Cause state change due to lowering temperatures
+	 * 
+	 * @return
+	 */
+	public PhysicalState coolingStateChange() {
+		if (this.isGas())
+			return LIQUID;
+		if (this.isLiquid())
+			return HARD_SOLID_WHOLE;
+		return this;
+	}
+
+	/**
+	 * Cause state change due to heat
+	 * 
+	 * @return
+	 */
+	public PhysicalState heatStateChange() {
+		if (this.isSolid())
+			return LIQUID;
+		if (this.isLiquid())
+			return GAS;
+		return this;
+	}
+
+	/**
+	 * Change this physical state into a more damaged version. Return self if there
+	 * is no such version.
+	 * 
+	 * @return
+	 */
+	public PhysicalState applyDamage() {
+		switch (this) {
+		case HARD_SOLID_WHOLE:
+			return HARD_SOLID_DAMAGED;
+		case HARD_SOLID_DAMAGED:
+			return HARD_SOLID_POWDER;
+		case HARD_SOLID_POWDER:
+			return GONE;
+		case FLEXIBLE_SOLID:
+			return RIPPED_FLEXIBLE_SOLID;
+		case RIPPED_FLEXIBLE_SOLID:
+			return GONE;
+		case SQUISHY_SOLID_WHOLE:
+			return SQUISHY_SOLID_DAMAGED;
+		case SQUISHY_SOLID_DAMAGED:
+			return SQUISHY_SOLID_PULPED;
+		case SQUISHY_SOLID_PULPED:
+			return SQUISHY_SOLID_PASTE;
+		case SQUISHY_SOLID_PASTE:
+			return GONE;
+		default:
+			return this;
+		}
+
+	}
+
+	/**
 	 * If this is a hard solid
 	 * 
 	 * @return

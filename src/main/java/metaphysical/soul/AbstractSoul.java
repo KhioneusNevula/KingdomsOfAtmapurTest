@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import actor.Actor;
 import actor.construction.physical.IComponentPart;
+import metaphysical.soul.generator.ISoulGenerator;
 
 public abstract class AbstractSoul implements ISoul {
 
@@ -74,7 +75,7 @@ public abstract class AbstractSoul implements ISoul {
 	}
 
 	@Override
-	public void moveToNew(Actor newActor, Collection<IComponentPart> newParts) {
+	public void tetherSpirit(Actor newActor, Collection<IComponentPart> newParts) {
 		if (newParts == null || newParts.size() != 1) {
 			throw new IllegalArgumentException("Soul must tether to one part");
 		}
@@ -86,6 +87,7 @@ public abstract class AbstractSoul implements ISoul {
 	@Override
 	public void onRemove(long worldTick) {
 		// TODO go to afterlife ig idk
+		System.out.println(this + " detached from " + this.container);
 		this.container = null;
 		this.containerSingleton = Collections.emptySet();
 	}
@@ -93,6 +95,11 @@ public abstract class AbstractSoul implements ISoul {
 	@Override
 	public boolean isTethered() {
 		return container != null;
+	}
+
+	@Override
+	public String toString() {
+		return this.getUniqueName();
 	}
 
 }

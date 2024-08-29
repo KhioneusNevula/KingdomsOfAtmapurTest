@@ -2,7 +2,7 @@ package metaphysical.soul;
 
 import java.util.UUID;
 
-import civilization.mind.IMind;
+import civilization_and_minds.mind.IMind;
 import sim.interfaces.IObjectType;
 
 public abstract class SapientSoul extends AbstractSoul {
@@ -32,6 +32,11 @@ public abstract class SapientSoul extends AbstractSoul {
 	@Override
 	public IObjectType getObjectType() {
 		return SoulType.SAPIENT;
+	}
+
+	@Override
+	public String report() {
+		return "sapientsoul(mind={" + this.mind.report() + "})";
 	}
 
 }

@@ -16,4 +16,11 @@ public class HumanoidActor extends BodiedActor {
 				new HungerSystem(this, 100, 0.01f, NutritionType.STANDARD_OMNIVORE));
 	}
 
+	@Override
+	public String report() {
+		return super.report()
+				+ (this.getBody().getSoulReference() != null ? "\nsoul:" + this.getBody().getSoulReference().report()
+						: "\nno body");
+	}
+
 }

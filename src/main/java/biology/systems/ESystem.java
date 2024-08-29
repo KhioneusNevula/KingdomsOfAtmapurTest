@@ -1,6 +1,9 @@
 package biology.systems;
 
+import java.util.stream.Stream;
+
 import actor.construction.ISystemHolder;
+import civilization_and_minds.mind.goals.INeed;
 
 /**
  * a system of an entity which reflects its state
@@ -48,6 +51,23 @@ public abstract class ESystem {
 			this.update(type, this.owner.getSystem(type));
 		}
 	}
+
+	/**
+	 * Generate needs for this system
+	 * 
+	 * @param forBeing
+	 * @return
+	 */
+	public abstract Stream<? extends INeed> generateNeeds();
+
+	/**
+	 * Whether this system has undergone a change in severity of needs since the
+	 * last time {@link #generateNeeds()} was called.
+	 * 
+	 * @return
+	 */
+	public abstract boolean changedStateSinceLastUpdatedNeeds();
+
 	/*
 	 * protected void postNeed(INeed need) { (this.needs == null ? needs =
 	 * MultimapBuilder.hashKeys().hashSetValues().build() :

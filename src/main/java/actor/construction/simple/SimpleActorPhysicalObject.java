@@ -2,9 +2,12 @@ package actor.construction.simple;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
@@ -19,6 +22,8 @@ import actor.construction.physical.IPhysicalActorObject;
 import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
 import biology.sensing.ISense;
+import civilization_and_minds.social.concepts.profile.Profile;
+import civilization_and_minds.social.concepts.profile.ProfileType;
 import metaphysical.ISpiritObject;
 import metaphysical.ISpiritObject.SpiritType;
 import sim.physicality.ExistencePlane;
@@ -31,17 +36,15 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	private int visi = ExistencePlane.ALL_PLANES.primeFactor();
 	private int planes = ExistencePlane.PHYSICAL.primeFactor();
 
+	protected Multimap<Actor, IComponentPart> actorsHeld = MultimapBuilder.hashKeys().hashSetValues().build();
+
 	private int w, h;
 	private HitboxType hitbox;
 
 	private IComponentPart part;
 
 	private float mass;
-
-	/**
-	 * If this entity has a specific "part ability" or whatever
-	 */
-	private IPartAbility ability;
+	private Profile profile;
 
 	private Multimap<Boolean, ISpiritObject> tetheredSpirits = MultimapBuilder.treeKeys().hashSetValues().build(); // true
 																													// =
@@ -60,6 +63,22 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 		this.w = 10;
 		this.mass = mass;
 		this.hitbox = HitboxType.CIRCLE;
+		this.profile = genProfile(owner);
+	}
+
+	/**
+	 * make a profile for this actor type
+	 * 
+	 * @param owner
+	 * @return
+	 */
+	protected Profile genProfile(Actor owner) {
+		return new Profile(owner.getUUID(), ProfileType.ITEM);
+	}
+
+	@Override
+	public Profile getProfile() {
+		return profile;
 	}
 
 	@Override
@@ -73,13 +92,62 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	}
 
 	@Override
+	public Collection<Actor> getHeld() {
+		return this.actorsHeld.keySet();
+	}
+
+	@Override
+	public Actor getHeld(IComponentPart byPart) {
+		return this.actorsHeld.entries().stream().filter((a) -> a.getValue().equals(byPart)).map((a) -> a.getKey())
+				.findFirst().orElse(null);
+	}
+
+	@Override
+	public Collection<IComponentPart> getHoldingParts(Actor a) {
+		return this.actorsHeld.get(a);
+	}
+
+	@Override
+	public boolean isHolding(Actor a) {
+		return this.actorsHeld.containsKey(a);
+	}
+
+	@Override
+	public boolean pickUp(IComponentPart withPart, Actor actor) {
+		return this.actorsHeld.put(actor, withPart);
+	}
+
+	@Override
+	public boolean putDown(Actor actor) {
+		return !this.actorsHeld.get(actor).isEmpty();
+	}
+
+	@Override
+	public Actor putDown(IComponentPart partHolding) {
+		Iterator<Entry<Actor, IComponentPart>> iterator = this.actorsHeld.entries().iterator();
+		while (iterator.hasNext()) {
+			Map.Entry<Actor, IComponentPart> ent = iterator.next();
+			if (ent.getValue().equals(partHolding)) {
+				iterator.remove();
+				return ent.getKey();
+			}
+		}
+		return null;
+	}
+
+	@Override
 	public IActorType getObjectType() {
 		return owner.getObjectType();
 	}
 
 	@Override
-	public Collection<IComponentPart> getOutermostParts() {
-		return Collections.singleton(part);
+	public Stream<IComponentPart> getOutermostParts() {
+		return Collections.singleton(part).stream();
+	}
+
+	@Override
+	public Stream<? extends IComponentPart> getExposedParts() {
+		return Collections.singleton(part).stream();
 	}
 
 	@Override
@@ -94,8 +162,12 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 
 	@Override
 	public Collection<? extends IComponentPart> getPartsWithAbility(IPartAbility ability) {
-		return this.ability != null && this.ability.equals(ability) ? Collections.singleton(part)
-				: Collections.emptySet();
+		return this.part.getType().hasAbility(ability) ? Collections.singleton(part) : Collections.emptySet();
+	}
+
+	@Override
+	public Stream<? extends ISense> getSenses() {
+		return this.part.getSenses().stream();
 	}
 
 	@Override
@@ -112,8 +184,8 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	}
 
 	@Override
-	public Collection<? extends IComponentPart> getParts() {
-		return Collections.singleton(part);
+	public Stream<? extends IComponentPart> getParts() {
+		return Collections.singleton(part).stream();
 	}
 
 	@Override
@@ -254,8 +326,13 @@ public class SimpleActorPhysicalObject implements IPhysicalActorObject {
 	}
 
 	@Override
-	public Collection<SenseProperty<?>> getGeneralSensableProperties() {
-		return Collections.emptySet();
+	public Stream<SenseProperty<?>> getGeneralSensableProperties() {
+		return Collections.<SenseProperty<?>>emptySet().stream();
+	}
+
+	@Override
+	public boolean hasSoul() {
+		return false;
 	}
 
 }

@@ -5,7 +5,7 @@ import java.util.Collections;
 
 import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
-import civilization.social.concepts.IConcept;
+import civilization_and_minds.social.concepts.IConcept;
 
 /**
  * A "type" of actor or phenomenon

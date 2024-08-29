@@ -116,4 +116,9 @@ public class Tile implements IObjectType, Comparable<Tile> {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return this.contiguous ? "Tile(r=" + row + ",col=" + col + ")" : "Tile(" + this.name + ")";
+	}
+
 }

@@ -3,11 +3,14 @@ package actor.construction.physical;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import actor.Actor;
+import biology.sensing.ISense;
 import metaphysical.ISpiritObject;
 import metaphysical.ISpiritObject.SpiritType;
-import metaphysical.soul.AbstractSoul;
-import metaphysical.soul.ISoulGenerator;
+import metaphysical.soul.ISoul;
+import metaphysical.soul.generator.ISoulGenerator;
 
 /**
  * Used to represent an objct or visage of a physical actor, with multiple parts
@@ -159,7 +162,8 @@ public interface IPhysicalActorObject extends IVisage {
 	public boolean containsSpirit(ISpiritObject spir, IComponentPart part);
 
 	/**
-	 * Update stored data, removing references to this spirit
+	 * Update stored data, removing references to this spirit. Updating tether
+	 * references in spirit itself is the responsibility of the caller.
 	 * 
 	 * @param spirit
 	 */
@@ -167,7 +171,8 @@ public interface IPhysicalActorObject extends IVisage {
 
 	/**
 	 * Attach the given spirit to this object. Leave tethers as null if tethered to
-	 * whole
+	 * whole. Updating tether references in spirit itself is the responsibility of
+	 * the caller.
 	 * 
 	 * @param spirit
 	 * @param tethers
@@ -189,8 +194,102 @@ public interface IPhysicalActorObject extends IVisage {
 	 * @param soul
 	 * @return
 	 */
-	public default void onGiveFirstSoul(AbstractSoul soul, ISoulGenerator soulgen) {
+	public default void onGiveFirstSoul(ISoul soul, ISoulGenerator soulgen) {
 
 	}
+
+	/**
+	 * Whether this entity has a soul
+	 * 
+	 * @return
+	 */
+	public boolean hasSoul();
+
+	/**
+	 * Gets the main soul of this being, or null if it lacks a soul or has multiple
+	 * souls
+	 * 
+	 * @return
+	 */
+	default ISoul getSoulReference() {
+		return null;
+	}
+
+	/**
+	 * Get all actors held by this
+	 * 
+	 * @return
+	 */
+	public Collection<Actor> getHeld();
+
+	/**
+	 * Get actor held by this part
+	 * 
+	 * @param byPart
+	 * @return
+	 */
+	public Actor getHeld(IComponentPart byPart);
+
+	/**
+	 * If this actor is held by this physical
+	 * 
+	 * @param a
+	 * @return
+	 */
+	public boolean isHolding(Actor a);
+
+	/**
+	 * Get all parts holding this actor
+	 * 
+	 * @param a
+	 * @return
+	 */
+	public Collection<? extends IComponentPart> getHoldingParts(Actor a);
+
+	/**
+	 * Return false if the part cannot pick up the actor due to strength or
+	 * something similar. Throw exception if part lacks ability to grasp or the self
+	 * is held by the given actor. Succeed if the actor is already held by another
+	 * part of the body; in fact, just register the actor as being held by two
+	 * parts, basically.
+	 * 
+	 * @param withPart
+	 * @param actor
+	 * @return
+	 */
+	public boolean pickUp(IComponentPart withPart, Actor actor);
+
+	/**
+	 * Put down whatever is held by the given part; return what was put down. Might
+	 * not completely put down the actor, since it may be held by multiple parts
+	 * 
+	 * @param partHolding
+	 */
+	public Actor putDown(IComponentPart partHolding);
+
+	/**
+	 * Put down the given actor; return true if it was held
+	 * 
+	 * @param actor
+	 */
+	public boolean putDown(Actor actor);
+
+	/**
+	 * Put down the given actor by the given part; return true if the given actor
+	 * was put down from the given part. Might not put the actor down fully if it si
+	 * held by multiple parts.
+	 * 
+	 * @param put
+	 * @param down
+	 * @return
+	 */
+	public default boolean putDown(IComponentPart put, Actor down) {
+		return this.putDown(put) == down;
+	}
+
+	/**
+	 * Get all senses this actor object has access to
+	 */
+	public Stream<? extends ISense> getSenses();
 
 }

@@ -1,6 +1,7 @@
 package biology.anatomy;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,19 @@ public class Tissue implements IMaterialLayer {
 
 			}
 
+		}
+	}
+
+	public Tissue(Tissue tiss) {
+		this.type = tiss.type;
+		this.sensables = new HashMap<>(tiss.sensables != null ? tiss.sensables : Collections.emptyMap());
+		this.state = tiss.state;
+		this.usual = tiss.usual;
+		this.subLayers = new TreeMap<>(Comparator.reverseOrder());
+		if (tiss.subLayers != null) {
+			for (Tissue tissa : tiss.subLayers.values()) {
+				this.subLayers.put(tissa.type, tissa);
+			}
 		}
 	}
 

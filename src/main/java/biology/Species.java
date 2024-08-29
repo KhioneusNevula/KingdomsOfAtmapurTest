@@ -17,15 +17,30 @@ import biology.anatomy.IBodyPartType;
 import biology.anatomy.ISpecies;
 import biology.anatomy.ITissueLayerType;
 import biology.anatomy.TissueType;
-import metaphysical.soul.AbstractSoul;
+import civilization_and_minds.mind.mechanics.PersonAgent;
+import civilization_and_minds.mind.type.HumanMind;
+import civilization_and_minds.social.concepts.profile.Profile;
+import civilization_and_minds.social.concepts.profile.ProfileType;
+import metaphysical.soul.HumanSoul;
+import metaphysical.soul.ISoul;
 
 public class Species implements ISpecies {
 	public static final Species FLESHBALL = new Species("Fleshball", TissueType.MUSCLE, BodyPartType.BODY, 0f);
+
+	private static final HumanSoul genSoulHuman(Actor act, IComponentPart part) {
+		PersonAgent ag = new PersonAgent(act.getUUID(), act.getObjectType(), act.getSimpleName());
+		Profile prof = new Profile(act.getUUID(), ProfileType.INDIVIDUAL);
+		HumanMind mind = new HumanMind(prof, ag);
+		HumanSoul soul = new HumanSoul(act.getUUID(), mind);
+		soul.tetherSpirit(act, Collections.singleton(part));
+		return soul;
+	}
+
 	public static final Species HUMAN = new Species("Human",
 			Set.of(TissueType.BONE, TissueType.BLOOD, TissueType.MUSCLE, TissueType.SKIN, TissueType.FAT,
 					TissueType.HAIR, TissueType.NERVES, TissueType.GRAY_MATTER, TissueType.WHITE_MATTER,
 					TissueType.EYE_FLUID, TissueType.EYE_MUSCLE, TissueType.CARTILAGE),
-			Set.of(BodyPartType.BODY, BodyPartType.SPINE, BodyPartType.RIBCAGE, BodyPartType.CHEST,
+			Set.of(BodyPartType.BODY, BodyPartType.BRAIN, BodyPartType.SPINE, BodyPartType.RIBCAGE, BodyPartType.CHEST,
 					BodyPartType.COLLARBONE, BodyPartType.HEART, BodyPartType.LEFT_LUNG, BodyPartType.RIGHT_LUNG,
 					BodyPartType.STOMACH, BodyPartType.GUTS, BodyPartType.ABDOMEN, BodyPartType.PELVIS,
 					BodyPartType.JUNK, BodyPartType.LEFT_BUTTOCK, BodyPartType.RIGHT_BUTTOCK, BodyPartType.LEFT_OVARY,
@@ -41,7 +56,8 @@ public class Species implements ISpecies {
 					BodyPartType.NOSE, BodyPartType.LEFT_NOSTRIL, BodyPartType.RIGHT_NOSTRIL, BodyPartType.MOUSTACHE,
 					BodyPartType.BEARD, BodyPartType.LEFT_EAR, BodyPartType.LEFT_EAR_CANAL, BodyPartType.RIGHT_EAR,
 					BodyPartType.RIGHT_EAR_CANAL),
-			0.5f);
+			0.5f).addSoulGen(Species::genSoulHuman);
+
 	public static final Species ELF = new Species(HUMAN, "Elf", Set.of(), Set.of(), Set.of(),
 			Set.of("moustache", "beard"), 0.5f);
 	public static final Species FAIRY = new Species(HUMAN, "Fairy", Set.of(TissueType.ESSENCE),
@@ -57,7 +73,7 @@ public class Species implements ISpecies {
 	private float averageUniqueness;
 	private IBodyPartType singlePart;
 	private String name;
-	private BiFunction<Actor, IComponentPart, AbstractSoul> soulgen;
+	private BiFunction<Actor, IComponentPart, ? extends ISoul> soulgen;
 
 	/**
 	 * For single-part entities. e.g. a sentient ball of fur
@@ -122,7 +138,7 @@ public class Species implements ISpecies {
 		this.averageUniqueness = averageUniqueness;
 	}
 
-	private Species addSoulGen(BiFunction<Actor, IComponentPart, AbstractSoul> gener) {
+	private Species addSoulGen(BiFunction<Actor, IComponentPart, ? extends ISoul> gener) {
 		this.soulgen = gener;
 		return this;
 	}
@@ -170,7 +186,7 @@ public class Species implements ISpecies {
 	}
 
 	@Override
-	public AbstractSoul generateSoul(Actor a, IComponentPart forPart) {
+	public ISoul generateSoul(Actor a, IComponentPart forPart) {
 		return this.soulgen.apply(a, forPart);
 	}
 

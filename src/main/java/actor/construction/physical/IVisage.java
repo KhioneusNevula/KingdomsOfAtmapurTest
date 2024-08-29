@@ -1,11 +1,12 @@
 package actor.construction.physical;
 
-import java.util.Collection;
+import java.util.stream.Stream;
 
 import actor.IUniqueEntity;
 import actor.construction.properties.ISensableTrait;
 import actor.construction.properties.SenseProperty;
 import biology.sensing.ISense;
+import civilization_and_minds.social.concepts.profile.Profile;
 import sim.interfaces.IObjectType;
 import sim.physicality.IInteractability;
 
@@ -19,14 +20,22 @@ public interface IVisage {
 	 */
 	public int sensabilityMode(ISense toSense);
 
-	public Collection<? extends IComponentPart> getParts();
+	public Stream<? extends IComponentPart> getParts();
 
 	/**
 	 * Get parts that are outermost (and usually sense-able)
 	 * 
 	 * @return
 	 */
-	public Collection<? extends IComponentPart> getOutermostParts();
+	public Stream<? extends IComponentPart> getOutermostParts();
+
+	/**
+	 * Get (intact) parts that are either outermost or that have a surrounding part
+	 * which is no longer present (or a hole), therefore exposing it
+	 * 
+	 * @return
+	 */
+	public Stream<? extends IComponentPart> getExposedParts();
 
 	/**
 	 * Get a salient general property of this entity, if it has properties which are
@@ -45,7 +54,7 @@ public interface IVisage {
 	 * 
 	 * @return
 	 */
-	public Collection<SenseProperty<?>> getGeneralSensableProperties();
+	public Stream<SenseProperty<?>> getGeneralSensableProperties();
 
 	/**
 	 * If this template consists only of one main part. For example, a rock. s
@@ -103,5 +112,10 @@ public interface IVisage {
 	 * @return
 	 */
 	public IUniqueEntity getOwner();
+
+	/**
+	 * What profile this visage projects
+	 */
+	public Profile getProfile();
 
 }

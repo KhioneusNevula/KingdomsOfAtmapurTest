@@ -1,8 +1,13 @@
 package biology.systems.types;
 
+import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Stream;
 
+import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeMap;
 
 import actor.Actor;
 import actor.construction.INutritionType;
@@ -11,6 +16,11 @@ import actor.construction.physical.IComponentPart;
 import biology.systems.ESystem;
 import biology.systems.EnergySystem;
 import biology.systems.SystemType;
+import civilization_and_minds.IIntelligent;
+import civilization_and_minds.mind.goals.IGoal;
+import civilization_and_minds.mind.goals.INeed;
+import civilization_and_minds.mind.goals.Necessity;
+import civilization_and_minds.mind.goals.NeedType;
 import energy.IEnergyUnit.EnergyUnit;
 import sim.physicality.PhysicalState;
 
@@ -20,9 +30,47 @@ public class HungerSystem extends EnergySystem {
 	private boolean canEat = true;
 	private boolean canNourish = true;
 	private Set<INutritionType> edibleTypes = Set.of();
+	private Necessity lastSeverity;
+	private Necessity currentSeverity;
+	/** proportions of the hunger "bar" that indicate levels of severity */
+	public static final RangeMap<Float, Necessity> SEVERITY_PROPORTIONS = ImmutableRangeMap.<Float, Necessity>builder()
+			.put(Range.openClosed(0.0f, 0.25f), Necessity.MAXIMAL).put(Range.openClosed(0.25f, 0.5f), Necessity.SERIOUS)
+			.put(Range.openClosed(0.5f, 0.75f), Necessity.NORMAL).put(Range.open(0.75f, 0.9f), Necessity.TRIVIAL)
+			.build();
 
 	public static enum HungerLevel {
 		FULL, WELL_FED, STABLE, HUNGRY, MALNOURISHED, STARVING;
+
+	}
+
+	public static class HungerNeed implements INeed {
+
+		private Necessity severity;
+
+		public HungerNeed(Necessity severity) {
+			this.severity = severity;
+		}
+
+		@Override
+		public Necessity getSeverity() {
+			return severity;
+		}
+
+		@Override
+		public String getUniqueName() {
+			return "need_hunger";
+		}
+
+		@Override
+		public Stream<IGoal> getGoals(IIntelligent forAgent) {
+			// TODO generate hunger goals
+			return null;
+		}
+
+		@Override
+		public INeedType getNeedType() {
+			return NeedType.HUNGER;
+		}
 
 	}
 
@@ -31,7 +79,8 @@ public class HungerSystem extends EnergySystem {
 	 * 
 	 * @param owner
 	 * @param max
-	 * @param chance
+	 * @param chance      proportion of hunger (out of 20) that transfers to life
+	 *                    every tick
 	 * @param edibleTypes types of nutrition this being can eat
 	 */
 	public HungerSystem(ISystemHolder owner, double max, double chance, Iterable<INutritionType> edibleTypes) {
@@ -87,9 +136,23 @@ public class HungerSystem extends EnergySystem {
 		if (other instanceof LifeSystem life) {
 			if (canNourish) {
 				this.supplyEnergy(life, life.getPowerUse() * hungerChance / 20.0 + 1);
+				float sevProportion = (float) (this.getEnergy() / this.getMaxCapacity());
+				Necessity sev = SEVERITY_PROPORTIONS.get(sevProportion);
+				this.currentSeverity = sev;
 			}
 
 		}
+	}
+
+	@Override
+	public boolean changedStateSinceLastUpdatedNeeds() {
+		return this.currentSeverity != this.lastSeverity;
+	}
+
+	@Override
+	public Stream<HungerNeed> generateNeeds() {
+		this.lastSeverity = this.currentSeverity;
+		return Collections.singleton(new HungerNeed(currentSeverity)).stream();
 	}
 
 	/**
@@ -145,6 +208,10 @@ public class HungerSystem extends EnergySystem {
 		return 0;
 		// }
 		// return 0;
+	}
+
+	public Necessity getSeverity() {
+		return currentSeverity;
 	}
 
 }

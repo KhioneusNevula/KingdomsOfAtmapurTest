@@ -13,7 +13,8 @@ import biology.sensing.ISense;
 
 /**
  * Component parts should sort their layers (if applicable) with the highest
- * layer coming first in sequence
+ * layer coming first in sequence <br>
+ * TODO add custom sizes? idk
  * 
  * @author borah
  *

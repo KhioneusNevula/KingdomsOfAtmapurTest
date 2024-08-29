@@ -5,14 +5,20 @@ import java.util.UUID;
 import actor.construction.physical.IComponentPart;
 import biology.anatomy.BodyPart;
 import biology.anatomy.Tissue;
-import civilization.mind.IMind;
+import civilization_and_minds.mind.type.HumanMind;
 
 public class HumanSoul extends SapientSoul {
 
 	private boolean wantsToDie;
 
-	public HumanSoul(UUID id, IMind mind) {
+	public HumanSoul(UUID id, HumanMind mind) {
 		super(id, mind);
+		mind.setSoul(this);
+	}
+
+	@Override
+	public HumanMind getMind() {
+		return (HumanMind) super.getMind();
 	}
 
 	@Override

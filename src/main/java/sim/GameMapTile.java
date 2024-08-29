@@ -12,9 +12,7 @@ import java.util.stream.Collectors;
 
 import actor.Actor;
 import actor.construction.physical.IPhysicalActorObject.HitboxType;
-import main.GameUniverse;
 import phenomenon.IPhenomenon;
-import sim.interfaces.IObjectType;
 import sim.interfaces.IUniqueThing;
 import sim.physicality.IInteractability.CollisionType;
 import utilities.ImmutableCollection;
@@ -41,8 +39,17 @@ public class GameMapTile implements IUniqueThing {
 	}
 
 	@Override
-	public IObjectType getObjectType() {
+	public Tile getObjectType() {
 		return this.tile;
+	}
+
+	/**
+	 * Get the Tile object representing this map tile
+	 * 
+	 * @return
+	 */
+	public Tile getTile() {
+		return tile;
 	}
 
 	public GameUniverse getUniverse() {
@@ -137,6 +144,7 @@ public class GameMapTile implements IUniqueThing {
 	 */
 	public synchronized <T extends Actor> T spawnActor(T a, boolean firstSpawn) {
 		this.actors.put(a.getUUID(), a);
+		a.onSpawn();
 		if (firstSpawn) {
 			System.out.println("Spawned " + a + " in " + tile.name());
 			if (this.universe.hasSoulGenerator())

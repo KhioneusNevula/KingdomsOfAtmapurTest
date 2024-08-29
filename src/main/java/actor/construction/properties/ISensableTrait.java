@@ -2,13 +2,15 @@ package actor.construction.properties;
 
 import java.util.UUID;
 
+import civilization_and_minds.social.concepts.IConcept;
+
 /**
  * Merely indicates a specific, sensable trait.
  * 
  * @author borah
  *
  */
-public interface ISensableTrait {
+public interface ISensableTrait extends IConcept {
 
 	/**
 	 * If this particular trait is unique to the entity it is on.

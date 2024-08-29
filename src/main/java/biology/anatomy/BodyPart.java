@@ -1,7 +1,9 @@
 package biology.anatomy;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +12,7 @@ import java.util.UUID;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Table;
@@ -42,8 +45,7 @@ public class BodyPart implements IComponentPart {
 	private Multimap<SpiritType, ISpiritObject> tetheredSpirits = MultimapBuilder.enumKeys(SpiritType.class)
 			.hashSetValues().build();
 
-	public BodyPart(IBodyPartType type, Map<String, IBodyPartType> partTypes,
-			Map<String, ITissueLayerType> tissueTypes) {
+	public BodyPart(IBodyPartType type, Map<String, ITissueLayerType> tissueTypes) {
 		this.type = type;
 		this.id = UUID.randomUUID();
 		this.senses = new HashSet<>(type.getDefaultSenses());
@@ -71,6 +73,29 @@ public class BodyPart implements IComponentPart {
 			}
 		}
 
+	}
+
+	/**
+	 * Copy this body part without copying entities connected to it (i.e. other body
+	 * parts, tethered spirits)
+	 * 
+	 * @param atPart
+	 * @param sameID whether to give this copy the same id
+	 */
+	public BodyPart(BodyPart atPart, boolean sameID) {
+		this.id = sameID ? atPart.id : UUID.randomUUID();
+		this.type = atPart.type;
+		this.gone = atPart.gone;
+		this.nutrition = atPart.nutrition;
+		this.nutritionTypes = atPart.nutritionTypes;
+		this.parent = null;
+		this.sensables = new HashMap<>(atPart.sensables != null ? atPart.sensables : Collections.emptyMap());
+		this.senses = new HashSet<>(atPart.senses != null ? atPart.senses : Collections.emptySet());
+		this.senseStats = HashBasedTable.create(atPart.senseStats != null ? atPart.senseStats : ImmutableTable.of());
+		this.tissue = new HashMap<>();
+		for (Tissue tiss : atPart.tissue.values()) {
+			this.tissue.put(tiss.getType(), new Tissue(tiss));
+		}
 	}
 
 	@Override
@@ -220,9 +245,11 @@ public class BodyPart implements IComponentPart {
 
 	@Override
 	public String report() {
-		return this.type.getName() + (gone ? "#" : (usual ? "" : "*"))
-				+ (this.parent == null ? "" : "{p:" + this.parent.type.getName() + "}") + "," + this.tissue.keySet()
-				+ "," + this.sensables + "," + this.tetheredSpirits.values() + "}";
+		return "<" + this.type.getName() + (gone ? "#" : (usual ? "" : "*"))
+				+ (this.parent == null ? "" : "{p:" + this.parent.type.getName() + "}") + ","
+				+ this.getMaterials().values()
+				+ (this.sensables != null && !this.sensables.isEmpty() ? ("," + this.sensables) : "")
+				+ (!this.tetheredSpirits.isEmpty() ? ("," + this.tetheredSpirits.values()) : "") + ">";
 	}
 
 	@Override
@@ -262,6 +289,17 @@ public class BodyPart implements IComponentPart {
 	@Override
 	public boolean hasOneMaterial() {
 		return mainTissue != null;
+	}
+
+	protected BodyPart removeSurrounded(BodyPart surro) {
+		if (this.surroundeds == null)
+			return this;
+		this.surroundeds.remove(surro.type.getName(), surro);
+		return this;
+	}
+
+	public void removeChild(BodyPart atPart) {
+		this.getChildParts().remove(atPart.type.getName(), atPart);
 	}
 
 }

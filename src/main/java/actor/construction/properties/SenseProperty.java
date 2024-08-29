@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableSet;
 
 import actor.construction.properties.SenseProperty.WrapperSensableTrait.FloatTrait;
 import biology.sensing.ISense;
+import civilization_and_minds.social.concepts.IConcept;
 
 /**
  * Sense properties are properties that can be sensed about an object.
@@ -16,7 +17,7 @@ import biology.sensing.ISense;
  *
  * @param <T>
  */
-public class SenseProperty<T extends ISensableTrait> implements Comparable<SenseProperty<?>> {
+public class SenseProperty<T extends ISensableTrait> implements Comparable<SenseProperty<?>>, IConcept {
 
 	public static final SenseProperty<IColor> COLOR = new SenseProperty<>("color", IColor.class, BasicColor.COLORLESS);
 	public static final SenseProperty<IShape> SHAPE = new SenseProperty<>("shape", IShape.class, BasicShape.FORMLESS);
@@ -89,6 +90,11 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 		return this.getUniqueName();
 	}
 
+	@Override
+	public ConceptType getConceptType() {
+		return ConceptType.SENSABLE_PROPERTY;
+	}
+
 	public static abstract class WrapperSensableTrait<T> implements ISensableTrait {
 
 		private T wrapped;
@@ -104,6 +110,16 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 		@Override
 		public boolean isUnique() {
 			return false;
+		}
+
+		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.SENSABLE_TRAIT;
+		}
+
+		@Override
+		public String getUniqueName() {
+			return "wrapped_" + this.getClass().getSimpleName().toLowerCase() + "_" + this.getValue();
 		}
 
 		public static class FloatTrait extends WrapperSensableTrait<Float> {
@@ -156,6 +172,16 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 		}
 
 		@Override
+		public String getUniqueName() {
+			return this.getName();
+		}
+
+		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.SENSABLE_TRAIT;
+		}
+
+		@Override
 		public boolean isUnique() {
 			return true;
 		}
@@ -183,6 +209,16 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 		@Override
 		public String getName() {
 			return "sound_" + name();
+		}
+
+		@Override
+		public String getUniqueName() {
+			return this.getName();
+		}
+
+		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.SENSABLE_TRAIT;
 		}
 
 		@Override
@@ -231,6 +267,16 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 		}
 
 		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.SENSABLE_TRAIT;
+		}
+
+		@Override
+		public String getUniqueName() {
+			return this.getName();
+		}
+
+		@Override
 		public boolean isAcrid() {
 			return acrid;
 		}
@@ -261,6 +307,16 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 		@Override
 		public String getName() {
 			return "smell_" + name();
+		}
+
+		@Override
+		public String getUniqueName() {
+			return this.getName();
+		}
+
+		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.SENSABLE_TRAIT;
 		}
 
 		@Override
@@ -305,7 +361,17 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 
 		@Override
 		public String getName() {
-			return "tex_" + name();
+			return "texture_" + name();
+		}
+
+		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.SENSABLE_TRAIT;
+		}
+
+		@Override
+		public String getUniqueName() {
+			return this.getName();
 		}
 
 		@Override
@@ -349,6 +415,16 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 		}
 
 		@Override
+		public String getUniqueName() {
+			return getName();
+		}
+
+		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.SENSABLE_TRAIT;
+		}
+
+		@Override
 		public boolean isUnique() {
 			return true;
 		}
@@ -364,6 +440,16 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 		@Override
 		public String getName() {
 			return "shape_" + name();
+		}
+
+		@Override
+		public String getUniqueName() {
+			return getName();
+		}
+
+		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.SENSABLE_TRAIT;
 		}
 
 		@Override
@@ -418,6 +504,16 @@ public class SenseProperty<T extends ISensableTrait> implements Comparable<Sense
 
 		public String getName() {
 			return "color_" + name();
+		}
+
+		@Override
+		public String getUniqueName() {
+			return getName();
+		}
+
+		@Override
+		public ConceptType getConceptType() {
+			return ConceptType.SENSABLE_TRAIT;
 		}
 
 		@Override

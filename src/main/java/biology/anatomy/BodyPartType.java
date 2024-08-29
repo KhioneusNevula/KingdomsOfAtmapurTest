@@ -44,12 +44,12 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 	public static final BodyPartType STOMACH = part("stomach", 0.07f).setParent(BODY).setSurrounding(RIBCAGE)
 			.setTissueTags("muscle").setSensableProperties(
 					Map.of(SenseProperty.SHAPE, BasicShape.OVOID, SenseProperty.TEXTURE, BasicTexture.SQUISHY));
-	public static final BodyPartType GUTS = part("guts", 0.25f).setParent(BODY).setSurrounding(BODY)
-			.setTissueTags("muscle").setSensableProperties(
-					Map.of(SenseProperty.SHAPE, BasicShape.STRINGY, SenseProperty.TEXTURE, BasicTexture.SQUISHY));
 	public static final BodyPartType ABDOMEN = part("abdomen", 0.25f).setParent(BODY).setFace(Face.FRONT)
 			.setTissueTags("muscle", "skin", "hair", "fat").setSensableProperties(
 					Map.of(SenseProperty.SHAPE, BasicShape.PILLOW, SenseProperty.TEXTURE, BasicTexture.FIRM));
+	public static final BodyPartType GUTS = part("guts", 0.25f).setParent(BODY).setSurrounding(ABDOMEN)
+			.setTissueTags("muscle").setSensableProperties(
+					Map.of(SenseProperty.SHAPE, BasicShape.STRINGY, SenseProperty.TEXTURE, BasicTexture.SQUISHY));
 	public static final BodyPartType PELVIS = part("pelvis", 0.08f).setParent(SPINE).setSurrounding(BODY)
 			/* .setHasBlood(false) */.setTissueTags("bone").setSensableProperties(
 					Map.of(SenseProperty.SHAPE, BasicShape.PELVIS, SenseProperty.TEXTURE, BasicTexture.HARD));
@@ -68,7 +68,7 @@ public class BodyPartType extends SimplePartType implements IBodyPartType, Clone
 	public static final BodyPartType BIRTHING = part("birthing", 0.02f).setParent(BODY).setSurrounding(BODY)
 			.setHeight(Height.BELOW).setHole(true).setAbilities(BodyAbility.GIVE_BIRTH).setTissueTags("muscle")
 			.setSensableProperties(Map.of(SenseProperty.SHAPE, BasicShape.ORIFICE));
-	public static final BodyPartType WOMB = part("womb", 0.2f).setParent(BODY).setSurrounding(BODY)
+	public static final BodyPartType WOMB = part("womb", 0.2f).setParent(BODY).setSurrounding(ABDOMEN)
 			.setAbilities(BodyAbility.GESTATE).setTissueTags("muscle").setSensableProperties(
 					Map.of(SenseProperty.SHAPE, BasicShape.OVOID, SenseProperty.TEXTURE, BasicTexture.SQUISHY));
 	// legs

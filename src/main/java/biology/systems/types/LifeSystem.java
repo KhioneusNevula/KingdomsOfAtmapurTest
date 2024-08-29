@@ -1,8 +1,12 @@
 package biology.systems.types;
 
+import java.util.Collections;
+import java.util.stream.Stream;
+
 import actor.construction.ISystemHolder;
 import biology.systems.EnergySystem;
 import biology.systems.SystemType;
+import civilization_and_minds.mind.goals.INeed;
 import energy.IEnergyUnit.EnergyUnit;
 import energy.IEnergyUser;
 
@@ -63,6 +67,18 @@ public class LifeSystem extends EnergySystem implements IEnergyUser {
 	@Override
 	public double getPowerUse() {
 		return this.powerUse;
+	}
+
+	@Override
+	public boolean changedStateSinceLastUpdatedNeeds() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Stream<? extends INeed> generateNeeds() {
+		// TODO Auto-generated method stub
+		return Collections.<INeed>emptySet().stream();
 	}
 
 }

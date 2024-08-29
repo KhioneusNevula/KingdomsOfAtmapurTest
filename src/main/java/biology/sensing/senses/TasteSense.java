@@ -12,13 +12,30 @@ import actor.Actor;
 import actor.IUniqueEntity;
 import actor.construction.physical.IComponentPart;
 import actor.construction.physical.IMaterialLayer;
+import actor.construction.physical.IVisage;
 import biology.sensing.AbstractSense;
 import biology.sensing.stats.BasicSenseStats;
+import phenomenon.IPhenomenon;
 
 public class TasteSense extends AbstractSense {
 
 	public TasteSense(String name) {
 		super(name, BasicSenseStats.EXISTENCE_PLANES);
+	}
+
+	@Override
+	public Stream<Actor> getActorVisages(Actor sensingActor, IComponentPart usingPart) {
+		return Stream.empty(); // TODO sense if something is touching tongue ig
+	}
+
+	@Override
+	public Stream<IPhenomenon> getPhysicalPhenomena(Actor sensingActor, IComponentPart usingPart) {
+		return Stream.empty(); // TODO sense if something is touching tongue ig
+	}
+
+	@Override
+	public Stream<IPhenomenon> getWorldPhenomena(Actor sensingActor, IComponentPart usingPart) {
+		return Stream.empty();
 	}
 
 	@Override
@@ -28,9 +45,9 @@ public class TasteSense extends AbstractSense {
 
 	@Override
 	public Map<? extends IComponentPart, ? extends Collection<? extends IMaterialLayer>> getSensableParts(
-			Actor sensingActor, IComponentPart usingPart, Actor forEntity) {
+			Actor sensingActor, IComponentPart usingPart, IVisage forEntity) {
 		Multimap<IComponentPart, IMaterialLayer> map = MultimapBuilder.hashKeys().arrayListValues().build();
-		for (IComponentPart part : forEntity.getPhysical().getOutermostParts()) {
+		forEntity.getOutermostParts().forEach((part) -> {
 
 			for (IMaterialLayer materi : part.getMaterials().values()) {
 				if (materi.getState().gone())
@@ -39,7 +56,7 @@ public class TasteSense extends AbstractSense {
 				if (materi.getState().isSolid())
 					break;
 			}
-		}
+		});
 		return map.asMap();
 	}
 
