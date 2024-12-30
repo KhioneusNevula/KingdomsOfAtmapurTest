@@ -33,6 +33,30 @@ public class Triplet<A, B, C> {
 		return first;
 	}
 
+	public A left() {
+		return first;
+	}
+
+	public B center() {
+		return second;
+	}
+
+	public C right() {
+		return third;
+	}
+
+	public A getX() {
+		return first;
+	}
+
+	public B getY() {
+		return second;
+	}
+
+	public C getZ() {
+		return third;
+	}
+
 	public B getSecond() {
 		return second;
 	}

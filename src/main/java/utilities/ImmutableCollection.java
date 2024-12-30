@@ -4,7 +4,6 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public class ImmutableCollection<T> extends AbstractCollection<T> {
 
@@ -42,11 +41,6 @@ public class ImmutableCollection<T> extends AbstractCollection<T> {
 	@Override
 	public boolean equals(Object obj) {
 		return inner.equals(obj);
-	}
-
-	@Override
-	public Stream<T> stream() {
-		return inner.stream();
 	}
 
 	@Override

@@ -108,6 +108,14 @@ public class Pair<A, B> implements Map.Entry<A, B> {
 		return this.second;
 	}
 
+	public A left() {
+		return this.first;
+	}
+
+	public B right() {
+		return this.second;
+	}
+
 	@Override
 	public B setValue(B value) {
 		B s = second;
