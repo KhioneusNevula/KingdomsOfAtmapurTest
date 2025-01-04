@@ -2,6 +2,7 @@ package things.interfaces;
 
 import sim.IRenderable;
 import sim.world.GameMap;
+import things.physical_form.IKind;
 import things.physical_form.ISoma;
 import things.physical_form.IVisage;
 
@@ -33,12 +34,28 @@ public interface IActor extends IThing, IPhysicsObject, IRenderable {
 	 * 
 	 * @param map
 	 */
-	void spawnIntoMap(GameMap map);
+	void onSpawnIntoMap(GameMap map);
 
 	/**
 	 * Run ticks
 	 * 
 	 * @param ticks
+	 * @param ticksPerSecond
 	 */
-	public void tick(long ticks);
+	public void tick(long ticks, float ticksPerSecond);
+
+	/**
+	 * What kind of actor this is
+	 * 
+	 * @return
+	 */
+	public IKind getKind();
+
+	/**
+	 * Return details about the actor's construction
+	 * 
+	 * @return
+	 */
+	public String report();
+
 }

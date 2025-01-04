@@ -6,6 +6,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import utilities.IProperty;
+
 /**
  * A property of a block state
  * 
@@ -13,21 +15,7 @@ import java.util.stream.IntStream;
  *
  * @param <E>
  */
-public interface IBlockStateProperty<E> {
-
-	/**
-	 * return the name of this property
-	 * 
-	 * @return
-	 */
-	public String name();
-
-	/**
-	 * Return the default value of this property
-	 * 
-	 * @return
-	 */
-	public E defaultValue();
+public interface IBlockStateProperty<E> extends IProperty<E> {
 
 	/**
 	 * Return all possible values of this block state
@@ -50,13 +38,6 @@ public interface IBlockStateProperty<E> {
 	 * @return
 	 */
 	public boolean isValidValue(E value);
-
-	/**
-	 * The type of this property
-	 * 
-	 * @return
-	 */
-	public Class<E> getType();
 
 	/**
 	 * Make new enum property using all valus of the appropriate enum

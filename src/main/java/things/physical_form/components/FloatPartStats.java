@@ -5,11 +5,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Streams;
 
+import utilities.TriFunction;
+
 public enum FloatPartStats implements IPartStat<Float> {
 	WALK_SPEED(0f, false), GRASP_STRENGTH(0f, true);
 
 	private Function<IComponentPart, Float> defaVal;
 	private Function<Iterable<Float>, Float> aggregator;
+	private TriFunction<Float, Float, Integer, Float> extractor;
 
 	/**
 	 * default summing or averaging (based on boolean)
@@ -27,16 +30,24 @@ public enum FloatPartStats implements IPartStat<Float> {
 								c++;
 							}
 							return su / c;
-						});
+						},
+				!avg ? (a, b, count) -> a - b : (a, b, count) -> {
+					float sum = a * count;
+					sum -= b;
+					return sum / (count - 1f);
+				});
 	}
 
-	private FloatPartStats(float dVal, Function<Iterable<Float>, Float> aggregator) {
-		this((a) -> dVal, aggregator);
+	private FloatPartStats(float dVal, Function<Iterable<Float>, Float> aggregator,
+			TriFunction<Float, Float, Integer, Float> extractor) {
+		this((a) -> dVal, aggregator, extractor);
 	}
 
-	private FloatPartStats(Function<IComponentPart, Float> defaVal, Function<Iterable<Float>, Float> aggregator) {
+	private FloatPartStats(Function<IComponentPart, Float> defaVal, Function<Iterable<Float>, Float> aggregator,
+			TriFunction<Float, Float, Integer, Float> extractor) {
 		this.defaVal = defaVal;
 		this.aggregator = aggregator;
+		this.extractor = extractor;
 	}
 
 	@Override
@@ -52,6 +63,11 @@ public enum FloatPartStats implements IPartStat<Float> {
 	@Override
 	public Float aggregate(Iterable<Float> values) {
 		return aggregator.apply(values);
+	}
+
+	@Override
+	public Float extract(Float val1, Float subVal, int count) {
+		return extractor.apply(val1, subVal, count);
 	}
 
 }

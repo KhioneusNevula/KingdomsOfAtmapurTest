@@ -9,13 +9,13 @@ import java.util.function.Supplier;
  *
  * @param <E>
  */
-public class GenericProperty<E> implements IGenericProperty<E> {
+public class PropertyImpl<E> implements IProperty<E> {
 
 	private String name;
-	private Class<E> type;
+	private Class<? super E> type;
 	private Supplier<E> defaultSupplier;
 
-	GenericProperty(String name, Class<E> clazz, Supplier<E> defaultVal) {
+	PropertyImpl(String name, Class<? super E> clazz, Supplier<E> defaultVal) {
 		this.name = name;
 		this.type = clazz;
 		this.defaultSupplier = defaultVal;
@@ -26,7 +26,7 @@ public class GenericProperty<E> implements IGenericProperty<E> {
 	}
 
 	@Override
-	public Class<E> getType() {
+	public Class<? super E> getType() {
 		return type;
 	}
 
@@ -41,7 +41,7 @@ public class GenericProperty<E> implements IGenericProperty<E> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof IGenericProperty mat) {
+		if (obj instanceof IProperty mat) {
 			return this.name.equals(mat.name()) && this.type.equals(mat.getType());
 		}
 		return super.equals(obj);

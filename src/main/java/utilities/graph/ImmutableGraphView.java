@@ -34,6 +34,11 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
+	public Collection<E> getNodesImmutable() {
+		return inner.getNodesImmutable();
+	}
+
+	@Override
 	public Iterator<E> iterator() {
 		return Iterators.unmodifiableIterator(inner.iterator());
 	}
@@ -114,12 +119,12 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
-	public boolean containsEdge(E one, E two) {
+	public boolean containsEdge(Object one, Object two) {
 		return inner.containsEdge(one, two);
 	}
 
 	@Override
-	public boolean containsEdge(E one, R type, E two) {
+	public boolean containsEdge(Object one, R type, Object two) {
 		return inner.containsEdge(one, type, two);
 	}
 
@@ -134,7 +139,7 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
-	public boolean nodeHasConnections(E one, R type) {
+	public boolean nodeHasConnections(Object one, R type) {
 		return inner.nodeHasConnections(one, type);
 	}
 
@@ -159,7 +164,7 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
-	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 
 		return Iterators
@@ -167,14 +172,14 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
-	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		return Iterators
 				.unmodifiableIterator(edgeTraversalIteratorDFS(startPoint, allowedEdgeTypes, applyAcrossObject));
 	}
 
 	@Override
-	public Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 
 		return Iterators
@@ -182,23 +187,33 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
-	public Iterator<E> nodeTraversalIteratorDFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<E> nodeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		return Iterators
 				.unmodifiableIterator(nodeTraversalIteratorDFS(startPoint, allowedEdgeTypes, applyAcrossObject));
 	}
 
 	@Override
-	public IRelationGraph<E, R> traverseBFS(E startPoint, Collection<R> allowedEdgeTypes, Consumer<E> forEachNode,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+	public IRelationGraph<E, R> traverseBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
+			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 
 		return inner.traverseBFS(startPoint, allowedEdgeTypes, forEachNode, applyAcrossObject);
 	}
 
 	@Override
-	public IRelationGraph<E, R> traverseDFS(E startPoint, Collection<R> allowedEdgeTypes, Consumer<E> forEachNode,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+	public IRelationGraph<E, R> traverseDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
+			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		return inner.traverseDFS(startPoint, allowedEdgeTypes, forEachNode, applyAcrossObject);
+	}
+
+	@Override
+	public IRelationGraph<E, R> copy() {
+		return inner.copy();
+	}
+
+	@Override
+	public IRelationGraph<E, R> subgraph(Collection<? extends E> nodes) {
+		return new ImmutableGraphView<>(inner.subgraph(nodes));
 	}
 
 	@Override

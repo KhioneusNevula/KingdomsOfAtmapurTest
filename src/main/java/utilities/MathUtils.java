@@ -149,6 +149,37 @@ public final class MathUtils {
 	/**
 	 * See {@link #primeUnion(int, int)}
 	 */
+	public static int primeUnion(int... inputs) {
+		Set<Integer> primes = new TreeSet<>();
+
+		for (int prime : MathUtils.primes) {
+			boolean br = false;
+			for (int p : inputs) {
+				if (prime < p) {
+					br = false;
+					break;
+				}
+				br = true;
+			}
+			if (br)
+				break;
+			for (int p : inputs) {
+				if (p % prime == 0) {
+					primes.add(prime);
+					break;
+				}
+			}
+		}
+		int res = 1;
+		for (int p : primes) {
+			res *= p;
+		}
+		return res;
+	}
+
+	/**
+	 * See {@link #primeUnion(int, int)}
+	 */
 	public static int primeUnion(Iterable<Integer> inputs) {
 		Set<Integer> primes = new TreeSet<>();
 

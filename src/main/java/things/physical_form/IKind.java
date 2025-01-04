@@ -12,6 +12,24 @@ import things.physical_form.components.IComponentPart;
 public interface IKind {
 
 	/**
+	 * The kind for things which are generated in a custom fashion and therefore do
+	 * not have a distinctive species. Use this for unique beings and objects, for
+	 * example
+	 */
+	public static final IKind MISCELLANEOUS = new IKind() {
+
+		@Override
+		public String name() {
+			return "_miscellaneous";
+		}
+
+		@Override
+		public ISoma<? extends IComponentPart> generate(IKindSettings settings) {
+			throw new UnsupportedOperationException("cannot generate body for miscellaneous kind");
+		}
+	};
+
+	/**
 	 * The name of this Kind
 	 * 
 	 * @return
@@ -25,5 +43,5 @@ public interface IKind {
 	 * @param settings
 	 * @return
 	 */
-	public <R extends IComponentPart> ISoma<R> generate(IKindSettings settings);
+	public ISoma<? extends IComponentPart> generate(IKindSettings settings);
 }

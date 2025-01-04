@@ -146,13 +146,13 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
-	public boolean containsEdge(E one, E two) {
+	public boolean containsEdge(Object one, Object two) {
 
 		return false;
 	}
 
 	@Override
-	public boolean containsEdge(E one, R type, E two) {
+	public boolean containsEdge(Object one, R type, Object two) {
 
 		return false;
 	}
@@ -174,7 +174,7 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
-	public boolean nodeHasConnections(E one, R type) {
+	public boolean nodeHasConnections(Object one, R type) {
 		if (!this.single.equals(one)) {
 			throw new IllegalArgumentException(one + " vs " + single);
 		}
@@ -206,12 +206,17 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
+	public Collection<E> getNodesImmutable() {
+		return this.singleton;
+	}
+
+	@Override
 	public Iterator<Triplet<E, R, E>> edgeIterator() {
 		return Collections.emptyIterator();
 	}
 
 	@Override
-	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		if (!startPoint.equals(this.single))
 			throw new IllegalArgumentException(startPoint + " vs " + single);
@@ -219,7 +224,7 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
-	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		if (!startPoint.equals(this.single))
 			throw new IllegalArgumentException(startPoint + " vs " + single);
@@ -227,7 +232,7 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
-	public Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		if (!startPoint.equals(this.single))
 			throw new IllegalArgumentException(startPoint + " vs " + single);
@@ -235,7 +240,7 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
-	public Iterator<E> nodeTraversalIteratorDFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<E> nodeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		if (!startPoint.equals(this.single))
 			throw new IllegalArgumentException(startPoint + " vs " + single);
@@ -243,8 +248,8 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
-	public IRelationGraph<E, R> traverseBFS(E startPoint, Collection<R> allowedEdgeTypes, Consumer<E> forEachNode,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+	public IRelationGraph<E, R> traverseBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
+			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		if (!startPoint.equals(this.single))
 			throw new IllegalArgumentException(startPoint + " vs " + single);
 		forEachNode.accept(startPoint);
@@ -252,12 +257,27 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
-	public IRelationGraph<E, R> traverseDFS(E startPoint, Collection<R> allowedEdgeTypes, Consumer<E> forEachNode,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+	public IRelationGraph<E, R> traverseDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
+			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		if (!startPoint.equals(this.single))
 			throw new IllegalArgumentException(startPoint + " vs " + single);
 		forEachNode.accept(startPoint);
 		return new SingletonGraph<>(startPoint);
+	}
+
+	@Override
+	public IRelationGraph<E, R> subgraph(Collection<? extends E> nodes) {
+		if (nodes.equals(this.singleton)) {
+			return this;
+		} else if (nodes.isEmpty()) {
+			return EmptyGraph.instance();
+		}
+		throw new IllegalArgumentException(nodes + " not in graph: " + this.singleton);
+	}
+
+	@Override
+	public SingletonGraph<E, R> copy() {
+		return new SingletonGraph<>(this.single);
 	}
 
 	@Override

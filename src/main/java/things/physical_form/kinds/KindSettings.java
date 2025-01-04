@@ -4,8 +4,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+
 import things.physical_form.IKindSettings;
-import utilities.IGenericProperty;
+import utilities.IProperty;
 
 public class KindSettings implements IKindSettings {
 
@@ -18,14 +20,14 @@ public class KindSettings implements IKindSettings {
 			settings.properties = new HashMap<>();
 		}
 
-		public <E> SettingsBuilder prop(IGenericProperty<E> p, E o) {
+		public <E> SettingsBuilder prop(IProperty<E> p, E o) {
 			if (closed)
 				throw new IllegalStateException();
 			settings.properties.put(p, o);
 			return this;
 		}
 
-		public SettingsBuilder prop(Map<IGenericProperty<?>, Object> map) {
+		public SettingsBuilder prop(Map<IProperty<?>, Object> map) {
 			if (closed)
 				throw new IllegalStateException();
 			settings.properties.putAll(map);
@@ -34,6 +36,7 @@ public class KindSettings implements IKindSettings {
 
 		public KindSettings build() {
 			this.closed = true;
+			settings.properties = ImmutableMap.copyOf(settings.properties);
 			return this.settings;
 		}
 
@@ -43,19 +46,18 @@ public class KindSettings implements IKindSettings {
 		return new SettingsBuilder();
 	}
 
-	private Map<IGenericProperty<?>, Object> properties;
+	private Map<IProperty<?>, Object> properties;
 
 	private KindSettings() {
 	}
 
 	@Override
-	public <E> E getSetting(IGenericProperty<E> property) {
+	public <E> E getSetting(IProperty<E> property) {
 		return (E) properties.getOrDefault(property, property.defaultValue());
 	}
 
 	@Override
-	public Collection<? extends IGenericProperty<?>> getProperties() {
+	public Collection<? extends IProperty<?>> getProperties() {
 		return properties.keySet();
 	}
-
 }

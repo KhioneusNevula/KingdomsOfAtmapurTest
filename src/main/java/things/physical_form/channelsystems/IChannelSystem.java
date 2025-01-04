@@ -5,6 +5,7 @@ import java.util.Collection;
 import things.physical_form.ISoma;
 import things.physical_form.channelsystems.IChannelCenter.ChannelRole;
 import things.physical_form.components.IComponentPart;
+import things.physical_form.graph.IPartConnection;
 
 /**
  * A singleton representation of a specific kind of channelSystem
@@ -86,11 +87,13 @@ public interface IChannelSystem {
 	public <E extends IComponentPart> void onBodyLoss(ISoma<E> body, E lost);
 
 	/**
-	 * Called when a body gains this new part
+	 * Called when a new connection is formed in the body;
 	 * 
 	 * @param body
 	 * @param gained
+	 * @param isNew  true if "gained" is a new part rather than an existing part
 	 */
-	public <E extends IComponentPart> void onBodyNew(ISoma<E> body, E gained);
+	public <E extends IComponentPart> void onBodyNew(ISoma<E> body, E gained, IPartConnection connect, E to,
+			boolean isNew);
 
 }

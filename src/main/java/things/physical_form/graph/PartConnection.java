@@ -28,6 +28,7 @@ public enum PartConnection implements IPartConnection {
 	private PartConnection reverse;
 
 	private static Collection<PartConnection> attachments = Set.of(JOINED, MERGED);
+	private static Collection<PartConnection> valuesl = Set.of(values());
 
 	private PartConnection(PartConnection reverse) {
 		this.reverse = reverse;
@@ -55,6 +56,10 @@ public enum PartConnection implements IPartConnection {
 
 	public static Collection<PartConnection> attachments() {
 		return attachments;
+	}
+
+	public static Collection<PartConnection> valuesCollection() {
+		return valuesl;
 	}
 
 }

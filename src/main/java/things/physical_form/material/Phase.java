@@ -13,12 +13,40 @@ public enum Phase {
 	GRANULAR,
 	/** a liquid */
 	LIQUID,
-	/** aa gas */
+	/** a gas */
 	GAS,
-	/** idk yet */
+	/** the highest "destroyed" state, a complete state of destroyedness */
 	PLASMA,
-	/** other unusual stuff */
+	/** other stuff; merely acts as a default */
 	OTHER;
+
+	/**
+	 * Whether this is a solid or granular, i.e. a solid in physics terms
+	 * 
+	 * @return
+	 */
+	public boolean isSolidOrGranular() {
+		return this == SOLID || this == GRANULAR;
+	}
+
+	/**
+	 * Whether this would behave as a fluid block; applies to all except Solid (and
+	 * Other)
+	 * 
+	 * @return
+	 */
+	public boolean isFluid() {
+		return this == LIQUID || this == GAS || this == PLASMA || this == GRANULAR;
+	}
+
+	/**
+	 * Whether this is gaseous, i.e. gas or plasma
+	 * 
+	 * @return
+	 */
+	public boolean isGaseous() {
+		return this == GAS || this == PLASMA;
+	}
 
 	/**
 	 * Typical next state when something of this state is heated
@@ -32,6 +60,8 @@ public enum Phase {
 			return LIQUID;
 		case LIQUID:
 			return GAS;
+		case GAS:
+			return PLASMA;
 		default:
 			return this;
 		}
@@ -48,6 +78,8 @@ public enum Phase {
 			return SOLID;
 		case GAS:
 			return LIQUID;
+		case PLASMA:
+			return GAS;
 		default:
 			return this;
 		}

@@ -22,7 +22,7 @@ import utilities.graph.RelationGraph;
  * @author borah
  *
  */
-public class CoverageGraph extends RelationGraph<IPart, CoverageType> {
+public class CoverageGraph<E extends IPart> extends RelationGraph<E, CoverageType> {
 
 	public static final EdgeProperty<Float> COVERAGE_PERCENT = new EdgeProperty<>("coverage_percent", float.class);
 
@@ -37,7 +37,7 @@ public class CoverageGraph extends RelationGraph<IPart, CoverageType> {
 	 * @param two
 	 * @return
 	 */
-	public Collection<RelativeSide> getCoverage(IPart one, IPart two) {
+	public Collection<RelativeSide> getCoverage(E one, E two) {
 		if (!this.containsEdge(one, two))
 			return Collections.emptySet();
 		return this.getEdgeTypesBetween(one, two).stream().filter((a) -> a.covers()).map((a) -> a.getSide())
@@ -51,7 +51,7 @@ public class CoverageGraph extends RelationGraph<IPart, CoverageType> {
 	 * @param two
 	 * @return
 	 */
-	public float percentCovered(IPart coverer, IPart covered, RelativeSide side) {
+	public float percentCovered(E coverer, E covered, RelativeSide side) {
 		return this.getProperty(coverer, CoverageType.covers(side), covered, COVERAGE_PERCENT);
 	}
 
@@ -62,7 +62,7 @@ public class CoverageGraph extends RelationGraph<IPart, CoverageType> {
 	 * @param two
 	 * @return
 	 */
-	public float percentCovered(IPart coverer, IPart covered) {
+	public float percentCovered(E coverer, E covered) {
 		float total = 0;
 		for (RelativeSide side : RelativeSide.values()) {
 			total += this.getProperty(coverer, CoverageType.covers(side), covered, COVERAGE_PERCENT);
@@ -76,7 +76,7 @@ public class CoverageGraph extends RelationGraph<IPart, CoverageType> {
 	 * @param part
 	 * @return
 	 */
-	public Set<RelativeSide> getOverallCoverage(IPart part) {
+	public Set<RelativeSide> getOverallCoverage(E part) {
 		Set<RelativeSide> sides = new HashSet<>();
 		for (RelativeSide side : RelativeSide.values()) {
 			if (!this.traverseBFS(part, CoverageType.getCoverageTypes(CoverageDirection.COVERED_ON),

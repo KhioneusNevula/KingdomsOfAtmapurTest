@@ -59,9 +59,10 @@ public class BrainSignalChannelCenter implements IChannelCenter {
 	@Override
 	public void controlTick(ISoma<?> body, IComponentPart brain, long tick) {
 		IRelationGraph<? extends IComponentPart, IPartConnection> connections = body.getChanneledParts(brain, system);
-		for (Object obj : (Iterable) (() -> connections.stream().filter((p) -> p.hasAutomaticChannelCenter())
-				.iterator())) {
-			IComponentPart part = (IComponentPart) obj;
+
+		for (IComponentPart part : (Iterable<IComponentPart>) (Iterable) (() -> connections.stream()
+				.filter((p) -> p.hasAutomaticChannelCenter()).iterator())) {
+
 			for (IChannelCenter center : part.getAutomaticChannelCenters()) {
 				if (center.canTick(body, part, tick)) {
 					center.automaticTick(body, part, tick);
@@ -76,6 +77,19 @@ public class BrainSignalChannelCenter implements IChannelCenter {
 	@Override
 	public boolean controllable() {
 		return false;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof IChannelCenter cc) {
+			return this.name.equals(cc.name()) && this.system.equals(cc.getSystem());
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public String toString() {
+		return "{|" + name + "(" + this.system + ") |}";
 	}
 
 }

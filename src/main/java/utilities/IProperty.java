@@ -9,14 +9,14 @@ import java.util.function.Supplier;
  *
  * @param <E>
  */
-public interface IGenericProperty<E> {
+public interface IProperty<E> {
 
-	public static <E> GenericProperty<E> make(String name, Class<E> clazz, E defVal) {
-		return new GenericProperty<>(name, clazz, () -> defVal);
+	public static <E> PropertyImpl<E> make(String name, Class<? super E> clazz, E defVal) {
+		return new PropertyImpl<>(name, clazz, () -> defVal);
 	}
 
-	public static <E> GenericProperty<E> make(String name, Class<E> clazz, Supplier<E> defVal) {
-		return new GenericProperty<E>(name, clazz, defVal);
+	public static <E> PropertyImpl<E> make(String name, Class<? super E> clazz, Supplier<E> defVal) {
+		return new PropertyImpl<E>(name, clazz, defVal);
 	}
 
 	/**
@@ -38,6 +38,6 @@ public interface IGenericProperty<E> {
 	 * 
 	 * @return
 	 */
-	public Class<E> getType();
+	public Class<? super E> getType();
 
 }

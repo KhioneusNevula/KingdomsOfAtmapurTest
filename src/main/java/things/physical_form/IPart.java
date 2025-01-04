@@ -2,8 +2,11 @@ package things.physical_form;
 
 import java.util.UUID;
 
+import things.IMultipart;
+import things.physical_form.components.IComponentPart;
 import things.physical_form.material.IMaterial;
 import things.physical_form.material.IShape;
+import things.physical_form.visage.IVisagePart;
 
 /**
  * A generic interface for component parts in a physical oroganism as well as
@@ -29,11 +32,37 @@ public interface IPart {
 	public String getName();
 
 	/**
-	 * The size of this part relative to the thing it is part of
+	 * The size of this part relative to the body
 	 * 
 	 * @return
 	 */
 	public float getRelativeSize();
+
+	/**
+	 * Modify the size of this part; use "callUpdate" to notify the parent part that
+	 * the size was changed
+	 * 
+	 * @param size
+	 */
+	public void changeSize(float size, boolean callUpdate);
+
+	/**
+	 * Change the material of this part. Set callUpdate to true if you want to call
+	 * an update on the parent soma
+	 * 
+	 * @param material
+	 * @param callUpdate
+	 */
+	public void changeMaterial(IMaterial material, boolean callUpdate);
+
+	/**
+	 * Change the shape of this part. Set callUpdate to true if you want to call an
+	 * update on the parent soma
+	 * 
+	 * @param material
+	 * @param callUpdate
+	 */
+	public void changeShape(IShape shape, boolean callUpdate);
 
 	// TODO mass, stored heat, electricity, material
 
@@ -57,5 +86,11 @@ public interface IPart {
 	 * @return
 	 */
 	public IMaterial getMaterial();
+
+	public IMultipart<?> getOwner();
+
+	public static interface IComponentVisagePart extends IComponentPart, IVisagePart {
+
+	}
 
 }

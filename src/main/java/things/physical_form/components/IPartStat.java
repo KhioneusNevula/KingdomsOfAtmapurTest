@@ -28,7 +28,7 @@ public interface IPartStat<E> {
 	 * 
 	 * @return
 	 */
-	public Class<E> getType();
+	public Class<? super E> getType();
 
 	/**
 	 * Aggregate multiple values of this stat into one, which is useful for some
@@ -38,4 +38,16 @@ public interface IPartStat<E> {
 	 * @return
 	 */
 	public E aggregate(Iterable<E> values);
+
+	/**
+	 * Return val1 with subVal "removed" from it, i.e. whatever aggregation is used,
+	 * it is subtracted.
+	 * 
+	 * @param val1
+	 * @param subVal
+	 * @param count  how many values were aggregated together before the extracted
+	 *               one was removed
+	 * @return
+	 */
+	public E extract(E val1, E subVal, int count);
 }

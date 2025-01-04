@@ -1,5 +1,7 @@
 package sim;
 
+import static sim.IVector.of;
+
 import sim.world.IDimensionTag;
 
 /**
@@ -11,35 +13,127 @@ import sim.world.IDimensionTag;
 
 public interface IVector {
 
+	public static final IVector ZERO = new IVector() {
+
+		@Override
+		public IVector withY(double y) {
+			return of(0, y);
+		}
+
+		@Override
+		public IVector withXY(double x, double y) {
+			return of(x, y);
+		}
+
+		@Override
+		public IVector withX(double x) {
+			return of(x, 0);
+		}
+
+		@Override
+		public IVector withLayer(MapLayer layer) {
+			return of(0, 0, layer);
+		}
+
+		@Override
+		public IVector withDimension(IDimensionTag tag) {
+			return of(0, 0, tag);
+		}
+
+		@Override
+		public int getY() {
+			return 0;
+		}
+
+		@Override
+		public int getX() {
+			return 0;
+		}
+
+		@Override
+		public double getUnadjustedY() {
+			return 0;
+		}
+
+		@Override
+		public double getUnadjustedX() {
+			return 0;
+		}
+
+		@Override
+		public MapLayer getLayer() {
+			return null;
+		}
+
+		@Override
+		public IDimensionTag getDimension() {
+			return null;
+		}
+
+		@Override
+		public String toString() {
+			return "(X:0,Y:0)";
+		}
+	};
+
+	/**
+	 * Create vector with the given angle (degrees) and magnitude
+	 * 
+	 * @param angle
+	 * @param mag
+	 * @return
+	 */
+	public static IVector fromAngle(double angle, double mag) {
+		double x = mag * Math.cos(Math.toRadians(angle));
+		double y = mag * Math.sin(Math.toRadians(angle));
+		return of(x, y);
+	}
+
 	public static IVector of(int x, int y) {
+		if (x == 0 && y == 0)
+			return ZERO;
 		return new VectorLoc(x, y);
 	}
 
 	public static IVector of(double x, double y) {
+		if (x == 0 && y == 0)
+			return ZERO;
 		return new VectorLoc(x, y);
 	}
 
 	public static IVector of(int x, int y, MapLayer layer, IDimensionTag dim) {
+		if (x == 0 && y == 0 && layer == null && dim == null)
+			return ZERO;
 		return new VectorLoc(x, y, layer, dim);
 	}
 
 	public static IVector of(double x, double y, MapLayer layer, IDimensionTag dim) {
+		if (x == 0 && y == 0 && layer == null && dim == null)
+			return ZERO;
 		return new VectorLoc(x, y, layer, dim);
 	}
 
 	public static IVector of(int x, int y, IDimensionTag dim) {
+		if (x == 0 && y == 0 && dim == null)
+			return ZERO;
 		return new VectorLoc(x, y, dim);
 	}
 
 	public static IVector of(double x, double y, IDimensionTag dim) {
+		if (x == 0 && y == 0 && dim == null)
+			return ZERO;
 		return new VectorLoc(x, y, dim);
 	}
 
 	public static IVector of(double x, double y, MapLayer layer) {
+		if (x == 0 && y == 0 && layer == null)
+			return ZERO;
 		return new VectorLoc(x, y, layer);
 	}
 
 	public static IVector of(int x, int y, MapLayer layer) {
+		if (x == 0 && y == 0 && layer == null)
+			return ZERO;
 		return new VectorLoc(x, y, layer);
 	}
 

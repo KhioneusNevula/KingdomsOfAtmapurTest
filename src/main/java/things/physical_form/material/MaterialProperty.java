@@ -40,10 +40,16 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	public static final MaterialProperty<Float> WASHING = make("washing", float.class, 0f);
 
 	/**
-	 * How much this material impedes movement along/through it, or how likely it is
-	 * to move along with something that touches it while moving
+	 * How likely this material is to move along with something that touches it
+	 * while moving
 	 */
 	public static final MaterialProperty<Float> STICKINESS = make("stickiness", float.class, 0f);
+
+	/**
+	 * The quantity of drag force this material exerts on whatever moves through it,
+	 * if it is a fluid or gas
+	 */
+	public static final MaterialProperty<Float> VISCOSITY = make("viscosity", float.class, 0.001f);
 
 	/**
 	 * Used to calculate the coefficient of dynamic friction by averaging the
@@ -144,10 +150,10 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	/**
 	 * Heat Transition Material: What material it turns into when it heats high
 	 * enough. For solid/granular this is usually a liquid; for liquid this is
-	 * usually gas
+	 * usually gas. For gas, this is usually plasma
 	 */
 	public static final MaterialProperty<IMaterial> HEAT_TRANSITION_MATERIAL = make("heat_transition_material",
-			IMaterial.class, Function.identity());
+			IMaterial.class, (IMaterial m) -> (IMaterial) (Material.PLASMA));
 
 	/**
 	 * Cold Transition Point: How much heat it needs to lose to go to the next state

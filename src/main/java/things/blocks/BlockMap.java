@@ -27,7 +27,7 @@ public class BlockMap {
 		this(w, h, Maps.asMap(Set.copyOf(MapLayer.getBlockLayers()), (a) -> defaultBlock));
 	}
 
-	public BlockMap(int w, int h, Map<MapLayer, IBlockState> defaultBlocks) {
+	public BlockMap(int w, int h, Map<MapLayer, ? extends IBlockState> defaultBlocks) {
 		this.w = w;
 		this.h = h;
 		this.blockmap = new IBlockState[MapLayer.numBlockLayers() * w * h];

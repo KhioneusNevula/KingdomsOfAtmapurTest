@@ -46,15 +46,15 @@ public class SignalChannelResource implements IChannelResource<Boolean> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof SignalChannelResource rs) {
-			return this.name.equals(rs.name);
+		if (obj instanceof IChannelResource rs) {
+			return this.name.equals(rs.name()) && this.getMeasureClass().equals(rs.getMeasureClass());
 		}
 		return super.equals(obj);
 	}
 
 	@Override
 	public int hashCode() {
-		return name.hashCode();
+		return name.hashCode() + this.getMeasureClass().hashCode();
 	}
 
 }

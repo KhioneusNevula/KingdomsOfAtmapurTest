@@ -11,19 +11,16 @@ import utilities.graph.RelationGraph;
  * @author borah
  *
  */
-public class ComponentGraph extends RelationGraph<IPart, PartConnection> {
-
-	private boolean illusory;
+public class ComponentGraph<P extends IPart> extends RelationGraph<P, IPartConnection> {
 
 	/**
 	 * 
 	 * @param illusory whether this graph represents an illusory body
 	 */
-	public ComponentGraph(boolean illusory) {
+	public ComponentGraph() {
 		/**
 		 * TODO we will add things like channels and properties and idk
 		 */
 		super(ImmutableMap.of());
-		this.illusory = illusory;
 	}
 }

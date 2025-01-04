@@ -12,8 +12,11 @@ import things.IMultipart;
 import things.blocks.IBlockState;
 import things.interfaces.IActor;
 import things.interfaces.IUnique;
+import things.physical_form.IKind;
+import things.physical_form.IKindSettings;
 import things.physical_form.ISoma;
 import things.physical_form.IVisage;
+import things.physical_form.components.IComponentPart;
 import things.physical_form.material.MaterialProperty;
 
 public class Actor implements IActor {
@@ -25,21 +28,49 @@ public class Actor implements IActor {
 	private ISoma<?> body;
 	private IVisage<?> visage;
 	private IVector velocity;
+	private IKind kind;
 
 	public Actor(UUID id) {
 		this.id = id;
 		this.name = "Actor" + id.getMostSignificantBits();
 		this.location = IVector.of(0, 0);
 		this.velocity = IVector.of(0, 0);
+		this.kind = IKind.MISCELLANEOUS;
+	}
+
+	/**
+	 * Make a body for this entity based on its existing Kind; set the appropriate
+	 * fields and also return the body
+	 * 
+	 * @param settings the settings used to make the body
+	 */
+	public ISoma<? extends IComponentPart> makeBody(IKindSettings settings, boolean setVisage) {
+		if (kind == null)
+			throw new IllegalStateException(this + "");
+		this.setBody(kind.generate(settings));
+		if (setVisage)
+			this.setVisage((IVisage<?>) this.body);
+		return this.body;
+	}
+
+	@Override
+	public IKind getKind() {
+		return kind;
+	}
+
+	public void setKind(IKind kind) {
+		this.kind = kind;
 	}
 
 	public Actor setBody(ISoma<?> soma) {
 		this.body = soma;
+		soma.setOwner(this);
 		return this;
 	}
 
 	public Actor setVisage(IVisage<?> visage) {
 		this.visage = visage;
+		visage.setOwner(this);
 		return this;
 	}
 
@@ -60,7 +91,7 @@ public class Actor implements IActor {
 	}
 
 	@Override
-	public void spawnIntoMap(GameMap map) {
+	public void onSpawnIntoMap(GameMap map) {
 		if (this.location.getDimension() != null
 				&& !this.location.getDimension().equals(map.getMapTile().getDimension())) {
 			this.location = this.location.withDimension(map.getMapTile().getDimension());
@@ -70,8 +101,11 @@ public class Actor implements IActor {
 
 	protected float getDynamicFrictionCoeff() {
 		IBlockState standingOn = world.getBlockMap().getBlock(this.location.down());
-		return (this.body.getMainMaterial().getProperty(MaterialProperty.ROUGHNESS)
+		IBlockState immersedIn = world.getBlockMap().getBlock(this.location);
+		float avg = (this.body.getMainMaterial().getProperty(MaterialProperty.ROUGHNESS)
 				+ standingOn.getBlock().getMaterial().getProperty(MaterialProperty.ROUGHNESS)) / 2;
+		float drag = (1 - avg) * immersedIn.getBlock().getMaterial().getProperty(MaterialProperty.VISCOSITY);
+		return avg + drag;
 	}
 
 	protected float getStaticFrictionCoeff() {
@@ -81,13 +115,29 @@ public class Actor implements IActor {
 	}
 
 	@Override
-	public void tick(long ticks) {
+	public void tick(long ticks, float ticksPerSecond) {
 		// TODO run ticks on actor relating to physical interactions
 		if (this.body != null) {
 			this.body.runTick(ticks);
 			if (this.velocity.mag() != 0) {
-				float fric = friction(this.getDynamicFrictionCoeff(), this.world.gravity());
-				this.location = this.location.add(this.velocity.clampSubtract(fric));
+
+				IBlockState standingOn = world.getBlockMap().getBlock(this.location.down());
+				// float brough =
+				// this.body.getMainMaterial().getProperty(MaterialProperty.ROUGHNESS);
+				// float sorough =
+				// standingOn.getBlock().getMaterial().getProperty(MaterialProperty.ROUGHNESS);
+				float mu = this.getDynamicFrictionCoeff();
+				float fric = friction(mu, this.world.gravity() / ticksPerSecond);
+				this.velocity = this.velocity.clampSubtract(fric / mass());
+				IVector newloc = this.location.add(velocity);
+				/**
+				 * System.out.println("son:" + standingOn + " mu1:" + brough + " mu2:" + sorough
+				 * + "=mu:" + mu + " to:" + newloc + " v:" + this.velocity + " m:" +
+				 * this.mass());
+				 */
+				if (!this.getMap().outOfBounds(newloc)) {
+					this.location = newloc;
+				}
 			}
 		}
 		if (this.visage != null)
@@ -175,7 +225,7 @@ public class Actor implements IActor {
 
 	@Override
 	public void draw(WorldGraphics g) {
-		if (this.visage != null)
+		if (this.visage != null && this.visage.canRender())
 			this.visage.draw(g);
 	}
 
@@ -214,7 +264,16 @@ public class Actor implements IActor {
 
 	@Override
 	public String toString() {
-		return "[|" + this.name + "|]";
+		return "[|" + this.name + "|]" + (this.location != IVector.ZERO ? this.location + "" : "");
+	}
+
+	@Override
+	public String report() {
+		return this + "{\n" + (this.kind != null ? "kind=" + this.kind + ",\n" : "")
+				+ (this.body != null ? "body=" + this.body.somaReport() + ",\n" : "")
+				+ (this.visage != null && this.visage != this.body ? "visage=" + this.visage.visageReport() + ",\n"
+						: "")
+				+ (this.velocity != IVector.ZERO ? "velocty=" + this.velocity + ",\n" : "") + "id=" + this.id + "\n}";
 	}
 
 }

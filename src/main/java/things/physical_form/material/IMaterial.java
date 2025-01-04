@@ -16,6 +16,9 @@ public interface IMaterial extends IChannelResource<Float> {
 
 		@Override
 		public <E> E getProperty(IMaterialProperty<E> property) {
+			if (property == MaterialProperty.PHASE) {
+				return (E) Phase.OTHER;
+			}
 			return property.getDefaultValue(this);
 		}
 	};

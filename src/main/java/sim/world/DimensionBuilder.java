@@ -1,11 +1,16 @@
 package sim.world;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+
+import utilities.IProperty;
 
 /**
  * A simple object to "design" dimensions; for now, just need to pass in the
- * dimension name and the tiles and their positions
+ * dimension name and the tiles and their positions. <br>
+ * TODO a way to add more robust settings and also per-mapp tile settings
  * 
  * @author borah
  *
@@ -15,6 +20,7 @@ public class DimensionBuilder {
 	private IDimensionTag dimension;
 
 	private Set<MapTile> tiles;
+	private Map<IProperty<?>, Object> properties;
 
 	public static DimensionBuilder of(IDimensionTag dimension) {
 		return new DimensionBuilder(dimension);
@@ -23,6 +29,7 @@ public class DimensionBuilder {
 	private DimensionBuilder(IDimensionTag dimension) {
 		this.dimension = dimension;
 		this.tiles = new HashSet<>();
+		this.properties = new HashMap<>();
 	}
 
 	public IDimensionTag getDimension() {
@@ -49,6 +56,15 @@ public class DimensionBuilder {
 
 		tiles.add(new MapTile(dimension, name));
 		return this;
+	}
+
+	public <E> DimensionBuilder addProp(IProperty<E> pr, E val) {
+		properties.put(pr, val);
+		return this;
+	}
+
+	public <E> E getProperty(IProperty<E> forProp) {
+		return (E) properties.getOrDefault(forProp, forProp.defaultValue());
 	}
 
 }

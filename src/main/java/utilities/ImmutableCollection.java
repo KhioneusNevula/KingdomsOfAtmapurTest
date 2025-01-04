@@ -9,7 +9,7 @@ public class ImmutableCollection<T> extends AbstractCollection<T> {
 
 	private Collection<T> inner;
 
-	public ImmutableCollection(Collection<T> inner) {
+	private ImmutableCollection(Collection<T> inner) {
 		this.inner = inner;
 	}
 
@@ -64,6 +64,13 @@ public class ImmutableCollection<T> extends AbstractCollection<T> {
 		public T next() {
 			return other.next();
 		}
+	}
+
+	public static <T> ImmutableCollection<T> from(Collection<T> th) {
+		if (th instanceof ImmutableCollection) {
+			return (ImmutableCollection<T>) th;
+		}
+		return new ImmutableCollection<>(th);
 	}
 
 }

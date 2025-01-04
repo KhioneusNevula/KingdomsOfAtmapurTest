@@ -101,8 +101,15 @@ public class Material implements IMaterial {
 
 	@Override
 	public String toString() {
-		return "|" + name + "|";
+		return "{|" + name + "|}";
 	}
+
+	/**
+	 * The "final" state of physical matter; this is the state all materials reach
+	 * when heated past a gas, and converts into air when cooled. It essentially
+	 * represents complete annihilation
+	 */
+	public static final Material PLASMA;
 
 	/**
 	 * The most basic solid material; heavy stone
@@ -141,19 +148,6 @@ public class Material implements IMaterial {
 	public static final Material ICE;
 
 	static {
-		// stone
-		MaterialBuilder stoneBuilder = builder("stone").prop(ImmutableMap.of(MaterialProperty.CRUMBLES, true));
-		STONE = stoneBuilder.build();
-		GRAVEL = STONE.buildCopy("gravel")
-				.prop(ImmutableMap.of(MaterialProperty.PHASE, Phase.GRANULAR, MaterialProperty.FINENESS, 0.5f)).build();
-		stoneBuilder.prop(MaterialProperty.CRUMBLE_MATERIAL, GRAVEL);
-		LAVA = STONE.buildCopy("lava")
-				.prop(ImmutableMap.of(MaterialProperty.FLUIDITY, 0.25f, MaterialProperty.STICKINESS, 0.5f,
-						MaterialProperty.COLD_TRANSITION_MATERIAL, STONE, MaterialProperty.COLD_TRANSITION_ENERGY,
-						1000f, MaterialProperty.DENSITY, 3.1f))
-				.build();
-		stoneBuilder.prop(MaterialProperty.HEAT_TRANSITION_MATERIAL, LAVA);
-
 		// air/water
 		MaterialBuilder waterBuilder = builder("water").prop(ImmutableMap.of(MaterialProperty.PHASE, Phase.LIQUID,
 				MaterialProperty.DENSITY, 1f, MaterialProperty.ELECTRIC_CONDUCTIVITY, 5f, MaterialProperty.WASHING,
@@ -176,6 +170,24 @@ public class Material implements IMaterial {
 		waterBuilder.prop(ImmutableMap.of(MaterialProperty.COLD_TRANSITION_ENERGY, 0f,
 				MaterialProperty.COLD_TRANSITION_MATERIAL, ICE, MaterialProperty.HEAT_TRANSITION_ENERGY, 100f,
 				MaterialProperty.HEAT_TRANSITION_MATERIAL, STEAM));
+		PLASMA = AIR.buildCopy("plasma")
+				.prop(ImmutableMap.of(MaterialProperty.COLD_TRANSITION_ENERGY, 100f,
+						MaterialProperty.COLD_TRANSITION_MATERIAL, AIR, MaterialProperty.OPACITY, 0.1f,
+						MaterialProperty.ELECTRIC_CONDUCTIVITY, 5f))
+				.build();
+
+		// stone
+		MaterialBuilder stoneBuilder = builder("stone").prop(ImmutableMap.of(MaterialProperty.CRUMBLES, true));
+		STONE = stoneBuilder.build();
+		GRAVEL = STONE.buildCopy("gravel")
+				.prop(ImmutableMap.of(MaterialProperty.PHASE, Phase.GRANULAR, MaterialProperty.FINENESS, 0.5f)).build();
+		stoneBuilder.prop(MaterialProperty.CRUMBLE_MATERIAL, GRAVEL);
+		LAVA = STONE.buildCopy("lava")
+				.prop(ImmutableMap.of(MaterialProperty.FLUIDITY, 0.25f, MaterialProperty.STICKINESS, 0.5f,
+						MaterialProperty.COLD_TRANSITION_MATERIAL, STONE, MaterialProperty.COLD_TRANSITION_ENERGY,
+						1000f, MaterialProperty.DENSITY, 3.1f))
+				.build();
+		stoneBuilder.prop(MaterialProperty.HEAT_TRANSITION_MATERIAL, LAVA);
 
 	}
 

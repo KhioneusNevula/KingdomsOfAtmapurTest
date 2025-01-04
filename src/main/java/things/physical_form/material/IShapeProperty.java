@@ -1,7 +1,7 @@
 package things.physical_form.material;
 
 /**
- * A property of a material
+ * A property of a shape
  * 
  * @author borah
  *
@@ -21,10 +21,10 @@ public interface IShapeProperty<E> {
 	 * 
 	 * @return
 	 */
-	public Class<E> getType();
+	public Class<? super E> getType();
 
 	/**
-	 * Return a default value for this property for a given material
+	 * Return a default value for this property for a given shape
 	 * 
 	 * @return
 	 */

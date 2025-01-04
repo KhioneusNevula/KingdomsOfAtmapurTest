@@ -1,6 +1,7 @@
 package sim;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,15 +57,20 @@ public enum Plane implements IPlane {
 	}
 
 	/**
-	 * Whether this number only contains the planes in the given set and no others
+	 * Whether this number only contains the planes in the given set and no others.
+	 * Returns false for 0.
 	 * 
 	 * @param number
 	 * @param planes
 	 * @return
 	 */
 	public static boolean matches(int number, Iterable<Plane> planes) {
+		if (number == 0)
+			return false;
 		int num = number;
 		for (Plane p : planes) {
+			if (p == OMNIPLANE)
+				continue;
 			boolean is = false;
 			while (num % p.prime == 0) {
 				num /= p.prime;
@@ -78,13 +84,16 @@ public enum Plane implements IPlane {
 	}
 
 	/**
-	 * Whether this number contains the given plane
+	 * Whether this number contains the given plane. Throws exception if given plane
+	 * is omniplane
 	 * 
 	 * @param number
 	 * @param plane
 	 * @return
 	 */
 	public static boolean contains(int number, Plane plane) {
+		if (plane == OMNIPLANE)
+			throw new IllegalArgumentException("Does not make sense to check if omniplane is contained in " + number);
 		return number % plane.prime == 0;
 	}
 
@@ -96,7 +105,11 @@ public enum Plane implements IPlane {
 	 * @return
 	 */
 	public static boolean contains(int number, Iterable<Plane> planes) {
+		if (number == 0)
+			return true;
 		for (Plane p : planes) {
+			if (p == OMNIPLANE)
+				throw new IllegalArgumentException("Why does " + planes + " include the omniplane?");
 			if (number % p.prime != 0) {
 				return false;
 			}
@@ -111,9 +124,13 @@ public enum Plane implements IPlane {
 	 * @return
 	 */
 	public static Collection<Plane> separate(int number) {
+		if (number == 0)
+			return Collections.singleton(Plane.OMNIPLANE);
 
 		Set<Plane> planes = new HashSet<>(values().length);
 		for (Plane p : values()) {
+			if (p == OMNIPLANE)
+				continue;
 			if (number % p.prime == 0) {
 				planes.add(p);
 			}

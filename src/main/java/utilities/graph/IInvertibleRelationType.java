@@ -22,4 +22,11 @@ public interface IInvertibleRelationType {
 	 */
 	public boolean bidirectional();
 
+	/**
+	 * The name of this relation
+	 * 
+	 * @return
+	 */
+	public String name();
+
 }

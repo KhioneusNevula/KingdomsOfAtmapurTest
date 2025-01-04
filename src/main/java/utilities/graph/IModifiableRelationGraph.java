@@ -1,5 +1,8 @@
 package utilities.graph;
 
+import java.util.Collection;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -25,12 +28,13 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 
 	/**
 	 * Remove all edges coming from this node. Return false if no connections were
-	 * removed (because the node had none)
+	 * removed (because the node had none). Will throw exception if the node doesn't
+	 * exist
 	 * 
 	 * @param value
 	 * @return
 	 */
-	boolean removeAllConnections(E value);
+	boolean removeAllConnections(Object value);
 
 	/**
 	 * Remove all connections of this type from the given node; return true if any
@@ -40,7 +44,7 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 * @param type
 	 * @return
 	 */
-	boolean removeAllConnections(E value, R type);
+	boolean removeAllConnections(Object value, R type);
 
 	/**
 	 * Remove all connections between these two nodes; return true if any edges were
@@ -50,7 +54,7 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 * @param other
 	 * @return
 	 */
-	boolean removeAllConnections(E value, E other);
+	boolean removeAllConnections(Object value, Object other);
 
 	/**
 	 * Remove the edge of the given type between these nodes, return true if an edge
@@ -61,7 +65,7 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 * @param other
 	 * @return
 	 */
-	boolean removeEdge(E value, R type, E other);
+	boolean removeEdge(Object value, R type, Object other);
 
 	/**
 	 * Get the value of a specified property on a specified edge. Return null if no
@@ -133,5 +137,19 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 * @param getSet
 	 */
 	<X> void forEachEdgeProperty(E one, R type, EdgeProperty<X> prop, Function<X, X> getSet);
+
+	@Override
+	public IModifiableRelationGraph<E, R> subgraph(Collection<? extends E> nodes);
+
+	@Override
+	public IModifiableRelationGraph<E, R> copy();
+
+	@Override
+	public IModifiableRelationGraph<E, R> traverseBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
+			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
+
+	@Override
+	public IModifiableRelationGraph<E, R> traverseDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
+			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
 
 }

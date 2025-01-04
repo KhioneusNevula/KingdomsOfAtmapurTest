@@ -35,4 +35,11 @@ public interface IChannel extends IPartConnection {
 	 */
 	public boolean isActiveDirection();
 
+	/**
+	 * The system of this channel
+	 * 
+	 * @return
+	 */
+	public IChannelSystem getSystem();
+
 }

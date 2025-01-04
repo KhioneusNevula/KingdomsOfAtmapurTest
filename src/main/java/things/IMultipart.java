@@ -9,6 +9,8 @@ import things.physical_form.IPart;
 import things.physical_form.components.IComponentPart;
 import things.physical_form.graph.CoverageType;
 import things.physical_form.graph.IPartConnection;
+import things.physical_form.material.IMaterial;
+import things.physical_form.material.IShape;
 import utilities.graph.IRelationGraph;
 
 /**
@@ -53,7 +55,8 @@ public interface IMultipart<P extends IPart> {
 
 	/**
 	 * Affix newPart to toPart using the given connection type. Return true if
-	 * successful or false if not
+	 * successful or false if not. NewPart does not have to be part of the body
+	 * already, but toPart does.
 	 * 
 	 * @param toPart
 	 * @param newPart
@@ -61,6 +64,31 @@ public interface IMultipart<P extends IPart> {
 	 */
 	public boolean attach(IComponentPart newPart, IComponentPart toPart, IPartConnection connectionType,
 			Collection<RelativeSide> coveringsides);
+
+	/**
+	 * Called when part of this soma experiences a change in material (e.g.
+	 * liquefies). If the part is therefore "destroyed," add its broken parts to the
+	 * broken part list and add the part itself as a broken part to the list too
+	 * 
+	 * @param part
+	 */
+	public void onPartMaterialChange(IPart part, IMaterial formerMaterial);
+
+	/**
+	 * Called when part of this soma experiences a change in size (e.g. is shrunk)
+	 * 
+	 * @param part
+	 * @param formerMaterial
+	 */
+	public void onPartSizeChange(IPart part, float formerMaterial);
+
+	/**
+	 * Called when part of this soma experiences a change in shape
+	 * 
+	 * @param part
+	 * @param tick
+	 */
+	public void onPartShapeChange(IPart part, IShape formerShape);
 
 	/**
 	 * Return the actor that owns this s

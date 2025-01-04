@@ -110,6 +110,8 @@ public class VectorLoc implements IVector, Cloneable {
 	public IVector withX(double xd) {
 		if (this.xd == xd)
 			return this;
+		if (xd == 0 && this.yd == 0 && this.dimension == null && this.layer == null)
+			return ZERO;
 		VectorLoc two2 = this.clone();
 		two2.x = (int) xd;
 		two2.xd = xd;
@@ -120,16 +122,21 @@ public class VectorLoc implements IVector, Cloneable {
 	public IVector withXY(double x, double y) {
 		if (this.xd == x && this.yd == y)
 			return this;
+		if (x == 0 && y == 0 && this.dimension == null && this.layer == null)
+			return ZERO;
 		VectorLoc two2 = this.clone();
 		two2.x = (int) x;
 		two2.xd = x;
 		two2.y = (int) y;
 		two2.yd = y;
+
 		return two2;
 	}
 
 	@Override
 	public IVector withY(double y) {
+		if (y == 0 && this.xd == 0 && this.dimension == null && this.layer == null)
+			return ZERO;
 		VectorLoc two2 = this.clone();
 		two2.y = (int) y;
 		two2.yd = y;

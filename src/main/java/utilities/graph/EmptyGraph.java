@@ -63,6 +63,11 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 	}
 
 	@Override
+	public Collection<E> getNodesImmutable() {
+		return Collections.emptySet();
+	}
+
+	@Override
 	public boolean addAll(Collection<? extends E> c) {
 		throw new UnsupportedOperationException();
 	}
@@ -113,13 +118,13 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 	}
 
 	@Override
-	public boolean containsEdge(E one, E two) {
+	public boolean containsEdge(Object one, Object two) {
 
 		return false;
 	}
 
 	@Override
-	public boolean containsEdge(E one, R type, E two) {
+	public boolean containsEdge(Object one, R type, Object two) {
 
 		return false;
 	}
@@ -135,7 +140,7 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 	}
 
 	@Override
-	public boolean nodeHasConnections(E one, R type) {
+	public boolean nodeHasConnections(Object one, R type) {
 		return false;
 	}
 
@@ -160,39 +165,47 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 	}
 
 	@Override
-	public Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		throw new IllegalArgumentException(startPoint + "");
 	}
 
 	@Override
-	public Iterator<E> nodeTraversalIteratorDFS(E startPoint, Collection<R> allowedEdgeTypes,
+	public Iterator<E> nodeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		throw new IllegalArgumentException(startPoint + "");
 	}
 
 	@Override
-	public IRelationGraph<E, R> traverseBFS(E startPoint, Collection<R> allowedEdgeTypes, Consumer<E> forEachNode,
+	public IRelationGraph<E, R> traverseBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
+			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+		throw new IllegalArgumentException(startPoint + "");
+	}
+
+	@Override
+	public IRelationGraph<E, R> traverseDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
+			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+		throw new IllegalArgumentException(startPoint + "");
+	}
+
+	@Override
+	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		throw new IllegalArgumentException(startPoint + "");
 	}
 
 	@Override
-	public IRelationGraph<E, R> traverseDFS(E startPoint, Collection<R> allowedEdgeTypes, Consumer<E> forEachNode,
+	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
 		throw new IllegalArgumentException(startPoint + "");
 	}
 
 	@Override
-	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<R> allowedEdgeTypes,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
-		throw new IllegalArgumentException(startPoint + "");
-	}
-
-	@Override
-	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<R> allowedEdgeTypes,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
-		throw new IllegalArgumentException(startPoint + "");
+	public IRelationGraph<E, R> subgraph(Collection<? extends E> nodes) {
+		if (nodes.isEmpty()) {
+			return this;
+		}
+		throw new IllegalArgumentException(nodes + " not in graph: {}");
 	}
 
 	@Override
@@ -203,6 +216,26 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 	@Override
 	public String toString() {
 		return representation();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this)
+			return true;
+		if (obj instanceof IRelationGraph rg) {
+			return rg.isEmpty();
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return Collections.emptySet().hashCode();
+	}
+
+	@Override
+	public EmptyGraph<E, R> copy() {
+		return instance();
 	}
 
 }

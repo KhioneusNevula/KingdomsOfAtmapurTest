@@ -35,6 +35,11 @@ public interface ISensor extends IPartAbility {
 		public Integer aggregate(Iterable<Integer> values) {
 			return MathUtils.primeUnion(values);
 		}
+
+		@Override
+		public Integer extract(Integer val1, Integer subVal, int count) {
+			return MathUtils.primeSetDifference(val1, subVal);
+		}
 	};
 
 	/**

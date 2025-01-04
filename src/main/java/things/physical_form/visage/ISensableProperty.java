@@ -4,22 +4,16 @@ import java.util.Collection;
 
 import things.physical_form.IVisage;
 import things.physical_form.components.ISensor;
+import utilities.IProperty;
 
-public interface ISensableProperty<E> {
-
-	/**
-	 * The type of data of this property
-	 * 
-	 * @return
-	 */
-	public Class<E> getType();
-
-	/**
-	 * The name of this property
-	 * 
-	 * @return
-	 */
-	public String name();
+/**
+ * Property of an object that can be sensed
+ * 
+ * @author borah
+ *
+ * @param <E>
+ */
+public interface ISensableProperty<E> extends IProperty<E> {
 
 	/**
 	 * What sensors can sense this property

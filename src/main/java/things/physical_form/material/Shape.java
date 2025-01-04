@@ -11,37 +11,10 @@ import java.util.Map;
  */
 public class Shape implements IShape {
 
-	private String name;
-	private Map<IShapeProperty<?>, Object> properties;
+	String name;
+	Map<IShapeProperty<?>, Object> properties;
 
-	public static class ShapeBuilder {
-
-		private Shape innerInstance;
-		private boolean closed;
-
-		private ShapeBuilder(String name) {
-			innerInstance = new Shape(name);
-		}
-
-		public <E> ShapeBuilder addProperty(IShapeProperty<E> prop, E val) {
-			if (closed) {
-				throw new IllegalStateException();
-			}
-			innerInstance.properties.put(prop, val);
-			return this;
-		}
-
-		public Shape build() {
-			closed = true;
-			return innerInstance;
-		}
-	}
-
-	public static ShapeBuilder builder(String name) {
-		return new ShapeBuilder(name);
-	}
-
-	private Shape(String name) {
+	Shape(String name) {
 		this.name = name;
 		this.properties = new HashMap<>();
 	}
@@ -80,7 +53,7 @@ public class Shape implements IShape {
 
 	@Override
 	public String toString() {
-		return "|" + name + "|";
+		return "|:" + name + ":|";
 	}
 
 }

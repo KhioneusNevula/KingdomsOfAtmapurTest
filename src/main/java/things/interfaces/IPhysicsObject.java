@@ -39,7 +39,7 @@ public interface IPhysicsObject extends IMovableObject {
 	}
 
 	/**
-	 * Apply a force to this object (in newtons)
+	 * Apply a force to this object (in newtons).
 	 * 
 	 * @param force
 	 */

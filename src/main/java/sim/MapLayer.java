@@ -21,9 +21,9 @@ public enum MapLayer {
 	 */
 	FLOOR(true),
 	/**
-	 * Layer on which walls usually are
+	 * Layer on which walls usually are and which most things move in
 	 */
-	WALL(true),
+	STANDARD_LAYER(true),
 	/**
 	 * Layer which usually blocks the sky, so to speak
 	 */

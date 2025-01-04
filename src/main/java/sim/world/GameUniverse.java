@@ -31,6 +31,7 @@ public class GameUniverse {
 	private Set<IDimensionTag> dimtags;
 	private Map<IDimensionTag, Map<Pair<Integer, Integer>, MapTile>> contiguousTiles = new HashMap<>();
 	private Map<IDimensionTag, Map<String, MapTile>> noncontiguousTiles = new HashMap<>();
+	private Map<IDimensionTag, DimensionBuilder> dimSettings = new HashMap<>();
 	// TODO allow multiple game maps(?) with some being on a lower-energy mode
 	private Map<MapTile, GameMap> loadedMaps = new HashMap<>();
 	private GameMap mainMap;
@@ -71,13 +72,13 @@ public class GameUniverse {
 	 */
 	public void tickWorlds(WorldGraphics g) {
 		if (mainMap != null) {
-			mainMap.tick();
+			mainMap.tick(g.getFps());
 		}
 		for (GameMap map : this.loadedMaps.values()) {
 			if (map == mainMap) {
 				continue;
 			}
-			map.tick();
+			map.tick(g.getFps());
 		}
 		if (mainMap != null) {
 			mainMap.draw(g);
@@ -142,7 +143,7 @@ public class GameUniverse {
 		if (loadedMaps.containsKey(tile)) {
 			return loadedMaps.get(tile).setAsMain(mainGame);
 		}
-		GameMap map = new GameMap(tile, this).setAsMain(mainGame);
+		GameMap map = new GameMap(tile, this, this.dimSettings.get(tile.getDimension())).setAsMain(mainGame);
 		if (mainGame) {
 			this.mainMap = map;
 		}
@@ -181,6 +182,7 @@ public class GameUniverse {
 						tile);
 			}
 		}
+		dimSettings.put(dim.getDimension(), dim);
 	}
 
 	/**

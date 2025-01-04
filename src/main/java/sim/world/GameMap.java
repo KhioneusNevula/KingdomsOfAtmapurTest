@@ -1,20 +1,18 @@
 package sim.world;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
+import java.util.UUID;
 
 import _main.WorldGraphics;
 import processing.core.PConstants;
 import sim.IRenderable;
-import sim.MapLayer;
+import sim.IVector;
 import things.blocks.BlockMap;
-import things.blocks.basic.BasicBlock;
-import things.blocks.fluid.BasicFluidBlock;
 import things.interfaces.IActor;
+import utilities.IProperty;
 
 /**
  * A world map for a game
@@ -36,18 +34,16 @@ public class GameMap implements IRenderable {
 	private int blockRenderSize = TILE_SIZE;
 	private int displayWidth = mapWidth * blockRenderSize;
 	private int displayHeight = mapHeight * blockRenderSize;
-	private Map<IWorldProperty<?>, Object> worldProperties = new HashMap<>();
+	private Map<IProperty<?>, Object> worldProperties = new HashMap<>();
 	private BlockMap blockMap;
-	private Collection<IActor> actors = new HashSet<>();
+	private Map<UUID, IActor> actorsById = new HashMap<>();
 	private long ticks = 0;
+	private List<Runnable> nextTicksQueue = new ArrayList<>();
 
-	GameMap(MapTile tile, GameUniverse universe) {
+	GameMap(MapTile tile, GameUniverse universe, DimensionBuilder builder) {
 		this.mapTile = tile;
 		this.universe = universe;
-		this.blockMap = new BlockMap(mapWidth, mapHeight,
-				ImmutableMap.of(MapLayer.LOWEST, BasicBlock.STONE.getDefaultState(), MapLayer.FLOOR,
-						BasicBlock.STONE.getDefaultState(), MapLayer.WALL, BasicFluidBlock.AIR.getDefaultState(),
-						MapLayer.ROOF, BasicFluidBlock.AIR.getDefaultState()));
+		this.blockMap = new BlockMap(mapWidth, mapHeight, builder.getProperty(WorldProperty.LAYER_BLOCKS));
 		// TODO make a better way to generate
 	}
 
@@ -61,11 +57,24 @@ public class GameMap implements IRenderable {
 	}
 
 	/**
+	 * Queue a process to run the next tick
+	 * 
+	 * @param action
+	 */
+	public void queueAction(Runnable action) {
+		this.nextTicksQueue.add(action);
+	}
+
+	/**
 	 * TODO Run a tick on this game map
 	 */
-	public void tick() {
-		for (IActor actor : actors) {
-			actor.tick(ticks);
+	public void tick(float ticksPerSecond) {
+		for (Runnable run : nextTicksQueue) {
+			run.run();
+		}
+		nextTicksQueue.clear();
+		for (IActor actor : actorsById.values()) {
+			actor.tick(ticks, ticksPerSecond);
 		}
 	}
 
@@ -74,9 +83,21 @@ public class GameMap implements IRenderable {
 		return 0;
 	}
 
+	public void spawnIntoWorld(IActor actor) {
+		this.actorsById.put(actor.getUUID(), actor);
+		actor.onSpawnIntoMap(this);
+	}
+
 	@Override
 	public void draw(WorldGraphics g) {
 		this.drawBackground(g);
+		for (IActor actor : actorsById.values()) {
+			g.push();
+			g.translate((float) (actor.getLocation().getUnadjustedX() * blockRenderSize),
+					(float) (actor.getLocation().getUnadjustedY() * blockRenderSize));
+			actor.draw(g);
+			g.pop();
+		}
 	}
 
 	private void drawBackground(WorldGraphics g) {
@@ -111,11 +132,11 @@ public class GameMap implements IRenderable {
 		return universe;
 	}
 
-	public <E> E getProperty(IWorldProperty<E> prop) {
+	public <E> E getProperty(IProperty<E> prop) {
 		return (E) this.worldProperties.getOrDefault(prop, prop.defaultValue());
 	}
 
-	public <E> void setProperty(IWorldProperty<E> prop, E val) {
+	public <E> void setProperty(IProperty<E> prop, E val) {
 		this.worldProperties.put(prop, val);
 	}
 
@@ -226,6 +247,11 @@ public class GameMap implements IRenderable {
 	 */
 	public int getBlockRenderSize() {
 		return blockRenderSize;
+	}
+
+	public boolean outOfBounds(IVector location) {
+		return location.getX() < 0 || location.getY() < 0 || location.getX() >= this.mapWidth
+				|| location.getY() >= this.mapHeight;
 	}
 
 }

@@ -87,7 +87,7 @@ public class ShapeProperty<E> implements IShapeProperty<E> {
 	}
 
 	@Override
-	public Class<E> getType() {
+	public Class<? super E> getType() {
 		return type;
 	}
 

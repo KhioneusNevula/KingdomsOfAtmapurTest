@@ -1,49 +1,37 @@
 package sim.world;
 
-import java.util.function.Supplier;
+import java.util.Map;
 
-public class WorldProperty<E> implements IWorldProperty<E> {
+import com.google.common.collect.ImmutableMap;
 
-	public static <E> WorldProperty<E> prop(String name, Class<E> type, Supplier<E> defaultVal) {
-		return new WorldProperty<>(name, type, defaultVal);
-	}
+import sim.MapLayer;
+import things.blocks.IBlockState;
+import things.blocks.basic.BasicBlock;
+import things.blocks.fluid.BasicFluidBlock;
+import utilities.IProperty;
 
-	public static <E> WorldProperty<E> prop(String name, Class<E> type, E defaultVal) {
-		return new WorldProperty<>(name, type, () -> defaultVal);
-	}
+/**
+ * Class for general properties that can be assigned to worlds
+ * 
+ * @author borah
+ *
+ */
+public class WorldProperty {
 
-	public static <E> WorldProperty<E> prop(String name, E defaultVal) {
-		return new WorldProperty<>(name, (Class<E>) defaultVal.getClass(), () -> defaultVal);
+	private WorldProperty() {
 	}
 
 	/**
 	 * Acceleration of gravity in a world
 	 */
-	public static final WorldProperty<Float> GRAVITY = prop("gravity", 10f);
-
-	private String name;
-	private Class<E> type;
-	private Supplier<E> defaultValue;
-
-	private WorldProperty(String name, Class<E> type, Supplier<E> defaultVal) {
-		this.type = type;
-		this.name = name;
-		this.defaultValue = defaultVal;
-	}
-
-	@Override
-	public String name() {
-		return name;
-	}
-
-	@Override
-	public E defaultValue() {
-		return defaultValue.get();
-	}
-
-	@Override
-	public Class<E> getType() {
-		return type;
-	}
+	public static final IProperty<Float> GRAVITY = IProperty.make("gravity", float.class, 10f);
+	/**
+	 * The standard default blocks for each map layer (which permits blocks)
+	 */
+	public static final IProperty<Map<MapLayer, ? extends IBlockState>> LAYER_BLOCKS = IProperty.make("layer_blocks",
+			Map.class,
+			ImmutableMap.of(MapLayer.LOWEST, BasicBlock.STONE.getDefaultState(), MapLayer.FLOOR,
+					BasicBlock.STONE.getDefaultState(), MapLayer.STANDARD_LAYER, BasicFluidBlock.AIR.getDefaultState(),
+					MapLayer.ROOF, BasicFluidBlock.AIR.getDefaultState()));
 
 }

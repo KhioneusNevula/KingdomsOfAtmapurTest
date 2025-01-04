@@ -104,8 +104,13 @@ public class CoverageType implements IInvertibleRelationType {
 		return false;
 	}
 
+	@Override
+	public String name() {
+		return this.dir + "_" + this.side;
+	}
+
 	public String toString() {
-		return dir + "_" + side;
+		return name();
 	}
 
 	public RelativeSide getSide() {

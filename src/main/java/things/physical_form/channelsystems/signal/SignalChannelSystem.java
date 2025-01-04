@@ -26,7 +26,7 @@ public class SignalChannelSystem implements IChannelSystem {
 	public SignalChannelSystem(String name, IMaterial signalVectorMaterial, String controlCenterPart) {
 		this.name = name;
 		this.resource = new SignalChannelResource("signal");
-		this.channel = new SignalChannel("nerve", signalVectorMaterial, resource);
+		this.channel = new SignalChannel("nerve", signalVectorMaterial, resource, this);
 		this.controlCenterPart = controlCenterPart;
 		this.brainType = new BrainSignalChannelCenter("brain", this);
 	}
@@ -61,15 +61,35 @@ public class SignalChannelSystem implements IChannelSystem {
 	}
 
 	@Override
+	public String toString() {
+		return "sys{~" + this.name + "~}";
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof IChannelSystem ics) {
+			return this.name.equals(ics.name()) && ics.getType() == ChannelType.SIGNAL
+					&& Collections.singleton(this.brainType).equals(ics.getCenterTypes())
+					&& Collections.singleton(this.channel).equals(ics.getChannelConnectionTypes());
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return name.hashCode() + brainType.hashCode() + channel.hashCode();
+	}
+
+	@Override
 	public <E extends IComponentPart> void populateBody(ISoma<E> body) {
 		Collection<E> brains = body.getPartsByName(controlCenterPart);
 		for (E brain : brains) {
-			brain.addAbility(brainType);
+			brain.addAbility(brainType, true);
 			for (Triplet<E, IPartConnection, E> edge : (Iterable<Triplet<E, IPartConnection, E>>) () -> body
 					.getRepresentationGraph()
 					.edgeTraversalIteratorBFS(brain, Set.copyOf(PartConnection.attachments()), (a, b) -> true)) {
-				body.addChannel(edge.getFirst(), channel, edge.getThird());
-				edge.getThird().addEmbeddedMaterials(channel.getVectorMaterials());
+				body.addChannel(edge.getFirst(), channel, edge.getThird(), true);
+				edge.getThird().addEmbeddedMaterials(channel.getVectorMaterials(), true);
 			}
 
 		}
@@ -78,18 +98,20 @@ public class SignalChannelSystem implements IChannelSystem {
 	@Override
 	public <E extends IComponentPart> void onBodyUpdate(ISoma<E> body, E updated) {
 		// TODO update channel system
+
 	}
 
 	@Override
 	public <E extends IComponentPart> void onBodyLoss(ISoma<E> body, E lost) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public <E extends IComponentPart> void onBodyNew(ISoma<E> body, E gained) {
-		// TODO Auto-generated method stub
-
+	public <E extends IComponentPart> void onBodyNew(ISoma<E> body, E gained, IPartConnection connection, E to,
+			boolean isNew) {
+		if (to.embeddedMaterials().containsAll(channel.getVectorMaterials())) {
+			body.addChannel(to, channel, gained, false);
+		}
 	}
 
 }

@@ -18,6 +18,16 @@ import utilities.Triplet;
 public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Collection<E> {
 
 	/**
+	 * Return the subgraph with only the given nodes of this graph. This subgraph is
+	 * a *view* of the main graph, and reflects changes made to it. Similarly, a
+	 * modifiable version of this graph should modify the parent.
+	 * 
+	 * @param nodes
+	 * @return
+	 */
+	public IRelationGraph<E, R> subgraph(Collection<? extends E> nodes);
+
+	/**
 	 * Get the value of a specified property on a specified edge. Return null if no
 	 * such property was assigned for this edge. Return default value from
 	 * {@link #edgeProperties} if no such property was assigned but a default value
@@ -91,7 +101,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @param two
 	 * @return
 	 */
-	boolean containsEdge(E one, E two);
+	boolean containsEdge(Object one, Object two);
 
 	/**
 	 * If an edge of this type exists between these nodes
@@ -101,7 +111,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @param two
 	 * @return
 	 */
-	boolean containsEdge(E one, R type, E two);
+	boolean containsEdge(Object one, R type, Object two);
 
 	/**
 	 * Number of edges connecting to/from this node
@@ -127,7 +137,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @param type
 	 * @return
 	 */
-	boolean nodeHasConnections(E one, R type);
+	boolean nodeHasConnections(Object one, R type);
 
 	/**
 	 * Return a collection of all the edge types between the given two edges
@@ -154,6 +164,13 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	int edgeCount();
 
 	/**
+	 * Return all nodes as an immutable collection
+	 * 
+	 * @return
+	 */
+	public Collection<E> getNodesImmutable();
+
+	/**
 	 * Return an iterator over edges in this graph
 	 * 
 	 * @return
@@ -176,7 +193,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @param allowedEdgeTypes
 	 * @return
 	 */
-	IRelationGraph<E, R> traverseBFS(E startPoint, Collection<R> allowedEdgeTypes, Consumer<E> forEachNode,
+	IRelationGraph<E, R> traverseBFS(E startPoint, Collection<? extends R> allowedEdgeTypes, Consumer<E> forEachNode,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
 
 	/**
@@ -188,7 +205,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @param allowedEdgeTypes
 	 * @return
 	 */
-	IRelationGraph<E, R> traverseDFS(E startPoint, Collection<R> allowedEdgeTypes, Consumer<E> forEachNode,
+	IRelationGraph<E, R> traverseDFS(E startPoint, Collection<? extends R> allowedEdgeTypes, Consumer<E> forEachNode,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
 
 	/**
@@ -199,7 +216,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @param allowedEdgeTypes
 	 * @return
 	 */
-	Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<R> allowedEdgeTypes,
+	Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
 
 	/**
@@ -210,7 +227,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @param allowedEdgeTypes
 	 * @return
 	 */
-	Iterator<E> nodeTraversalIteratorDFS(E startPoint, Collection<R> allowedEdgeTypes,
+	Iterator<E> nodeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
 
 	/**
@@ -221,7 +238,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @param allowedEdgeTypes
 	 * @return
 	 */
-	Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<R> allowedEdgeTypes,
+	Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
 
 	/**
@@ -232,7 +249,14 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @param allowedEdgeTypes
 	 * @return
 	 */
-	Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<R> allowedEdgeTypes,
+	Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
+
+	/**
+	 * Make copy of this graph
+	 * 
+	 * @return
+	 */
+	public IRelationGraph<E, R> copy();
 
 }
