@@ -4,10 +4,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.google.common.collect.Iterators;
 
-import utilities.Triplet;
+import utilities.couplets.Triplet;
 
 public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements IRelationGraph<E, R> {
 
@@ -36,6 +37,11 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	@Override
 	public Collection<E> getNodesImmutable() {
 		return inner.getNodesImmutable();
+	}
+
+	@Override
+	public Iterable<E> getBareNodes() {
+		return inner.getBareNodes();
 	}
 
 	@Override
@@ -208,7 +214,13 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 
 	@Override
 	public IRelationGraph<E, R> copy() {
-		return inner.copy();
+		return new ImmutableGraphView<>(inner.copy());
+	}
+
+	@Override
+	public IRelationGraph<E, R> deepCopy(Function<E, E> cloner) {
+
+		return new ImmutableGraphView<>(inner.deepCopy(cloner));
 	}
 
 	@Override

@@ -5,8 +5,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
-import utilities.Triplet;
+import utilities.couplets.Triplet;
 
 public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelationGraph<E, R> {
 	public static final EmptyGraph INSTANCE = new EmptyGraph();
@@ -64,6 +65,11 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 
 	@Override
 	public Collection<E> getNodesImmutable() {
+		return Collections.emptySet();
+	}
+
+	@Override
+	public Iterable<E> getBareNodes() {
 		return Collections.emptySet();
 	}
 
@@ -235,6 +241,11 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 
 	@Override
 	public EmptyGraph<E, R> copy() {
+		return instance();
+	}
+
+	@Override
+	public EmptyGraph<E, R> deepCopy(Function<E, E> cloner) {
 		return instance();
 	}
 

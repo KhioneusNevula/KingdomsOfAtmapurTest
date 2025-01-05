@@ -1,9 +1,10 @@
 package things.spirit;
 
+import mental.IMemoryStorage;
+import things.form.graph.connections.IPartConnection;
+import things.form.soma.ISoma;
+import things.form.soma.component.IComponentPart;
 import things.interfaces.IUnique;
-import things.physical_form.ISoma;
-import things.physical_form.components.IComponentPart;
-import things.physical_form.graph.IPartConnection;
 import utilities.graph.IRelationGraph;
 
 /**
@@ -16,13 +17,20 @@ import utilities.graph.IRelationGraph;
 public interface ISpirit extends IUnique {
 
 	/**
+	 * Return this spirit's memory storage
+	 * 
+	 * @return
+	 */
+	public IMemoryStorage getMemories();
+
+	/**
 	 * Whether this spirit can attach itself to the given part in the given body
 	 * 
 	 * @param part
 	 * @param body
 	 * @return
 	 */
-	public boolean canAttachHost(IComponentPart part, ISoma<?> body);
+	public boolean canAttachHost(IComponentPart part, ISoma body);
 
 	/**
 	 * Run this method when attaching this spirit to a given part and body
@@ -30,7 +38,7 @@ public interface ISpirit extends IUnique {
 	 * @param part
 	 * @param body
 	 */
-	public void onAttachHost(IComponentPart part, ISoma<?> body);
+	public void onAttachHost(IComponentPart part, ISoma body);
 
 	/**
 	 * Called when the host changes material or shape; return a new ComponentPart if
@@ -40,7 +48,7 @@ public interface ISpirit extends IUnique {
 	 * 
 	 * @return
 	 */
-	public IComponentPart onHostStateChange(IComponentPart part, ISoma<?> body);
+	public IComponentPart onHostStateChange(IComponentPart part, ISoma body);
 
 	/**
 	 * Called when the host removes this spirit from itself. Use this to, e.g.,
@@ -49,7 +57,7 @@ public interface ISpirit extends IUnique {
 	 * @param part
 	 * @param body
 	 */
-	public void onRemove(IComponentPart part, ISoma<?> body);
+	public void onRemove(IComponentPart part, ISoma body);
 
 	/**
 	 * Run tick on this spirit
@@ -59,5 +67,7 @@ public interface ISpirit extends IUnique {
 	 *               ChannelCenter that is running it
 	 * @param ticks
 	 */
-	public void runTick(IComponentPart part, IRelationGraph<?, IPartConnection> access, long ticks);
+	public void runTick(IComponentPart part, IRelationGraph<IComponentPart, IPartConnection> access, ISoma body,
+			long ticks);
+
 }

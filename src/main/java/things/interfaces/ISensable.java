@@ -1,8 +1,6 @@
 package things.interfaces;
 
-import things.physical_form.IVisage;
-
-import things.physical_form.IVisage;
+import things.form.visage.IVisage;
 
 public interface ISensable {
 
@@ -11,5 +9,5 @@ public interface ISensable {
 	 * 
 	 * @return
 	 */
-	public IVisage visage();
+	public IVisage<?> visage();
 }

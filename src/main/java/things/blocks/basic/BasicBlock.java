@@ -4,13 +4,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import sim.IVector;
-import sim.world.GameMap;
+import _sim.vectors.IVector;
+import _sim.world.GameMap;
 import things.blocks.IBlock;
 import things.blocks.IBlockState;
 import things.blocks.stateproperties.IBlockStateProperty;
-import things.physical_form.material.IMaterial;
-import things.physical_form.material.Material;
+import things.form.material.IMaterial;
+import things.form.material.Material;
 
 /**
  * Basic blocks which have no complex behaviors

@@ -1,5 +1,13 @@
 package utilities.graph;
 
+/**
+ * Edge properties are assumed to be immutable. An edge property that is
+ * nonimmutable may have unexpected behavior
+ * 
+ * @author borah
+ *
+ * @param <E>
+ */
 public class EdgeProperty<E> {
 	private String name;
 	private Class<E> type;

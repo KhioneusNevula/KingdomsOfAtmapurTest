@@ -1,6 +1,6 @@
 package things.interfaces;
 
-import sim.IVector;
+import _sim.vectors.IVector;
 
 public interface IMovableObject extends ILocatable {
 

@@ -145,6 +145,9 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	public IModifiableRelationGraph<E, R> copy();
 
 	@Override
+	public IModifiableRelationGraph<E, R> deepCopy(Function<E, E> cloner);
+
+	@Override
 	public IModifiableRelationGraph<E, R> traverseBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
 

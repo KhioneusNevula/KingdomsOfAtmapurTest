@@ -1,8 +1,8 @@
 package things.interfaces;
 
-import sim.MapLayer;
-import sim.world.GameMap;
-import sim.world.IDimensionTag;
+import _sim.MapLayer;
+import _sim.dimension.IDimensionTag;
+import _sim.world.GameMap;
 
 /**
  * Something that can exist physically in the world

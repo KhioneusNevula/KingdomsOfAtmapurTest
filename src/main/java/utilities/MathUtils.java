@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.IntStream;
 
+import utilities.couplets.Pair;
+
 public final class MathUtils {
 	private MathUtils() {
 	}

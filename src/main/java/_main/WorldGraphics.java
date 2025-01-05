@@ -2,10 +2,10 @@ package _main;
 
 import java.awt.event.KeyEvent;
 
+import _sim.IRenderable;
+import _sim.world.GameUniverse;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
-import sim.IRenderable;
-import sim.world.GameUniverse;
 
 public class WorldGraphics extends PApplet {
 

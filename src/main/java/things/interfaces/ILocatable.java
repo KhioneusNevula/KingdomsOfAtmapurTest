@@ -1,6 +1,6 @@
 package things.interfaces;
 
-import sim.IVector;
+import _sim.vectors.IVector;
 
 public interface ILocatable {
 
@@ -9,5 +9,5 @@ public interface ILocatable {
 	 * 
 	 * @return
 	 */
-	public IVector getLocation();
+	public IVector getPosition();
 }

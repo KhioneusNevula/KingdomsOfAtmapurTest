@@ -26,10 +26,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 
-import utilities.ImmutableCollection;
 import utilities.MathUtils;
-import utilities.Pair;
-import utilities.Triplet;
+import utilities.collections.ImmutableCollection;
+import utilities.couplets.Pair;
+import utilities.couplets.Triplet;
 
 /**
  * 
@@ -858,6 +858,12 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		return ImmutableCollection.from(V.keySet());
 	}
 
+	@Override
+	public Iterable<E> getBareNodes() {
+		return (Iterable<E>) () -> V.values().stream().filter((a) -> a.getAllEdges().isEmpty()).map((a) -> a.getValue())
+				.iterator();
+	}
+
 	/**
 	 * Get the value of a specified property on a specified edge. Return null if no
 	 * such property was assigned for this edge. Return default value from
@@ -1527,7 +1533,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	@Override
 	public String representation() {
 		StringBuilder builder = new StringBuilder("{\n\tNodes (" + V.size() + ")=");
-		builder.append(V.values()).append(", ");
+		builder.append(this.V.keySet()).append(", ");
 		builder.append("\n\tEdges (" + E.size() + ")={\n\t\t");
 		int cols = MathUtils.largestPrimeFactor(E.size());
 		Iterator<IInvertibleEdge<E, R>> edgeit = E.iterator();
@@ -1554,10 +1560,16 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 	@Override
 	public IModifiableRelationGraph<E, R> copy() {
+		return deepCopy(Function.identity());
+	}
+
+	@Override
+	public IModifiableRelationGraph<E, R> deepCopy(Function<E, E> cloner) {
 		RelationGraph<E, R> newGraph = new RelationGraph<>();
 		newGraph.edgeProperties = this.edgeProperties;
 		for (E node : V.keySet()) {
-			newGraph.V.put(node, new Node(node));
+			E n = cloner.apply(node);
+			newGraph.V.put(n, new Node(n));
 		}
 		for (IInvertibleEdge<E, R> edge : E) {
 			INode<E, R> start = newGraph.V.get(edge.getStart().getValue());
@@ -1744,6 +1756,12 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		}
 
 		@Override
+		public Iterable<E> getBareNodes() {
+			return (Iterable<E>) () -> nodes.values().stream().filter((a) -> a.getAllEdges().isEmpty())
+					.map((a) -> a.getValue()).iterator();
+		}
+
+		@Override
 		public <X> X getProperty(E one, R type, E two, EdgeProperty<X> prop) {
 			check(one);
 			check(two);
@@ -1903,9 +1921,9 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			Set<IInvertibleEdge<E, R>> E = Sets.newHashSet(self.E.stream().filter(
 					(e) -> nodes.containsKey(e.getStart().getValue()) && nodes.containsKey(e.getEnd().getValue()))
 					.iterator());
-			StringBuilder builder = new StringBuilder("{\n\tNodes (" + nodes.size() + ")=");
-			builder.append(nodes.values()).append(", ");
-			builder.append("\n\tEdges (" + E.size() + ")={\n\t\t");
+			StringBuilder builder = new StringBuilder("{\n\tNodes (" + nodes.size() + "/" + self.size() + ")=");
+			builder.append(nodes.keySet()).append(", ");
+			builder.append("\n\tEdges (" + E.size() + "/" + self.edgeCount() + ")={\n\t\t");
 			int cols = MathUtils.largestPrimeFactor(E.size());
 			Iterator<IInvertibleEdge<E, R>> edgeit = E.iterator();
 			for (int i = 0; i < E.size(); i++) {
@@ -1919,6 +1937,14 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			}
 			builder.append("\n\t}");
 			return builder.append("\n}").toString();
+		}
+
+		@Override
+		public String toString() {
+			Set<IInvertibleEdge<E, R>> E = Sets.newHashSet(self.E.stream().filter(
+					(e) -> nodes.containsKey(e.getStart().getValue()) && nodes.containsKey(e.getEnd().getValue()))
+					.iterator());
+			return this.getClass().getSimpleName() + "[V=" + this.nodes.size() + ",E=" + E.size() + "]";
 		}
 
 		@Override
@@ -1967,10 +1993,16 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		@Override
 		public IModifiableRelationGraph<E, R> copy() {
+			return deepCopy(Function.identity());
+		}
+
+		@Override
+		public IModifiableRelationGraph<E, R> deepCopy(Function<E, E> cloner) {
 			RelationGraph<E, R> newGraph = new RelationGraph<>();
 			newGraph.edgeProperties = self.edgeProperties;
 			for (E node : this.nodes.keySet()) {
-				newGraph.V.put(node, new Node(node));
+				E n = cloner.apply(node);
+				newGraph.V.put(n, new Node(n));
 			}
 			for (IInvertibleEdge<E, R> edge : E) {
 				if (!nodes.containsKey(edge.getStart().getValue()) || !nodes.containsKey(edge.getEnd().getValue())) {

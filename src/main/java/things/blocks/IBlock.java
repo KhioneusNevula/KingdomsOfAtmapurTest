@@ -2,11 +2,11 @@ package things.blocks;
 
 import java.util.Map;
 
-import sim.IVector;
-import sim.world.GameMap;
+import _sim.vectors.IVector;
+import _sim.world.GameMap;
 import things.blocks.stateproperties.BlockIntProperty;
 import things.blocks.stateproperties.IBlockStateProperty;
-import things.physical_form.material.IMaterial;
+import things.form.material.IMaterial;
 
 /**
  * Interface representing a distinct block
@@ -17,7 +17,7 @@ import things.physical_form.material.IMaterial;
 public interface IBlock {
 
 	/**
-	 * The block property for fluid level
+	 * The block property for fluid level, ranging from 0 to 15
 	 */
 	public static final BlockIntProperty FLUID_LEVEL = IBlockStateProperty.intProperty("level", 0, 0, 15);
 

@@ -42,8 +42,12 @@ public class BasicFluidBlockState implements IBlockState {
 	public <E> IBlockState changeValue(IBlockStateProperty<E> prop, E val) {
 		Builder<IBlockStateProperty<?>, Object> builder = ImmutableMap.builder();
 		builder.put(prop, val);
-		if (prop != BasicFluidBlock.FLUID_LEVEL) {
-			builder.put(BasicFluidBlock.FLUID_LEVEL, level);
+		if (prop == BasicFluidBlock.FLUID_LEVEL) {
+			if (prop.isValidValue(val)) {
+				builder.put(BasicFluidBlock.FLUID_LEVEL, val);
+			} else {
+				throw new IllegalArgumentException("Illegal value for " + prop + " : " + val);
+			}
 		}
 		return material.getState(builder.build());
 	}

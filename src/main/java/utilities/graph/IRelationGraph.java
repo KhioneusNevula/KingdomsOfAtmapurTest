@@ -4,8 +4,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
-import utilities.Triplet;
+import utilities.couplets.Triplet;
 
 /**
  * An interface representing relations-graph with no writing functionality
@@ -171,6 +172,13 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	public Collection<E> getNodesImmutable();
 
 	/**
+	 * Return an iterable of all bare nodes in this graph
+	 * 
+	 * @return
+	 */
+	public Iterable<E> getBareNodes();
+
+	/**
 	 * Return an iterator over edges in this graph
 	 * 
 	 * @return
@@ -258,5 +266,13 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Co
 	 * @return
 	 */
 	public IRelationGraph<E, R> copy();
+
+	/**
+	 * Copy this graph and also try to make copies of the values of each node using
+	 * the given function.
+	 * 
+	 * @return
+	 */
+	public IRelationGraph<E, R> deepCopy(Function<E, E> cloner);
 
 }

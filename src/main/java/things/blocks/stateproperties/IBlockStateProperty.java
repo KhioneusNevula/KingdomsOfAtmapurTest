@@ -6,7 +6,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import utilities.IProperty;
+import utilities.property.IProperty;
 
 /**
  * A property of a block state

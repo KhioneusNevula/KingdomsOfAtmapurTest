@@ -7,8 +7,8 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 
-import sim.IVector;
-import sim.MapLayer;
+import _sim.MapLayer;
+import _sim.vectors.IVector;
 
 /**
  * TODO store temperature?

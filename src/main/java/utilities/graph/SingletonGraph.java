@@ -5,10 +5,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.google.common.collect.Iterators;
 
-import utilities.Triplet;
+import utilities.couplets.Triplet;
 
 public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRelationGraph<E, R> {
 
@@ -211,6 +212,11 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
+	public Iterable<E> getBareNodes() {
+		return this.singleton;
+	}
+
+	@Override
 	public Iterator<Triplet<E, R, E>> edgeIterator() {
 		return Collections.emptyIterator();
 	}
@@ -278,6 +284,11 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	@Override
 	public SingletonGraph<E, R> copy() {
 		return new SingletonGraph<>(this.single);
+	}
+
+	@Override
+	public SingletonGraph<E, R> deepCopy(Function<E, E> cloner) {
+		return new SingletonGraph<>(cloner.apply(single));
 	}
 
 	@Override
