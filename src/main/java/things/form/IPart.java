@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import things.form.material.IMaterial;
 import things.form.shape.IShape;
+import things.form.soma.component.IComponentPart;
 import things.form.visage.IVisage;
 import things.stains.IStain;
 
@@ -16,6 +17,19 @@ import things.stains.IStain;
  *
  */
 public interface IPart extends Cloneable {
+
+	/**
+	 * Creates a "dummy part", i.e. a single-use part whose sole purpose is to be
+	 * used to find a part in a hash map. If any method other than {@link #equals},
+	 * {@link #hashCode}, {@link #toString()}, or {@link #getName()} is called on
+	 * this, throw an exception
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public static IPart dummy(UUID id) {
+		return new DummyPart(id);
+	}
 
 	/**
 	 * Clone this part (does not need to change the UUID)
@@ -81,6 +95,7 @@ public interface IPart extends Cloneable {
 	public void changeShape(IShape shape, boolean callUpdate);
 
 	// TODO mass, stored heat, electricity, material
+	// TODO sensable properties
 
 	/**
 	 * If this part is actually a hole
@@ -155,5 +170,131 @@ public interface IPart extends Cloneable {
 	 * @return
 	 */
 	public Collection<IStain> getStains();
+
+	/**
+	 * 
+	 * @author borah
+	 *
+	 */
+	class DummyPart implements IPart {
+
+		private UUID uuid;
+
+		protected DummyPart(UUID id) {
+			this.uuid = id;
+		}
+
+		@Override
+		public DummyPart setID(UUID id) {
+			this.uuid = id;
+			return this;
+		}
+
+		@Override
+		public UUID getID() {
+			return uuid;
+		}
+
+		@Override
+		public int hashCode() {
+			return uuid.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj instanceof IComponentPart ico) {
+				return this.uuid.equals(ico.getID());
+			}
+			return super.equals(obj);
+		}
+
+		@Override
+		public String toString() {
+			return "dummy(" + this.uuid + ")";
+		}
+
+		@Override
+		public String getName() {
+			return toString();
+		}
+
+		@Override
+		public float getRelativeSize() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void changeSize(float size, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void changeMaterial(IMaterial material, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void changeShape(IShape shape, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean isHole() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public IShape getShape() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public IMaterial getMaterial() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public IForm<?> getOwner() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public int detectionPlanes() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setOwner(IForm<?> owner) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void addStain(IStain stain, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void removeStain(IStain stain, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void removeAllStains(boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<IStain> getStains() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public IComponentPart clone() {
+			throw new UnsupportedOperationException();
+		}
+
+	}
 
 }

@@ -1,6 +1,7 @@
 package things.form.kinds.settings;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import utilities.property.IProperty;
 
@@ -14,6 +15,22 @@ import utilities.property.IProperty;
  *
  */
 public interface IKindSettings {
+
+	/**
+	 * A KindSettings with no properties
+	 */
+	public static final IKindSettings NONE = new IKindSettings() {
+
+		@Override
+		public <E> E getSetting(IProperty<E> property) {
+			return property.defaultValue();
+		}
+
+		@Override
+		public Collection<? extends IProperty<?>> getProperties() {
+			return Collections.emptySet();
+		}
+	};
 
 	/**
 	 * Get a specific property

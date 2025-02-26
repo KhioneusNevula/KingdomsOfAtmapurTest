@@ -23,16 +23,47 @@ public class ShapeProperty<E> implements IShapeProperty<E> {
 		AMORPHIC, SHAPED
 	}
 
+	/**
+	 * Usually determines things like drawing height
+	 * 
+	 * @author borah
+	 *
+	 */
 	public static enum Length {
-		SHORT, MEDIUM, LONG
+		/** A short length, with a factor of 0.5 */
+		SHORT(0.5f),
+		/** A normal length, with a factor of 1 */
+		MEDIUM(1f),
+		/** A long length, with a factor of 2 */
+		LONG(2f);
+
+		/** the multiplying factor for a length */
+		public final float factor;
+
+		private Length(float factor) {
+			this.factor = factor;
+		}
 	}
 
 	public static enum Sharpness {
 		ROUNDED, NOT_SHARP, SHARP, SPIKY
 	}
 
+	/**
+	 * Usually determines things like drawing width
+	 * 
+	 * @author borah
+	 *
+	 */
 	public static enum Thickness {
-		THIN, THICK
+		THIN(0.5f), MEDIUM(1f), THICK(2f);
+
+		/** the multiplying factor for a thickness */
+		public final float factor;
+
+		private Thickness(float factor) {
+			this.factor = factor;
+		}
 	}
 
 	public static enum RollableShape {
@@ -58,14 +89,28 @@ public class ShapeProperty<E> implements IShapeProperty<E> {
 	 * Thin/Thick — if it is thin (in the way of a sheet) or not (impacts how it
 	 * breaks and whether it can slice)
 	 */
-	public static final ShapeProperty<Thickness> THICKNESS = make("thickness", Thickness.class, Thickness.THICK);
+	public static final ShapeProperty<Thickness> THICKNESS = make("thickness", Thickness.class, Thickness.MEDIUM);
 	/**
 	 * Shape of the item in regard to whether or not it can roll
 	 */
 	public static final ShapeProperty<RollableShape> ROLL_SHAPE = make("roll_shape", RollableShape.class,
 			RollableShape.NON_ROLLABLE);
-	/** Tensile Strength — how strong it is; */
-	public static final ShapeProperty<Float> TENSILE = make("tensile", float.class, 0.5f);
+	/**
+	 * Integrity — how much it withstands damage; integrity decreases when
+	 * undergoing damaging forces. Acts as a multiplier to resistance of the
+	 * material
+	 */
+	public static final ShapeProperty<Float> INTEGRITY = make("integrity", float.class, 1f);
+
+	/**
+	 * Is Shard -- whether this shape is a broken shard
+	 */
+	public static final ShapeProperty<Boolean> IS_SHARD = make("is_shard", boolean.class, false);
+
+	/**
+	 * Is Half -- whether this shape is half of something that was bisected
+	 */
+	public static final ShapeProperty<Boolean> IS_HALF = make("is_half", boolean.class, false);
 
 	/**
 	 * 

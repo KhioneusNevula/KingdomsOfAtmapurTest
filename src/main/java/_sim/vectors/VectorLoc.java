@@ -1,7 +1,7 @@
 package _sim.vectors;
 
 import _sim.MapLayer;
-import _sim.dimension.IDimensionTag;
+import _sim.world.MapTile;
 
 /**
  * A location vector with a layer and dimension
@@ -16,7 +16,7 @@ class VectorLoc implements IVector, Cloneable {
 	private int y;
 	private double yd;
 	private MapLayer layer;
-	private IDimensionTag dimension;
+	private MapTile tile;
 
 	VectorLoc(int x, int y) {
 		this.x = x;
@@ -30,15 +30,15 @@ class VectorLoc implements IVector, Cloneable {
 		this.layer = layer;
 	}
 
-	VectorLoc(int x, int y, IDimensionTag tag) {
+	VectorLoc(int x, int y, MapTile tag) {
 		this(x, y);
-		this.dimension = tag;
+		this.tile = tag;
 	}
 
-	VectorLoc(int x, int y, MapLayer layer, IDimensionTag tag) {
+	VectorLoc(int x, int y, MapLayer layer, MapTile tag) {
 		this(x, y);
 		this.layer = layer;
-		this.dimension = tag;
+		this.tile = tag;
 	}
 
 	VectorLoc(double x, double y) {
@@ -53,20 +53,20 @@ class VectorLoc implements IVector, Cloneable {
 		this.layer = layer;
 	}
 
-	VectorLoc(double x, double y, IDimensionTag tag) {
+	VectorLoc(double x, double y, MapTile tag) {
 		this(x, y);
-		this.dimension = tag;
+		this.tile = tag;
 	}
 
-	VectorLoc(double x, double y, MapLayer layer, IDimensionTag tag) {
+	VectorLoc(double x, double y, MapLayer layer, MapTile tag) {
 		this(x, y);
 		this.layer = layer;
-		this.dimension = tag;
+		this.tile = tag;
 	}
 
 	@Override
-	public IDimensionTag getDimension() {
-		return dimension;
+	public MapTile getTile() {
+		return tile;
 	}
 
 	@Override
@@ -90,11 +90,11 @@ class VectorLoc implements IVector, Cloneable {
 	}
 
 	@Override
-	public IVector withDimension(IDimensionTag tag) {
-		if (this.dimension == tag)
+	public IVector withTile(MapTile tag) {
+		if (this.tile == tag)
 			return this;
 		VectorLoc two2 = this.clone();
-		two2.dimension = tag;
+		two2.tile = tag;
 		return two2;
 	}
 
@@ -111,7 +111,7 @@ class VectorLoc implements IVector, Cloneable {
 	public IVector withX(double xd) {
 		if (this.xd == xd)
 			return this;
-		if (xd == 0 && this.yd == 0 && this.dimension == null && this.layer == null)
+		if (xd == 0 && this.yd == 0 && this.tile == null && this.layer == null)
 			return ZERO;
 		VectorLoc two2 = this.clone();
 		two2.x = (int) xd;
@@ -123,7 +123,7 @@ class VectorLoc implements IVector, Cloneable {
 	public IVector withXY(double x, double y) {
 		if (this.xd == x && this.yd == y)
 			return this;
-		if (x == 0 && y == 0 && this.dimension == null && this.layer == null)
+		if (x == 0 && y == 0 && this.tile == null && this.layer == null)
 			return ZERO;
 		VectorLoc two2 = this.clone();
 		two2.x = (int) x;
@@ -136,7 +136,7 @@ class VectorLoc implements IVector, Cloneable {
 
 	@Override
 	public IVector withY(double y) {
-		if (y == 0 && this.xd == 0 && this.dimension == null && this.layer == null)
+		if (y == 0 && this.xd == 0 && this.tile == null && this.layer == null)
 			return ZERO;
 		VectorLoc two2 = this.clone();
 		two2.y = (int) y;
@@ -160,8 +160,10 @@ class VectorLoc implements IVector, Cloneable {
 
 	@Override
 	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
 		if (obj instanceof IVector loc) {
-			return this.x == loc.getX() && this.y == loc.getY() && this.dimension == loc.getDimension()
+			return this.x == loc.getX() && this.y == loc.getY() && this.tile == loc.getTile()
 					&& this.layer == loc.getLayer();
 		}
 		return super.equals(obj);
@@ -169,14 +171,14 @@ class VectorLoc implements IVector, Cloneable {
 
 	@Override
 	public int hashCode() {
-		return this.x * this.y + (this.dimension != null ? this.dimension.getId().hashCode() : 0)
+		return this.x * this.y + (this.tile != null ? this.tile.hashCode() : 0)
 				+ (this.layer != null ? this.layer.hashCode() : 0);
 	}
 
 	@Override
 	public String toString() {
 		return "(X:" + (this.xd != this.x ? this.xd : this.x) + ",Y:" + (this.yd != this.y ? this.yd : this.y)
-				+ (layer != null ? ",L:" + layer : "") + (dimension != null ? ",D:" + this.dimension : "") + ")";
+				+ (layer != null ? ",L:" + layer : "") + (tile != null ? ",T:" + this.tile.toString() : "") + ")";
 	}
 
 }

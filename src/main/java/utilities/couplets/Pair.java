@@ -10,7 +10,7 @@ import java.util.Map;
  * @param <A> first parameter type
  * @param <B> second parameter type
  */
-public class Pair<A, B> implements Map.Entry<A, B> {
+public class Pair<A, B> implements Map.Entry<A, B>, Cloneable {
 
 	private A first;
 	private B second;
@@ -136,6 +136,15 @@ public class Pair<A, B> implements Map.Entry<A, B> {
 							: pair.second == null);
 		}
 		return super.equals(obj);
+	}
+
+	@Override
+	public Pair<A, B> clone() {
+
+		Pair<A, B> pa = Pair.of(first, second);
+		pa.firstLabel = this.firstLabel;
+		pa.secondLabel = this.secondLabel;
+		return pa;
 	}
 
 }

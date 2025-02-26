@@ -31,7 +31,7 @@ public class BlockEnumProperty<E extends Enum<E>> implements IBlockStateProperty
 	}
 
 	@Override
-	public String name() {
+	public String getPropertyName() {
 		return name;
 	}
 

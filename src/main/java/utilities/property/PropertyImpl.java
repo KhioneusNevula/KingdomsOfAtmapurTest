@@ -21,7 +21,7 @@ public class PropertyImpl<E> implements IProperty<E> {
 		this.defaultSupplier = defaultVal;
 	}
 
-	public String name() {
+	public String getPropertyName() {
 		return name;
 	}
 
@@ -42,7 +42,7 @@ public class PropertyImpl<E> implements IProperty<E> {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof IProperty mat) {
-			return this.name.equals(mat.name()) && this.type.equals(mat.getType());
+			return this.name.equals(mat.getPropertyName()) && this.type.equals(mat.getType());
 		}
 		return super.equals(obj);
 	}

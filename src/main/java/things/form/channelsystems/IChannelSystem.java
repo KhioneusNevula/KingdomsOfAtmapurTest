@@ -1,11 +1,15 @@
 package things.form.channelsystems;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import things.form.channelsystems.IChannelCenter.ChannelRole;
+import things.form.channelsystems.signal.SignalChannelSystem;
 import things.form.graph.connections.IPartConnection;
+import things.form.material.Material;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
+import things.spirit.ISpirit;
 
 /**
  * A singleton representation of a specific kind of channelSystem
@@ -27,11 +31,40 @@ public interface IChannelSystem {
 	}
 
 	/**
+	 * A general nervous system, using the nerve-tissue material
+	 */
+	public static final SignalChannelSystem NERVOUS_SYSTEM = new SignalChannelSystem("nerve", Material.GENERIC_TISSUE,
+			"brain");
+
+	/**
 	 * The name of this channel system
 	 * 
 	 * @return
 	 */
 	public String name();
+
+	/**
+	 * Returns a set of Needs that represent any quantity this channel system
+	 * requires to remain full or high-level
+	 * 
+	 * @return
+	 */
+	public default Collection<ChannelNeed> getChannelSystemNeeds() {
+		return Collections.emptySet();
+	}
+
+	/**
+	 * Return the amount of the given Need this body has from the perspective of
+	 * this body part (the brain body part, so to speak) and the given spirit, where
+	 * 1f means the need is in fine condition and 0f means the body is in critical
+	 * condition
+	 * 
+	 * @param part
+	 * @return
+	 */
+	public default float getNeedLevel(ISpirit spirit, IComponentPart part, ChannelNeed forNeed) {
+		return 1f;
+	}
 
 	/**
 	 * The type of this system
@@ -69,14 +102,15 @@ public interface IChannelSystem {
 	 * 
 	 * @return
 	 */
-	public Collection<? extends IChannelResource<?>> getChannelResources();
+	public Collection<? extends IResource<?>> getChannelResources();
 
 	/**
-	 * Populate a body with the channels and centers of this system
+	 * Populate a body with the channels and centers of this system and return the
+	 * parts that had channel centers applied to them
 	 * 
 	 * @param body
 	 */
-	public void populateBody(ISoma body);
+	public Collection<? extends IComponentPart> populateBody(ISoma body);
 
 	/**
 	 * Called when a body experiences a significant change in one of its parts (i.e.
@@ -88,12 +122,13 @@ public interface IChannelSystem {
 	public void onBodyUpdate(ISoma body, IComponentPart updated);
 
 	/**
-	 * Called when a body loses a part
+	 * Called when a body loses a part. Return false if the channel system can no
+	 * longer exist in the body
 	 * 
 	 * @param body
 	 * @param lost
 	 */
-	public void onBodyLoss(ISoma body, IComponentPart lost);
+	public boolean onBodyLoss(ISoma body, IComponentPart lost);
 
 	/**
 	 * Called when a new connection is formed in the body;

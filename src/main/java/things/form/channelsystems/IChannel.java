@@ -10,6 +10,9 @@ import things.form.material.IMaterial;
  */
 public interface IChannel extends IPartConnection {
 
+	@Override
+	public IChannel invert();
+
 	/**
 	 * Get the embedded materials this channel is conveyed through, if any (e.g.
 	 * nerve (signals) are conveyed through nerve tissue). These materials are
@@ -24,7 +27,7 @@ public interface IChannel extends IPartConnection {
 	 * 
 	 * @return
 	 */
-	public Collection<? extends IChannelResource<?>> conveys();
+	public Collection<? extends IResource<?>> conveys();
 
 	/**
 	 * Whether this is the "active" direction of the channel, i.e. the direction the

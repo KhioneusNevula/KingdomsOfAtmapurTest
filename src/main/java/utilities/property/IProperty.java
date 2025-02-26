@@ -24,7 +24,7 @@ public interface IProperty<E> {
 	 * 
 	 * @return
 	 */
-	public String name();
+	public String getPropertyName();
 
 	/**
 	 * Return the default value of this property

@@ -1,11 +1,14 @@
 package things.spirit;
 
-import mental.IMemoryStorage;
-import things.form.graph.connections.IPartConnection;
+import java.util.Collection;
+
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.interfaces.IUnique;
-import utilities.graph.IRelationGraph;
+import things.status_effect.IPartStatusEffectInstance;
+import thinker.mind.clock.IClock;
+import thinker.mind.will.IWill;
+import thinker.social.IParty;
 
 /**
  * An intangible element of a sentient being which governs their body and how
@@ -14,14 +17,29 @@ import utilities.graph.IRelationGraph;
  * @author borah
  *
  */
-public interface ISpirit extends IUnique {
+public interface ISpirit extends IUnique, IParty {
 
 	/**
-	 * Return this spirit's memory storage
+	 * Whether this spirit is "active," i.e. it is actively thinking. If inactive,
+	 * it will not think
 	 * 
 	 * @return
 	 */
-	public IMemoryStorage getMemories();
+	public boolean isActive();
+
+	/**
+	 * The will is the location of the thoughts this spirit thinks
+	 * 
+	 * @return
+	 */
+	public IWill getWill();
+
+	/**
+	 * Get the internal clock of this being
+	 * 
+	 * @return
+	 */
+	public IClock getClock();
 
 	/**
 	 * Whether this spirit can attach itself to the given part in the given body
@@ -60,6 +78,24 @@ public interface ISpirit extends IUnique {
 	public void onRemove(IComponentPart part, ISoma body);
 
 	/**
+	 * Called when the host gains a new status effect
+	 * 
+	 * @param part
+	 * @param body
+	 * @param effect
+	 */
+	public void onHostEffectApplied(IComponentPart part, ISoma body, IPartStatusEffectInstance effect);
+
+	/**
+	 * Called when the host removes a status effect
+	 * 
+	 * @param part
+	 * @param body
+	 * @param effect
+	 */
+	public void onHostEffectRemoved(IComponentPart part, ISoma body, IPartStatusEffectInstance effect);
+
+	/**
 	 * Run tick on this spirit
 	 * 
 	 * @param part
@@ -67,7 +103,6 @@ public interface ISpirit extends IUnique {
 	 *               ChannelCenter that is running it
 	 * @param ticks
 	 */
-	public void runTick(IComponentPart part, IRelationGraph<IComponentPart, IPartConnection> access, ISoma body,
-			long ticks);
+	public void runTick(IComponentPart part, Collection<? extends IComponentPart> access, ISoma body, long ticks);
 
 }

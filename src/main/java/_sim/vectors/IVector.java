@@ -3,7 +3,7 @@ package _sim.vectors;
 import static _sim.vectors.IVector.of;
 
 import _sim.MapLayer;
-import _sim.dimension.IDimensionTag;
+import _sim.world.MapTile;
 
 /**
  * A vector of location or movement. Should be immutable.
@@ -37,8 +37,8 @@ public interface IVector {
 		}
 
 		@Override
-		public IVector withDimension(IDimensionTag tag) {
-			return of(0, 0, tag);
+		public IVector withTile(MapTile tile) {
+			return of(0, 0, tile);
 		}
 
 		@Override
@@ -67,7 +67,7 @@ public interface IVector {
 		}
 
 		@Override
-		public IDimensionTag getDimension() {
+		public MapTile getTile() {
 			return null;
 		}
 
@@ -108,7 +108,7 @@ public interface IVector {
 		return new DoubleVector(x, y);
 	}
 
-	public static IVector of(int x, int y, MapLayer layer, IDimensionTag dim) {
+	public static IVector of(int x, int y, MapLayer layer, MapTile dim) {
 		if (layer == null && dim != null) {
 			return of(x, y, dim);
 		}
@@ -121,7 +121,7 @@ public interface IVector {
 		return new VectorLoc(x, y, layer, dim);
 	}
 
-	public static IVector of(double x, double y, MapLayer layer, IDimensionTag dim) {
+	public static IVector of(double x, double y, MapLayer layer, MapTile dim) {
 		if (layer == null && dim != null) {
 			return of(x, y, dim);
 		}
@@ -134,14 +134,14 @@ public interface IVector {
 		return new VectorLoc(x, y, layer, dim);
 	}
 
-	public static IVector of(int x, int y, IDimensionTag dim) {
+	public static IVector of(int x, int y, MapTile dim) {
 		if (dim == null) {
 			return of(x, y);
 		}
 		return new VectorLoc(x, y, dim);
 	}
 
-	public static IVector of(double x, double y, IDimensionTag dim) {
+	public static IVector of(double x, double y, MapTile dim) {
 		if (dim == null)
 			return of(x, y);
 		return new VectorLoc(x, y, dim);
@@ -160,11 +160,11 @@ public interface IVector {
 	}
 
 	/**
-	 * Get the dimensional position
+	 * Get the map tile this vector is at
 	 * 
 	 * @return
 	 */
-	public IDimensionTag getDimension();
+	public MapTile getTile();
 
 	/**
 	 * Get the layer of the map this is in
@@ -202,12 +202,12 @@ public interface IVector {
 	public double getUnadjustedY();
 
 	/**
-	 * Return a new vector in the given dmiension
+	 * Return a new vector in the given tile
 	 * 
 	 * @param tag
 	 * @return
 	 */
-	public IVector withDimension(IDimensionTag tag);
+	public IVector withTile(MapTile tag);
 
 	/**
 	 * Return a new vector on the given layer
@@ -348,5 +348,14 @@ public interface IVector {
 		if (factor == 1)
 			return this;
 		return this.withXY(this.getUnadjustedX() * factor, this.getUnadjustedY() * factor);
+	}
+
+	/**
+	 * Return the vector with magnitude set to 1
+	 * 
+	 * @return
+	 */
+	public default IVector normalize() {
+		return this.withMagnitude(1);
 	}
 }

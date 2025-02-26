@@ -15,7 +15,10 @@ import com.google.common.collect.Iterators;
 import _main.WorldGraphics;
 import _sim.dimension.DimensionBuilder;
 import _sim.dimension.IDimensionTag;
-import utilities.collections.IteratorUtils;
+import thinker.concepts.knowledge.INoosphereKnowledgeBase;
+import thinker.concepts.knowledge.NoosphereKnowledgeBase;
+import thinker.social.PartyRelationGraph;
+import utilities.collections.CollectionUtils;
 import utilities.couplets.Pair;
 
 /**
@@ -37,6 +40,8 @@ public class GameUniverse {
 	// TODO allow multiple game maps(?) with some being on a lower-energy mode
 	private Map<MapTile, GameMap> loadedMaps = new HashMap<>();
 	private GameMap mainMap;
+	private PartyRelationGraph partyRelations;
+	private INoosphereKnowledgeBase noosphere;
 
 	/**
 	 * UUID is to generate the random as well as to save it
@@ -47,6 +52,16 @@ public class GameUniverse {
 		this.universeID = id;
 		this.rand = new Random(id.getMostSignificantBits());
 		dimtags = ImmutableSet.of();
+		this.partyRelations = new PartyRelationGraph();
+		this.noosphere = new NoosphereKnowledgeBase();
+	}
+
+	public INoosphereKnowledgeBase getNoosphere() {
+		return noosphere;
+	}
+
+	public void setNoosphere(INoosphereKnowledgeBase noosphere) {
+		this.noosphere = noosphere;
 	}
 
 	/**
@@ -56,6 +71,15 @@ public class GameUniverse {
 	 */
 	public GameMap getMainMap() {
 		return mainMap;
+	}
+
+	/**
+	 * Get the graph of relations of the different parties in the world
+	 * 
+	 * @return
+	 */
+	public PartyRelationGraph getPartyRelations() {
+		return partyRelations;
 	}
 
 	/**
@@ -225,8 +249,8 @@ public class GameUniverse {
 	 * @return
 	 */
 	public Iterator<MapTile> getAllTiles() {
-		return Iterators.concat(IteratorUtils.ofMapOfMaps(contiguousTiles),
-				IteratorUtils.ofMapOfMaps(noncontiguousTiles));
+		return Iterators.concat(CollectionUtils.ofMapOfMaps(contiguousTiles),
+				CollectionUtils.ofMapOfMaps(noncontiguousTiles));
 	}
 
 	/**

@@ -2,19 +2,38 @@ package utilities.graph;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import com.google.common.collect.Iterators;
 
 import utilities.couplets.Triplet;
+import utilities.property.IProperty;
 
 public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements IRelationGraph<E, R> {
 
 	private IRelationGraph<E, R> inner;
 
-	public ImmutableGraphView(IRelationGraph<E, R> inner) {
+	/**
+	 * Returns an immutable graph view. If the given graph is an immutable graph,
+	 * then just return it again to avoid unnecessary recursions.
+	 * 
+	 * @param <E>
+	 * @param <R>
+	 * @param other
+	 * @return
+	 */
+	public static <E, R extends IInvertibleRelationType> ImmutableGraphView<E, R> of(IRelationGraph<E, R> other) {
+		if (other instanceof ImmutableGraphView) {
+			return (ImmutableGraphView<E, R>) other;
+		}
+		return new ImmutableGraphView<>(other);
+	}
+
+	private ImmutableGraphView(IRelationGraph<E, R> inner) {
 		this.inner = inner;
 	}
 
@@ -35,8 +54,8 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
-	public Collection<E> getNodesImmutable() {
-		return inner.getNodesImmutable();
+	public Set<E> getNodeSetImmutable() {
+		return inner.getNodeSetImmutable();
 	}
 
 	@Override
@@ -95,22 +114,27 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
-	public <X> X getProperty(E one, R type, E two, EdgeProperty<X> prop) {
+	public <X> X getProperty(E one, R type, E two, IProperty<X> prop) {
 		return inner.getProperty(one, type, two, prop);
 	}
 
 	@Override
-	public <X> void forEachEdgeProperty(E one, E two, EdgeProperty<X> prop, Consumer<X> get) {
+	public String edgeToString(E first, R second, E third, boolean includeEnds) {
+		return inner.edgeToString(first, second, third, includeEnds);
+	}
+
+	@Override
+	public <X> void forEachEdgeProperty(E one, E two, IProperty<X> prop, Consumer<X> get) {
 		inner.forEachEdgeProperty(one, two, prop, get);
 	}
 
 	@Override
-	public <X> void forEachEdgeProperty(E one, EdgeProperty<X> prop, Consumer<X> get) {
+	public <X> void forEachEdgeProperty(E one, IProperty<X> prop, Consumer<X> get) {
 		inner.forEachEdgeProperty(one, prop, get);
 	}
 
 	@Override
-	public <X> void forEachEdgeProperty(E one, R type, EdgeProperty<X> prop, Consumer<X> get) {
+	public <X> void forEachEdgeProperty(E one, R type, IProperty<X> prop, Consumer<X> get) {
 		inner.forEachEdgeProperty(one, type, prop, get);
 	}
 
@@ -125,12 +149,17 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
+	public E get(Object of) {
+		return inner.get(of);
+	}
+
+	@Override
 	public boolean containsEdge(Object one, Object two) {
 		return inner.containsEdge(one, two);
 	}
 
 	@Override
-	public boolean containsEdge(Object one, R type, Object two) {
+	public boolean containsEdge(Object one, Object type, Object two) {
 		return inner.containsEdge(one, type, two);
 	}
 
@@ -170,8 +199,18 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
+	public Iterator<Triplet<E, R, E>> edgeIterator(Collection<? extends R> forTypes) {
+		return Iterators.unmodifiableIterator(inner.edgeIterator(forTypes));
+	}
+
+	@Override
+	public Iterator<Triplet<E, R, E>> outgoingEdges(E forNode) {
+		return Iterators.unmodifiableIterator(inner.outgoingEdges(forNode));
+	}
+
+	@Override
 	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+			BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 
 		return Iterators
 				.unmodifiableIterator(inner.edgeTraversalIteratorBFS(startPoint, allowedEdgeTypes, applyAcrossObject));
@@ -179,14 +218,14 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 
 	@Override
 	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+			BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 		return Iterators
 				.unmodifiableIterator(edgeTraversalIteratorDFS(startPoint, allowedEdgeTypes, applyAcrossObject));
 	}
 
 	@Override
 	public Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+			BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 
 		return Iterators
 				.unmodifiableIterator(nodeTraversalIteratorBFS(startPoint, allowedEdgeTypes, applyAcrossObject));
@@ -194,43 +233,65 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 
 	@Override
 	public Iterator<E> nodeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
-			BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+			BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 		return Iterators
 				.unmodifiableIterator(nodeTraversalIteratorDFS(startPoint, allowedEdgeTypes, applyAcrossObject));
 	}
 
 	@Override
 	public IRelationGraph<E, R> traverseBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
-			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+			Consumer<E> forEachNode, BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 
 		return inner.traverseBFS(startPoint, allowedEdgeTypes, forEachNode, applyAcrossObject);
 	}
 
 	@Override
 	public IRelationGraph<E, R> traverseDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
-			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject) {
+			Consumer<E> forEachNode, BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 		return inner.traverseDFS(startPoint, allowedEdgeTypes, forEachNode, applyAcrossObject);
 	}
 
 	@Override
 	public IRelationGraph<E, R> copy() {
-		return new ImmutableGraphView<>(inner.copy());
+		return ImmutableGraphView.of(inner.copy());
 	}
 
 	@Override
 	public IRelationGraph<E, R> deepCopy(Function<E, E> cloner) {
 
-		return new ImmutableGraphView<>(inner.deepCopy(cloner));
+		return ImmutableGraphView.of(inner.deepCopy(cloner));
 	}
 
 	@Override
-	public IRelationGraph<E, R> subgraph(Collection<? extends E> nodes) {
-		return new ImmutableGraphView<>(inner.subgraph(nodes));
+	public <E2, R2 extends IInvertibleRelationType> ImmutableGraphView<E2, R2> mapCopy(Function<E, E2> nodeMapper,
+			Function<R, R2> edgeMapper) {
+		return ImmutableGraphView.of(inner.mapCopy(nodeMapper, edgeMapper));
+	}
+
+	@Override
+	public ImmutableGraphView<E, R> subgraph(Iterable<? extends E> nodes) {
+		return ImmutableGraphView.of(inner.subgraph(nodes));
+	}
+
+	@Override
+	public ImmutableGraphView<E, R> subgraph(Iterable<? extends E> nodes, Predicate<Triplet<E, R, E>> edgePred) {
+		return ImmutableGraphView.of(inner.subgraph(nodes, edgePred));
 	}
 
 	@Override
 	public String representation() {
-		return "ImmutableView{" + inner.representation() + "}";
+		return this.representation(Object::toString);
+	}
+
+	@Override
+	public String representation(Function<E, String> converter) {
+		return "ImmutableView{" + inner.representation(converter) + "}";
+	}
+
+	@Override
+	public String representation(Function<E, String> converter, Function<R, String> edgeConverter) {
+
+		return "ImmutableView{" + inner.representation(converter, edgeConverter) + "}";
 	}
 
 	@Override

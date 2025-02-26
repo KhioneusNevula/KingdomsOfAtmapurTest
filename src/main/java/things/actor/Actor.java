@@ -13,19 +13,26 @@ import _sim.vectors.IVector;
 import _sim.world.GameMap;
 import things.blocks.IBlockState;
 import things.form.IForm;
+import things.form.graph.connections.PartConnection;
 import things.form.kinds.IKind;
 import things.form.kinds.settings.IKindSettings;
 import things.form.material.property.MaterialProperty;
+import things.form.shape.property.ShapeProperty;
+import things.form.shape.property.ShapeProperty.Shapedness;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.form.visage.IVisage;
 import things.interfaces.IUnique;
-import things.physics.ForceType;
+import things.physics_and_chemistry.ForceResult;
+import things.physics_and_chemistry.ForceType;
+import thinker.concepts.general_types.IProfile.ProfileType;
+import thinker.concepts.general_types.Profile;
 
 public class Actor implements IActor {
 
 	private String name;
 	private UUID id;
+	private Profile profile;
 	private IVector location;
 	private GameMap world;
 	private ISoma body;
@@ -34,8 +41,13 @@ public class Actor implements IActor {
 	private IKind kind;
 
 	public Actor(UUID id) {
+		this(id, null);
+	}
+
+	public Actor(UUID id, String name) {
 		this.id = id;
-		this.name = "Actor" + id.getMostSignificantBits();
+		this.profile = new Profile(id, ProfileType.INDIVIDUAL).setIdentifierName(name);
+		this.name = name == null ? "Actor" + id.getMostSignificantBits() : name;
 		this.location = IVector.of(0, 0);
 		this.velocity = IVector.of(0, 0);
 		this.kind = IKind.MISCELLANEOUS;
@@ -95,9 +107,8 @@ public class Actor implements IActor {
 
 	@Override
 	public void onSpawnIntoMap(GameMap map) {
-		if (this.location.getDimension() != null
-				&& !this.location.getDimension().equals(map.getMapTile().getDimension())) {
-			this.location = this.location.withDimension(map.getMapTile().getDimension());
+		if (this.location.getTile() != null && !this.location.getTile().equals(map.getMapTile())) {
+			this.location = this.location.withTile(map.getMapTile());
 		}
 		this.world = map;
 	}
@@ -133,7 +144,7 @@ public class Actor implements IActor {
 					List<Actor> toSpawn = new ArrayList<>();
 					float totalmass = this.mass();
 					for (ISoma soma : this.body.popBrokenOffParts()) {
-						Actor newActor = new Actor(soma.getCenterPart().getID()).setBodyAndVisage(soma);
+						Actor newActor = new Actor(UUID.randomUUID()).setBodyAndVisage(soma);
 						newActor.setPosition(this.getPosition());
 						totalmass += newActor.mass();
 						toSpawn.add(newActor);
@@ -198,7 +209,7 @@ public class Actor implements IActor {
 
 	@Override
 	public IDimensionTag getDimension() {
-		return location.getDimension();
+		return location != null ? (location.getTile() != null ? location.getTile().getDimension() : null) : null;
 	}
 
 	@Override
@@ -216,6 +227,16 @@ public class Actor implements IActor {
 		return id;
 	}
 
+	public void setUUID(UUID id) {
+		this.id = id;
+		this.profile = new Profile(id, ProfileType.INDIVIDUAL).setIdentifierName(this.profile.getIdentifierName());
+	}
+
+	@Override
+	public Profile getProfile() {
+		return this.profile;
+	}
+
 	@Override
 	public void move(IVector difference) {
 		this.location = this.location.add(difference);
@@ -227,32 +248,69 @@ public class Actor implements IActor {
 	}
 
 	@Override
-	public void applyForce(IComponentPart at, IVector force, ForceType type, IComponentPart generatedBy) {
+	public ForceResult applyForce(IComponentPart at, IComponentPart connection, IVector force, ForceType type,
+			IComponentPart generatedBy) {
 		// TODO do complex force interactions
-		switch (type) {
-		case BLUNT:
-		case PUSH:
-		case SCRATCH:
-		case SLICE:
-		case STAB:
-		}
+		return this.applyForce(at, connection, force, type, RelativeSide.fromVector(force));
 	}
 
 	@Override
-	public void applyForce(IComponentPart at, IVector force, ForceType type, RelativeSide side) {
+	public ForceResult applyForce(IComponentPart at, IComponentPart connection, IVector force, ForceType type,
+			RelativeSide side) {
+
 		// TODO do complex force interactions
 		switch (type) {
-		case BLUNT:
-
 		case PUSH:
-
+			this.accelerate(force.scaleMagnitudeBy(1 / mass()));
+			return ForceResult.MOVED;
 		case SCRATCH:
+			// TODO scratching mechanic
+		case BLUNT:
+			float mag = (float) force.mag();
 
+			float resistance = at.getMaterial().getProperty(MaterialProperty.RESISTANCE)
+					* at.getShape().getProperty(ShapeProperty.INTEGRITY);
+			if (mag >= resistance) {
+				if (at.getMaterial().getProperty(MaterialProperty.CRUMBLES)) { // TODO crystalline??
+					at.changeMaterial(at.getMaterial().getProperty(MaterialProperty.CRUMBLE_MATERIAL), true);
+
+				} else {
+					at.changeShape(at.getShape().copyBuilder().addProperty(ShapeProperty.INTEGRITY, 0f)
+							.addProperty(ShapeProperty.SHAPEDNESS, Shapedness.AMORPHIC).build(), true);
+				}
+				return ForceResult.DESTROYED;
+			} else {
+				at.changeShape(at.getShape().copyBuilder()
+						.addProperty(ShapeProperty.INTEGRITY, (float) mag / resistance).build(), true);
+				return ForceResult.DAMAGED_PART;
+			}
 		case SLICE:
-
+			resistance = at.getMaterial().getProperty(MaterialProperty.RESISTANCE)
+					* at.getShape().getProperty(ShapeProperty.INTEGRITY);
+			if (connection != null) {
+				if (!this.body.getRepresentationGraph().containsEdge(at, PartConnection.JOINED, connection)) {
+					return ForceResult.SLIPPED_THROUGH;
+				}
+				float secresistance = connection.getMaterial().getProperty(MaterialProperty.RESISTANCE)
+						* connection.getShape().getProperty(ShapeProperty.INTEGRITY);
+				float usedRes = Math.min(resistance, secresistance);
+				if (force.mag() >= usedRes) {
+					this.body.severConnection(at, connection);
+					return ForceResult.SEVERED;
+				} else {
+					this.body.setConnectionIntegrity(at, connection,
+							this.body.getConnectionIntegrity(at, connection) * (float) force.mag() / usedRes);
+					return ForceResult.DAMAGED_CONNECTION;
+				}
+			} else {
+				// TODO if you don't attack between two parts, slice the first part in half
+				return ForceResult.CUT_PART;
+			}
 		case STAB:
+			// TODO stabbing mechanics
+			return ForceResult.MADE_HOLE;
 		}
-
+		return ForceResult.NOTHING;
 	}
 
 	@Override
@@ -288,6 +346,7 @@ public class Actor implements IActor {
 	public void draw(WorldGraphics g) {
 		if (this.visage != null && this.visage.canRender())
 			this.visage.draw(g);
+
 	}
 
 	@Override
@@ -317,6 +376,8 @@ public class Actor implements IActor {
 
 	@Override
 	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
 		if (obj instanceof IUnique iu) {
 			return this.getUUID().equals(iu.getUUID());
 		}

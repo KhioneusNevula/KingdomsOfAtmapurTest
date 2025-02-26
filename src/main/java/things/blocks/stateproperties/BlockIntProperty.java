@@ -27,7 +27,7 @@ public class BlockIntProperty implements IBlockStateProperty<Integer> {
 	}
 
 	@Override
-	public String name() {
+	public String getPropertyName() {
 		return name;
 	}
 

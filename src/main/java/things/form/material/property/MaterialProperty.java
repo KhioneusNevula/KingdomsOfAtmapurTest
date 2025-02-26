@@ -1,8 +1,10 @@
 package things.form.material.property;
 
+import java.awt.Color;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import things.biology.genes.IGenome;
 import things.form.material.IMaterial;
 import things.form.material.Material;
 
@@ -27,13 +29,27 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	 */
 	public static final MaterialProperty<Boolean> ORGANIC = make("organic", boolean.class, false);
 
+	/**
+	 * Plant: Whether this is plant material or not
+	 */
+	public static final MaterialProperty<Boolean> PLANT = make("plant", boolean.class, false);
+
+	/**
+	 * Plant: Whether this is meat material or not
+	 */
+	public static final MaterialProperty<Boolean> MEAT = make("meat", boolean.class, false);
+
 	/** Phase: what phase a material is in */
 	public static final MaterialProperty<Phase> PHASE = make("phase", Phase.class, Phase.SOLID);
 
-	/** Softness: how much it deforms when struck, if solid **/
+	/**
+	 * Softness: how comfortable it is to touch, and also how much damage is reduced
+	 * to the applicator of a force against it. 1f is complete softness, i.e.
+	 * reduces all damage to the applicator of force.
+	 **/
 	public static final MaterialProperty<Float> SOFTNESS = make("softness", float.class, 0f);
 
-	/** Elasticity: how much it regains shape after it deforms, if solid **/
+	/** TODO Elasticity: ??? **/
 	public static final MaterialProperty<Float> ELASTICITY = make("elasticity", float.class, 0f);
 
 	/** Bounciness: how much it bounces, if solid **/
@@ -71,7 +87,7 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	 * How likely this material is to leave a stain, and also how unlikely the stain
 	 * is to come off when washed
 	 */
-	public static final MaterialProperty<Float> STAINING = make("staining", float.class, 0f);
+	public static final MaterialProperty<Float> STAINING = make("staining", float.class, 1f);
 
 	/** How much this material as a fluid or stain corrodes a material in contact */
 	public static final MaterialProperty<Float> CORROSIVENESS = make("corrosiveness", float.class, 0f);
@@ -117,10 +133,13 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	/** Crystalline: true/false, whether it breaks into shards or not, if solid **/
 	public static final MaterialProperty<Boolean> CRYSTALLINE = make("crystalline", boolean.class, false);
 
-	/** Crumble: true/false, whether it can be crushed into a Granular **/
+	/**
+	 * Crumbles: true/false, whether this material can be crushed into another
+	 * material, usually a granular
+	 **/
 	public static final MaterialProperty<Boolean> CRUMBLES = make("crumbles", boolean.class, false);
 
-	/** Crumble Material: what Material it becomes when crushed into powder **/
+	/** Crumble Material: what Material it becomes when crushed **/
 	public static final MaterialProperty<IMaterial> CRUMBLE_MATERIAL = make("crumble_material", IMaterial.class,
 			Function.identity());
 
@@ -145,6 +164,26 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 
 	/** Flammable: true/false, whether it can catch fire */
 	public static final MaterialProperty<Boolean> FLAMMABLE = make("flammable", boolean.class, false);
+
+	/**
+	 * Flammable Temperature: What temperature it catches fire, if
+	 * {@link #FLAMMABLE} is true
+	 */
+	public static final MaterialProperty<Float> FLAMMABLE_TEMPERATURE = make("flammable_temperature", float.class,
+			300f);
+
+	/**
+	 * Burn material: What material it burns into, if {@link #FLAMMABLE} is true
+	 */
+	public static final MaterialProperty<IMaterial> BURN_MATERIAL = make("burn_material", IMaterial.class,
+			Material.AIR);
+
+	/**
+	 * Smoke material: What material of smoke it produces, if {@link #FLAMMABLE} is
+	 * true
+	 */
+	public static final MaterialProperty<IMaterial> SMOKE_MATERIAL = make("smoke_material", IMaterial.class,
+			Material.WOOD_SMOKE);
 
 	/**
 	 * Heat Transition Point: How much heat it needs to receive/lose to go to the
@@ -174,6 +213,16 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	 */
 	public static final MaterialProperty<IMaterial> COLD_TRANSITION_MATERIAL = make("cold_transition_material",
 			IMaterial.class, Function.identity());
+
+	/**
+	 * The color to represent this material with
+	 */
+	public static final MaterialProperty<Color> COLOR = make("color", Color.class, Color.GRAY);
+
+	/**
+	 * The genetics of a given material, if it is organic
+	 */
+	public static final MaterialProperty<IGenome> GENETICS = make("genetics", IGenome.class, IGenome.NONE);
 	/**
 	 * 
 	 * 

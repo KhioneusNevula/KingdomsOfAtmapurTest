@@ -6,7 +6,6 @@ import java.util.Collections;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelSystem;
 import things.form.material.IMaterial;
-import utilities.graph.IInvertibleRelationType;
 
 /**
  * A bidirectional Channel representing a channel for signal to travel through
@@ -31,7 +30,7 @@ public class SignalChannel implements IChannel {
 	}
 
 	@Override
-	public IInvertibleRelationType invert() {
+	public SignalChannel invert() {
 		return this;
 	}
 
@@ -72,7 +71,7 @@ public class SignalChannel implements IChannel {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof IChannel ic) {
+		if (obj instanceof SignalChannel ic) {
 			return this.name.equals(ic.name()) && this.material.equals(ic.getVectorMaterials())
 					&& this.conveys.equals(ic.conveys());
 		}

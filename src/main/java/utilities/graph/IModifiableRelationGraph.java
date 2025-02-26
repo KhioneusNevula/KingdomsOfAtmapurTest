@@ -4,6 +4,10 @@ import java.util.Collection;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+
+import utilities.couplets.Triplet;
+import utilities.property.IProperty;
 
 /**
  * Generic interface for graph-style structures with modifiable functionality
@@ -14,6 +18,17 @@ import java.util.function.Function;
  * @param <R>
  */
 public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> extends IRelationGraph<E, R> {
+
+	/**
+	 * For some element {@literal oldNode} in a graph, this function will replace
+	 * {oldNode} with {newNode} such that all the connections that used to connect
+	 * to {oldNode} now connect to {newNode}, and {oldNode} no longer exists in the
+	 * graph.
+	 * 
+	 * @param oldNode the node that will be changed
+	 * @param newNode the new value to put in place of it
+	 */
+	void set(Object oldNode, E newNode);
 
 	/**
 	 * Add new edge. Return true if there was no existing edge. Return false and do
@@ -57,6 +72,11 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	boolean removeAllConnections(Object value, Object other);
 
 	/**
+	 * Removes all bare nodes from this graph
+	 */
+	void removeBareNodes();
+
+	/**
 	 * Remove the edge of the given type between these nodes, return true if an edge
 	 * was removed at all
 	 * 
@@ -69,9 +89,8 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 
 	/**
 	 * Get the value of a specified property on a specified edge. Return null if no
-	 * such property was assigned for this edge. Return default value from
-	 * {@link #edgeProperties} if no such property was assigned but a default value
-	 * is available.
+	 * such property was assigned for this edge. Return default value if no such
+	 * property was assigned but a default value is available.
 	 * 
 	 * @param <E>
 	 * @param one
@@ -84,7 +103,7 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 *                        map
 	 * @return
 	 */
-	<X> X getProperty(E one, R type, E two, EdgeProperty<X> prop, boolean computeIfAbsent);
+	<X> X getProperty(E one, R type, E two, IProperty<X> prop, boolean computeIfAbsent);
 
 	/**
 	 * Set the property and return the prior value, if any
@@ -97,7 +116,7 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 * @param obj
 	 * @return
 	 */
-	<X> X setProperty(E one, R type, E two, EdgeProperty<X> prop, X val);
+	<X> X setProperty(E one, R type, E two, IProperty<X> prop, X val);
 
 	/**
 	 * For each edge between these two nodes, run getSet on it for the given
@@ -110,7 +129,7 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 * @param prop
 	 * @param getSet
 	 */
-	<X> void forEachEdgeProperty(E one, E two, EdgeProperty<X> prop, Function<X, X> getSet);
+	<X> void forEachEdgeProperty(E one, E two, IProperty<X> prop, Function<X, X> getSet);
 
 	/**
 	 * For each edge connecting from this node to any other, run getSet on it for
@@ -123,7 +142,7 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 * @param prop
 	 * @param getSet
 	 */
-	<X> void forEachEdgeProperty(E one, EdgeProperty<X> prop, Function<X, X> getSet);
+	<X> void forEachEdgeProperty(E one, IProperty<X> prop, Function<X, X> getSet);
 
 	/**
 	 * For each edge from this node of the given type, run getSet on it for the
@@ -136,10 +155,19 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 * @param prop
 	 * @param getSet
 	 */
-	<X> void forEachEdgeProperty(E one, R type, EdgeProperty<X> prop, Function<X, X> getSet);
+	<X> void forEachEdgeProperty(E one, R type, IProperty<X> prop, Function<X, X> getSet);
 
 	@Override
-	public IModifiableRelationGraph<E, R> subgraph(Collection<? extends E> nodes);
+	public IModifiableRelationGraph<E, R> subgraph(Iterable<? extends E> nodes);
+
+	@Override
+	public IModifiableRelationGraph<E, R> subgraph(Iterable<? extends E> nodes, Predicate<Triplet<E, R, E>> edgePred);
+
+	/**
+	 * Adds all elements and edges of the given subgraph in this graph; return true
+	 * if anything changed
+	 */
+	public boolean addAll(IRelationGraph<E, R> subgraph);
 
 	@Override
 	public IModifiableRelationGraph<E, R> copy();
@@ -149,10 +177,23 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 
 	@Override
 	public IModifiableRelationGraph<E, R> traverseBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
-			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
+			Consumer<E> forEachNode, BiPredicate<IProperty<?>, Object> applyAcrossObject);
 
 	@Override
 	public IModifiableRelationGraph<E, R> traverseDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
-			Consumer<E> forEachNode, BiPredicate<EdgeProperty<?>, Object> applyAcrossObject);
+			Consumer<E> forEachNode, BiPredicate<IProperty<?>, Object> applyAcrossObject);
+
+	/**
+	 * Removes all edges
+	 * 
+	 * @return
+	 */
+	public default boolean clearEdges() {
+		boolean mod = false;
+		for (E node : this) {
+			mod = mod || this.removeAllConnections(node);
+		}
+		return mod;
+	}
 
 }

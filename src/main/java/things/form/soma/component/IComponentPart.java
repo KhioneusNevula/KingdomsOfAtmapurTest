@@ -1,18 +1,37 @@
 package things.form.soma.component;
 
 import java.util.Collection;
+import java.util.UUID;
 
 import things.form.IPart;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
-import things.form.channelsystems.IChannelResource;
+import things.form.channelsystems.IResource;
+import things.form.channelsystems.IChannelSystem;
 import things.form.material.IMaterial;
 import things.form.soma.ISoma;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.stats.IPartStat;
 import things.spirit.ISpirit;
+import things.status_effect.IPartStatusEffect;
+import things.status_effect.IPartStatusEffectInstance;
 
 public interface IComponentPart extends IPart {
+
+	/**
+	 * Creates a "dummy part" (cast as an {@link IComponentPart}, as opposed to the
+	 * version of the method {@link IPart#dummy(UUID)} which just returns an IPart),
+	 * i.e. a single-use part whose sole purpose is to be used to find a component
+	 * part in a hash map. If any method other than {@link #equals},
+	 * {@link #hashCode}, {@link #toString()}, or {@link #getName()} is called on
+	 * this, throw an exception
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public static IComponentPart dummy(UUID id) {
+		return new DummyComponentPart(id);
+	}
 
 	/**
 	 * Materials that spill out of this part when it is damaged. Depends on factors
@@ -29,7 +48,7 @@ public interface IComponentPart extends IPart {
 	 * @param resource
 	 * @return
 	 */
-	public <E> E getResourceAmount(IChannelResource<E> resource);
+	public <E extends Comparable<?>> E getResourceAmount(IResource<E> resource);
 
 	/**
 	 * The number indicating what planes this part can interact on
@@ -69,6 +88,14 @@ public interface IComponentPart extends IPart {
 	 * @return
 	 */
 	public Collection<IChannelCenter> getChannelCenters(ChannelRole role);
+
+	/**
+	 * Get channelcenters in this part which come from this system
+	 * 
+	 * @param role
+	 * @return
+	 */
+	public Collection<IChannelCenter> getChannelCenters(IChannelSystem role);
 
 	/**
 	 * Get channelcenters in this part that are automatic
@@ -121,6 +148,52 @@ public interface IComponentPart extends IPart {
 	 * @param toRemove
 	 */
 	public void removeSpirit(ISpirit toRemove, boolean callUpdate);
+
+	/**
+	 * Return all effect instances on this part
+	 * 
+	 * @return
+	 */
+	public Collection<IPartStatusEffectInstance> getEffectInstances();
+
+	/**
+	 * Return all effect types on this part
+	 * 
+	 * @return
+	 */
+	public Collection<IPartStatusEffect> getEffectTypes();
+
+	/**
+	 * Wehther this component part has the given effect
+	 * 
+	 * @param spirit
+	 * @return
+	 */
+	public boolean hasEffect(IPartStatusEffect effect);
+
+	/**
+	 * Return the status effect instance for a given part
+	 * 
+	 * @param effect
+	 * @return
+	 */
+	public IPartStatusEffectInstance getEffectInstance(IPartStatusEffect effect);
+
+	/**
+	 * Apply the given status effect to this component; override any previous status
+	 * effect of the same kind
+	 * 
+	 * @param spirit
+	 */
+	public void applyEffect(IPartStatusEffectInstance effect, boolean callUpdate);
+
+	/**
+	 * Remove this status effect and return the instance if this status effect
+	 * existed
+	 * 
+	 * @param toRemove
+	 */
+	public IPartStatusEffectInstance removeEffect(IPartStatusEffect toRemove, boolean callUpdate);
 
 	/**
 	 * If this part has a channelcenter that performs control ticks
@@ -186,9 +259,176 @@ public interface IComponentPart extends IPart {
 	 * @param value
 	 * @param callUpdate whether to call update on parent soma and contained spirits
 	 */
-	void changeResourceAmount(IChannelResource<?> resource, Object value, boolean callUpdate);
+	void changeResourceAmount(IResource<?> resource, Comparable<?> value, boolean callUpdate);
+
+	/** TODO Shatters a part into shards */
+	/** public void shatterPart(float force, ForceType type, boolean update); */
 
 	/** TODO temperature */
 	/** public float getTemperature(); */
+
+	/**
+	 * The equals method should just compare UUID's to one another
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	@Override
+	boolean equals(Object obj);
+
+	/**
+	 * The hash code should solely be based on UUID
+	 * 
+	 * @return
+	 */
+	@Override
+	int hashCode();
+
+	public class DummyComponentPart extends DummyPart implements IComponentPart {
+
+		public DummyComponentPart(UUID id) {
+			super(id);
+		}
+
+		@Override
+		public Collection<IMaterial> embeddedMaterials() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <E extends Comparable<?>> E getResourceAmount(IResource<E> resource) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public int interactionPlanes() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<IPartAbility> getAbilities() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void addAbility(IPartAbility ability, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void addEmbeddedMaterials(Collection<? extends IMaterial> mat, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void applyEffect(IPartStatusEffectInstance effect, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public IPartStatusEffectInstance getEffectInstance(IPartStatusEffect effect) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<IPartStatusEffectInstance> getEffectInstances() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<IPartStatusEffect> getEffectTypes() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean hasEffect(IPartStatusEffect effect) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public IPartStatusEffectInstance removeEffect(IPartStatusEffect toRemove, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<IChannelCenter> getChannelCenters(ChannelRole role) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<IChannelCenter> getChannelCenters(IChannelSystem role) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<IChannelCenter> getAutomaticChannelCenters() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean hasAutomaticChannelCenter() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<ChannelRole> getChannelRoles() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<ISpirit> getTetheredSpirits() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean canAttachSpirit(ISpirit spirit) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void attachSpirit(ISpirit spirit, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void removeSpirit(ISpirit toRemove, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean hasControlCenter() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <E> E getStat(IPartStat<E> forStat) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <E> void changeStat(IPartStat<E> stat, E newValue, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<? extends IPartStat<?>> getStats() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String componentReport() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setOwner(ISoma soma) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void changeResourceAmount(IResource<?> resource, Comparable<?> value, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+	}
 
 }

@@ -21,14 +21,14 @@ public class SignalChannelSystem implements IChannelSystem {
 	private SignalChannelResource resource;
 	private SignalChannel channel;
 	private String controlCenterPart;
-	private BrainSignalChannelCenter brainType;
+	private SignalControlCenter brainType;
 
 	public SignalChannelSystem(String name, IMaterial signalVectorMaterial, String controlCenterPart) {
 		this.name = name;
 		this.resource = new SignalChannelResource(name + "_signal");
 		this.channel = new SignalChannel(name + "_pathway", signalVectorMaterial, resource, this);
 		this.controlCenterPart = controlCenterPart;
-		this.brainType = new BrainSignalChannelCenter(name + "_controller", this);
+		this.brainType = new SignalControlCenter(name + "_controller", this);
 	}
 
 	@Override
@@ -72,21 +72,21 @@ public class SignalChannelSystem implements IChannelSystem {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof IChannelSystem ics) {
+		if (obj instanceof SignalChannelSystem ics) {
 			return this.name.equals(ics.name()) && ics.getType() == ChannelType.SIGNAL
-					&& Collections.singleton(this.brainType).equals(ics.getCenterTypes())
-					&& Collections.singleton(this.channel).equals(ics.getChannelConnectionTypes());
+					&& this.brainType.equals(ics.brainType) && this.channel.equals(ics.channel)
+					&& this.controlCenterPart.equals(ics.controlCenterPart);
 		}
 		return super.equals(obj);
 	}
 
 	@Override
 	public int hashCode() {
-		return name.hashCode() + brainType.hashCode() + channel.hashCode();
+		return name.hashCode() + brainType.hashCode() + channel.hashCode() + controlCenterPart.hashCode();
 	}
 
 	@Override
-	public void populateBody(ISoma body) {
+	public Collection<? extends IComponentPart> populateBody(ISoma body) {
 		Collection<IComponentPart> brains = body.getPartsByName(controlCenterPart);
 		for (IComponentPart brain : brains) {
 			brain.addAbility(brainType, true);
@@ -98,6 +98,7 @@ public class SignalChannelSystem implements IChannelSystem {
 			}
 
 		}
+		return brains;
 	}
 
 	@Override
@@ -107,8 +108,9 @@ public class SignalChannelSystem implements IChannelSystem {
 	}
 
 	@Override
-	public void onBodyLoss(ISoma body, IComponentPart lost) {
+	public boolean onBodyLoss(ISoma body, IComponentPart lost) {
 
+		return true;
 	}
 
 	@Override

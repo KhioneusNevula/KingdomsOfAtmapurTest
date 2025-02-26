@@ -1,8 +1,14 @@
 package things.form.graph.connections;
 
 import utilities.graph.IInvertibleRelationType;
+import utilities.property.IProperty;
 
 public interface IPartConnection extends IInvertibleRelationType {
+
+	public static final IProperty<Float> CONNECTION_INTEGRITY = IProperty.make("connection_integrity", float.class, 1f);
+
+	@Override
+	public IPartConnection invert();
 
 	/**
 	 * Whether this kind of part connection can be broken by damage

@@ -8,6 +8,7 @@ import com.google.common.collect.Table;
 
 import _sim.RelativeSide;
 import utilities.graph.IInvertibleRelationType;
+import utilities.property.IProperty;
 
 /**
  * TODO add parameters for the nature of the cover (solidness, transparency, and
@@ -17,6 +18,8 @@ import utilities.graph.IInvertibleRelationType;
  *
  */
 public class CoverageType implements IInvertibleRelationType {
+
+	public static final IProperty<Float> COVERAGE_PERCENT = IProperty.make("coverage_percent", float.class, 0f);
 
 	public static enum CoverageDirection {
 		/** X covers the given side of Y */
@@ -102,7 +105,7 @@ public class CoverageType implements IInvertibleRelationType {
 	}
 
 	@Override
-	public IInvertibleRelationType invert() {
+	public CoverageType invert() {
 		return coverages.get(side, dir.opposite());
 	}
 

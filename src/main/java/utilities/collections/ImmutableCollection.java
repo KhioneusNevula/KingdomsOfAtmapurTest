@@ -7,10 +7,11 @@ import java.util.function.Consumer;
 
 public class ImmutableCollection<T> extends AbstractCollection<T> {
 
-	private Collection<T> inner;
+	protected Collection<T> internal;
 
-	private ImmutableCollection(Collection<T> inner) {
-		this.inner = inner;
+	ImmutableCollection(Collection<T> inner) {
+		this.internal = inner;
+
 	}
 
 	@Override
@@ -20,39 +21,54 @@ public class ImmutableCollection<T> extends AbstractCollection<T> {
 
 	@Override
 	public int size() {
-		return inner.size();
+		return internal.size();
 	}
 
 	@Override
 	public boolean contains(Object o) {
-		return inner.contains(o);
+		return internal.contains(o);
 	}
 
 	@Override
 	public boolean containsAll(Collection<?> c) {
-		return inner.containsAll(c);
+		return internal.containsAll(c);
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return inner.isEmpty();
+		return internal.isEmpty();
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		return inner.equals(obj);
+		if (obj == this)
+			return true;
+		if (obj instanceof ImmutableCollection) {
+			return this.internal.equals(((ImmutableCollection) obj).internal);
+		}
+		return internal.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return internal.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return "ImmutableView" + this.internal;
 	}
 
 	@Override
 	public void forEach(Consumer<? super T> action) {
-		inner.forEach(action);
+		internal.forEach(action);
 	}
 
 	private class ImIterator implements Iterator<T> {
 		private Iterator<T> other;
 
 		private ImIterator() {
-			this.other = inner.iterator();
+			this.other = internal.iterator();
 		}
 
 		@Override

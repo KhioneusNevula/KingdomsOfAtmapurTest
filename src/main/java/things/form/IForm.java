@@ -1,12 +1,19 @@
 package things.form;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import _sim.RelativeSide;
 import things.actor.IActor;
 import things.form.graph.connections.CoverageType;
+import things.form.graph.connections.CoverageType.CoverageDirection;
 import things.form.graph.connections.IPartConnection;
+import things.form.kinds.IKind;
 import things.form.material.IMaterial;
 import things.form.shape.IShape;
 import things.form.soma.component.IComponentPart;
@@ -21,6 +28,13 @@ import utilities.graph.IRelationGraph;
  * @param <P>
  */
 public interface IForm<P extends IPart> extends Cloneable {
+
+	/**
+	 * Return the kind used to generate this body
+	 * 
+	 * @return
+	 */
+	public IKind getKind();
 
 	/**
 	 * Create a copy of this Form, cloning each constituent part as well
@@ -133,4 +147,74 @@ public interface IForm<P extends IPart> extends Cloneable {
 	 * @param owner
 	 */
 	void setOwner(IActor owner);
+
+	/**
+	 * Return (immutable) set representing the coverage between these two parts
+	 * 
+	 * @param one
+	 * @param two
+	 * @return
+	 */
+	public default Collection<RelativeSide> getCoverage(P one, P two) {
+		if (!this.getCoverageGraph().containsEdge(one, two))
+			return Collections.emptySet();
+		return this.getCoverageGraph().getEdgeTypesBetween(one, two).stream().filter((a) -> a.covers())
+				.map((a) -> a.getSide()).collect(Collectors.toUnmodifiableSet());
+	}
+
+	/**
+	 * Return the percent of a specific side of Covered that Coverer covers
+	 * 
+	 * @param one
+	 * @param two
+	 * @return
+	 */
+	public default float percentCovered(P coverer, P covered, RelativeSide side) {
+		return this.getCoverageGraph().getProperty(coverer, CoverageType.covers(side), covered,
+				CoverageType.COVERAGE_PERCENT);
+	}
+
+	/**
+	 * Return the total percent of Covered's sides that Coverer covers
+	 * 
+	 * @param one
+	 * @param two
+	 * @return
+	 */
+	public default float percentCovered(P coverer, P covered) {
+		float total = 0;
+		for (RelativeSide side : RelativeSide.values()) {
+			total += this.getCoverageGraph().getProperty(coverer, CoverageType.covers(side), covered,
+					CoverageType.COVERAGE_PERCENT);
+		}
+		return total / RelativeSide.values().length;
+	}
+
+	/**
+	 * Set the amount of coverage that Coverer covers for Covered on the given side
+	 * 
+	 * @param coverer
+	 * @param covered
+	 * @param side    The side of Covered being covered by Coverer
+	 * @param amount
+	 */
+	public void setCoveragePercentage(P coverer, P covered, RelativeSide side, float amount);
+
+	/**
+	 * Returns what sides of this part have coverage of any kind
+	 * 
+	 * @param part
+	 * @return
+	 */
+	public default Set<RelativeSide> getOverallCoverage(P part) {
+		Set<RelativeSide> sides = new HashSet<>();
+		for (RelativeSide side : RelativeSide.values()) {
+			if (!this.getCoverageGraph().traverseBFS(part, CoverageType.getCoverageTypes(CoverageDirection.COVERED_ON),
+					Function.identity()::apply, (prop, obj) -> true).isEmpty()) {
+				sides.add(side);
+			}
+		}
+		return sides;
+	}
+
 }

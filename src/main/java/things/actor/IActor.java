@@ -6,7 +6,7 @@ import things.form.kinds.IKind;
 import things.form.soma.ISoma;
 import things.form.visage.IVisage;
 import things.interfaces.IThing;
-import things.physics.IPhysicsObject;
+import things.physics_and_chemistry.IPhysicsObject;
 
 public interface IActor extends IThing, IPhysicsObject, IRenderable {
 

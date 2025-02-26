@@ -5,7 +5,7 @@ public enum Dim implements IDimensionTag {
 
 	@Override
 	public String getId() {
-		return "base_" + this.name();
+		return "base_" + this.name().toLowerCase();
 	}
 
 }

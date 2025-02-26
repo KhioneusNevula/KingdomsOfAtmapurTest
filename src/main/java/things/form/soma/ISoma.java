@@ -6,14 +6,17 @@ import _sim.RelativeSide;
 import things.form.IForm;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelCenter;
-import things.form.channelsystems.IChannelResource;
 import things.form.channelsystems.IChannelSystem;
+import things.form.channelsystems.IResource;
 import things.form.graph.connections.IPartConnection;
+import things.form.graph.connections.PartConnection;
 import things.form.material.IMaterial;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.component.IComponentPart;
+import things.form.soma.component.StandardComponentPart;
 import things.form.soma.stats.IPartStat;
 import things.spirit.ISpirit;
+import things.status_effect.IPartStatusEffectInstance;
 import utilities.graph.IRelationGraph;
 
 /**
@@ -80,6 +83,28 @@ public interface ISoma extends IForm<IComponentPart> {
 	public void addChannel(IComponentPart one, IChannel channel, IComponentPart two, boolean callSystemUpdate);
 
 	/**
+	 * Get the integrity of the connection (of type {@link PartConnection#JOINED})
+	 * between these two parts
+	 * 
+	 * @param one
+	 * @param connection
+	 * @param two
+	 * @return
+	 */
+	public float getConnectionIntegrity(IComponentPart one, IComponentPart two);
+
+	/**
+	 * Set the integrity of the connection (of type {@link PartConnection#JOINED})
+	 * between these two parts. Values > 1 or < 0 will throw an error
+	 * 
+	 * @param one
+	 * @param connection
+	 * @param two
+	 * @return
+	 */
+	public void setConnectionIntegrity(IComponentPart one, IComponentPart two, float integrity);
+
+	/**
 	 * Attempt to sever a connection between these two parts and return a subgraph
 	 * if any part of the Soma is now disconnected, or null if nothing was
 	 * disconnected
@@ -134,13 +159,21 @@ public interface ISoma extends IForm<IComponentPart> {
 	public Collection<IChannelSystem> getChannelSystems();
 
 	/**
+	 * Return the channel system with the given name
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public IChannelSystem getSystemByName(String name);
+
+	/**
 	 * Return the aggregate value of some channel resource
 	 * 
 	 * @param <E>
 	 * @param resource
 	 * @return
 	 */
-	public <E> E getResourceAggregate(IChannelResource<E> resource);
+	public <E extends Comparable<?>> E getResourceAggregate(IResource<E> resource);
 
 	/**
 	 * Get all channelcenters of the given type
@@ -169,7 +202,9 @@ public interface ISoma extends IForm<IComponentPart> {
 
 	/**
 	 * Returns a subgraph of all parts connecting to this one through edges in the
-	 * given channelsystem, e.g. all parts connected to the brain by nerves
+	 * given channelsystem, e.g. all parts connected to the brain by nerves. Only
+	 * needs to return a value for ChannelCenters. Other parts, behavior may be
+	 * undefined.
 	 * 
 	 * @param toPart
 	 * @param bySystem
@@ -247,7 +282,7 @@ public interface ISoma extends IForm<IComponentPart> {
 	 * @param forStat
 	 * @param formerValue
 	 */
-	public void onChannelResourceChanged(IComponentPart part, IChannelResource<?> resource, Object formerValue);
+	public void onChannelResourceChanged(IComponentPart part, IResource<?> resource, Comparable<?> formerValue);
 
 	/**
 	 * Called when a spirit is added to a part
@@ -264,4 +299,21 @@ public interface ISoma extends IForm<IComponentPart> {
 	 * @param part
 	 */
 	void onRemoveSpirit(ISpirit spirit, IComponentPart part);
+
+	/**
+	 * Called when an effect is applied newly (not attempted, but actually applied
+	 * when there was none before)
+	 * 
+	 * @param effect
+	 * @param part
+	 */
+	public void onApplyEffect(IPartStatusEffectInstance effect, IComponentPart part);
+
+	/**
+	 * Called when an effect is removed
+	 * 
+	 * @param effect
+	 * @param part
+	 */
+	public void onRemoveEffect(IPartStatusEffectInstance effect, StandardComponentPart part);
 }

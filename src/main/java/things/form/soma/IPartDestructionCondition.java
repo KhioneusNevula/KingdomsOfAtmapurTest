@@ -21,7 +21,7 @@ public interface IPartDestructionCondition {
 		 * non-solid phase, including liquid or granular. Most standard biological
 		 * beings are like this
 		 */
-		DISINTEGRATED((s, c) -> c.getMaterial().getProperty(MaterialProperty.PHASE) != Phase.SOLID),
+		GRANULATED((s, c) -> c.getMaterial().getProperty(MaterialProperty.PHASE) != Phase.SOLID),
 		/**
 		 * The condition where parts are considered destroyed only if they become gas or
 		 * plasma. Water elementals and the like would be in this category.
@@ -66,7 +66,7 @@ public interface IPartDestructionCondition {
 		/**
 		 * Indicates something is destroyed when it is either disintegrated or mashed.
 		 */
-		public static final CompositePredicate DISINTEGRATE_MASH = compose(Standard.DISINTEGRATED, Standard.MASHED);
+		public static final CompositePredicate DISINTEGRATE_MASH = compose(Standard.GRANULATED, Standard.MASHED);
 
 		private Set<? extends IPartDestructionCondition> conditions;
 

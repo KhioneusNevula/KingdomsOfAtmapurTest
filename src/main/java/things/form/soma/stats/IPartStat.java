@@ -3,7 +3,8 @@ package things.form.soma.stats;
 import things.form.soma.component.IComponentPart;
 
 /**
- * A stat relevant to a specific part ability
+ * A stat relevant to a specific part ability. Should have some kind of ordering
+ * permitting one stat to be higher than another
  * 
  * @author borah
  *
@@ -31,6 +32,20 @@ public interface IPartStat<E> {
 	 * @return
 	 */
 	public Class<? super E> getType();
+
+	/**
+	 * Compares two instances of a given stat
+	 * 
+	 * @param one
+	 * @param two
+	 * @return
+	 */
+	public default int compare(E one, E two) {
+		if (one instanceof Comparable com) {
+			return ((Comparable) one).compareTo((Comparable) two);
+		}
+		throw new UnsupportedOperationException("Unimplemented comparator for stats");
+	}
 
 	/**
 	 * Aggregate multiple values of this stat into one, which is useful for some

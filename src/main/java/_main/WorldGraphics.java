@@ -1,11 +1,14 @@
 package _main;
 
 import java.awt.event.KeyEvent;
+import java.util.Set;
 
 import _sim.IRenderable;
 import _sim.world.GameUniverse;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
+import thinker.concepts.relations.ConceptRelationType;
+import utilities.graph.GraphRenderer;
 
 public class WorldGraphics extends PApplet {
 
@@ -101,7 +104,7 @@ public class WorldGraphics extends PApplet {
 	public void keyPressed() {
 		if (key == KeyEvent.VK_ESCAPE) {
 			if (this.currentDisplay != Display.WORLD) {
-
+				this.returnToWorldDisplay();
 			}
 			key = 0;
 		}
@@ -113,7 +116,19 @@ public class WorldGraphics extends PApplet {
 		int aMouseX = mouseX - BORDER;
 		int aMouseY = mouseY - BORDER;
 		synchronized (world) {
-			if (event.getKeyCode() == KeyEvent.VK_W) {
+			if (event.getKeyCode() == KeyEvent.VK_N) {
+				System.out.println("Switcheroo");
+				this.changeDisplay(new GraphRenderer("Noosphere", this.world.getNoosphere().getConceptGraphView(),
+						this.world.rand()), Display.KNOWLEDGE);
+			} else if (event.getKeyCode() == KeyEvent.VK_X) {
+				if (this.currentDisplay == Display.KNOWLEDGE && this.currentScreen instanceof GraphRenderer gr) {
+					gr.setRenderableEdges(Set.of(ConceptRelationType.CHARACTERIZES, ConceptRelationType.VALUE_OF));
+				}
+			} else if (event.getKeyCode() == KeyEvent.VK_P) {
+				System.out.println("Switcheree");
+				this.changeDisplay(new GraphRenderer("Parties", this.world.getPartyRelations(), this.world.rand()),
+						Display.SOCIAL);
+			} else if (event.getKeyCode() == KeyEvent.VK_W) {
 			}
 		}
 		super.keyPressed(event);
@@ -126,7 +141,16 @@ public class WorldGraphics extends PApplet {
 	}
 
 	public static enum Display {
-		WORLD, MIND, GROUP
+		/** standard world display */
+		WORLD,
+		/** display of a graph of thoughts */
+		THOUGHTS,
+		/** display of a graph of knowledge/memories */
+		KNOWLEDGE,
+		/** display of party and group relations */
+		SOCIAL,
+		/** display of a single entity's body represetnation */
+		BODY
 	}
 
 	@Override

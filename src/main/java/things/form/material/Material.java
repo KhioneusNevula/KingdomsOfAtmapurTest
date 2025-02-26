@@ -1,16 +1,20 @@
 package things.form.material;
 
+import java.awt.Color;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
+import things.form.material.condition.IMaterialCondition;
 import things.form.material.property.IMaterialProperty;
 import things.form.material.property.MaterialProperty;
 import things.form.material.property.Phase;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.stains.IStain;
+import utilities.collections.ImmutableSetView;
 
 /**
  * implementation of material
@@ -20,44 +24,10 @@ import things.stains.IStain;
  */
 public class Material implements IMaterial {
 
-	private String name;
-	private Map<IMaterialProperty<?>, Object> properties;
+	String name;
+	Map<IMaterialProperty<?>, Object> properties;
 
-	public static class MaterialBuilder {
-
-		private Material innerInstance;
-
-		private MaterialBuilder(String name) {
-			innerInstance = new Material(name);
-		}
-
-		public <E> MaterialBuilder prop(IMaterialProperty<E> prop, E val) {
-			innerInstance.properties.put(prop, val);
-			return this;
-		}
-
-		public MaterialBuilder prop(Map<? extends IMaterialProperty<?>, ?> props) {
-			innerInstance.properties.putAll(props);
-			return this;
-		}
-
-		public MaterialBuilder prop(Map.Entry<? extends IMaterialProperty<?>, ?>... pairs) {
-			for (Map.Entry<? extends IMaterialProperty<?>, ?> entry : pairs) {
-				innerInstance.properties.put(entry.getKey(), entry.getValue());
-			}
-			return this;
-		}
-
-		public Material build() {
-			return innerInstance;
-		}
-	}
-
-	public static MaterialBuilder builder(String name) {
-		return new MaterialBuilder(name);
-	}
-
-	private Material(String name) {
+	Material(String name) {
 		this.name = name;
 		this.properties = new HashMap<>();
 	}
@@ -65,6 +35,11 @@ public class Material implements IMaterial {
 	@Override
 	public <E> E getProperty(IMaterialProperty<E> property) {
 		return (E) properties.getOrDefault(property, property.getDefaultValue(this));
+	}
+
+	@Override
+	public Collection<IMaterialProperty<?>> getDistinctProperties() {
+		return ImmutableSetView.from(this.properties.keySet());
 	}
 
 	@Override
@@ -98,7 +73,7 @@ public class Material implements IMaterial {
 	 * @return
 	 */
 	public MaterialBuilder buildCopy(String copyName) {
-		MaterialBuilder builder = new MaterialBuilder(copyName);
+		MaterialBuilder builder = IMaterial.builder(copyName);
 		builder.prop(this.properties);
 		return builder;
 	}
@@ -112,6 +87,15 @@ public class Material implements IMaterial {
 				return false;
 			for (Map.Entry<IMaterialProperty<?>, Object> entry : this.properties.entrySet()) {
 				if (!mat.getProperty(entry.getKey()).equals(entry.getValue())) {
+					return false;
+				}
+			}
+			return true;
+		} else if (obj instanceof IMaterialCondition iec) {
+			if (!this.getCheckedProperties().equals(iec.getCheckedProperties()))
+				return false;
+			for (IMaterialProperty<?> pro : this.properties.keySet()) {
+				if (!this.getAllowedValues(pro).equals(iec.getAllowedValues(pro))) {
 					return false;
 				}
 			}
@@ -164,6 +148,12 @@ public class Material implements IMaterial {
 	public static final Material WATER;
 
 	/**
+	 * Blood, a standard material. This is blood without genetics; to make blood
+	 * with genetics, do .buildCopy and add genetics to it.
+	 */
+	public static final Material BLOOD;
+
+	/**
 	 * Gaseous steam produced from hot water
 	 */
 	public static final Material STEAM;
@@ -173,17 +163,33 @@ public class Material implements IMaterial {
 	 */
 	public static final Material ICE;
 
+	/**
+	 * Wood material
+	 */
+	public static final Material WOOD;
+
+	/**
+	 * What wood burns into -- charcoal
+	 */
+	public static final Material WOOD_ASH;
+
+	/**
+	 * Carbon-based smoke as a material
+	 */
+	public static final Material WOOD_SMOKE;
+
 	static {
 		// air/water
-		MaterialBuilder waterBuilder = builder("water").prop(ImmutableMap.of(MaterialProperty.PHASE, Phase.LIQUID,
-				MaterialProperty.DENSITY, 1f, MaterialProperty.ELECTRIC_CONDUCTIVITY, 5f, MaterialProperty.WASHING,
-				0.5f, MaterialProperty.STAINING, 1f, MaterialProperty.OPACITY, 0.1f));
+		MaterialBuilder waterBuilder = IMaterial.builder("water")
+				.prop(ImmutableMap.of(MaterialProperty.PHASE, Phase.LIQUID, MaterialProperty.DENSITY, 1f,
+						MaterialProperty.ELECTRIC_CONDUCTIVITY, 5f, MaterialProperty.WASHING, 0.5f,
+						MaterialProperty.STAINING, 1f, MaterialProperty.OPACITY, 0.1f, MaterialProperty.COLOR,
+						Color.blue));
 		WATER = waterBuilder.build();
-		ICE = WATER.buildCopy("ice")
-				.prop(ImmutableMap.of(MaterialProperty.PHASE, Phase.SOLID, MaterialProperty.DENSITY, 0.9f,
-						MaterialProperty.CRYSTALLINE, true, MaterialProperty.OPACITY, 0.5f, MaterialProperty.ROUGHNESS,
-						0.02f, MaterialProperty.UNEVENNESS, 0.05f, MaterialProperty.HEAT_TRANSITION_ENERGY, 0f,
-						MaterialProperty.HEAT_TRANSITION_MATERIAL, WATER))
+		ICE = WATER.buildCopy("ice").prop(ImmutableMap.of(MaterialProperty.PHASE, Phase.SOLID, MaterialProperty.DENSITY,
+				0.9f, MaterialProperty.CRYSTALLINE, true, MaterialProperty.OPACITY, 0.5f, MaterialProperty.ROUGHNESS,
+				0.02f, MaterialProperty.UNEVENNESS, 0.05f, MaterialProperty.HEAT_TRANSITION_ENERGY, 0f,
+				MaterialProperty.HEAT_TRANSITION_MATERIAL, WATER, MaterialProperty.COLOR, new Color(145, 199, 237)))
 				.build();
 		AIR = WATER.buildCopy("air")
 				.prop(ImmutableMap.of(MaterialProperty.PHASE, Phase.GAS, MaterialProperty.DENSITY, 0.0013f,
@@ -191,11 +197,16 @@ public class Material implements IMaterial {
 						WATER, /* this represents the dew point, basically */
 						MaterialProperty.ELECTRIC_CONDUCTIVITY, 1e-14f, MaterialProperty.OPACITY, 0f))
 				.build();
+		BLOOD = WATER.buildCopy("blood")
+				.prop(ImmutableMap.of(MaterialProperty.DENSITY, 1.06f, MaterialProperty.OPACITY, 0.9f,
+						MaterialProperty.WASHING, 0f, MaterialProperty.ORGANIC, true, MaterialProperty.STAINING, 0.9f,
+						MaterialProperty.VISCOSITY, 0.5f, MaterialProperty.COLOR, Color.red))
+				.build();
 		STEAM = AIR.buildCopy("steam").prop(ImmutableMap.of(MaterialProperty.COLD_TRANSITION_ENERGY, 100f,
 				MaterialProperty.COLD_TRANSITION_MATERIAL, WATER, MaterialProperty.OPACITY, 0.1f)).build();
 		waterBuilder.prop(ImmutableMap.of(MaterialProperty.COLD_TRANSITION_ENERGY, 0f,
 				MaterialProperty.COLD_TRANSITION_MATERIAL, ICE, MaterialProperty.HEAT_TRANSITION_ENERGY, 100f,
-				MaterialProperty.HEAT_TRANSITION_MATERIAL, STEAM));
+				MaterialProperty.HEAT_TRANSITION_MATERIAL, STEAM, MaterialProperty.COLOR, Color.white));
 		PLASMA = AIR.buildCopy("plasma")
 				.prop(ImmutableMap.of(MaterialProperty.COLD_TRANSITION_ENERGY, 100f,
 						MaterialProperty.COLD_TRANSITION_MATERIAL, AIR, MaterialProperty.OPACITY, 0.1f,
@@ -203,7 +214,8 @@ public class Material implements IMaterial {
 				.build();
 
 		// stone
-		MaterialBuilder stoneBuilder = builder("stone").prop(ImmutableMap.of(MaterialProperty.CRUMBLES, true));
+		MaterialBuilder stoneBuilder = IMaterial.builder("stone")
+				.prop(ImmutableMap.of(MaterialProperty.CRUMBLES, true));
 		STONE = stoneBuilder.build();
 		GRAVEL = STONE.buildCopy("gravel")
 				.prop(ImmutableMap.of(MaterialProperty.PHASE, Phase.GRANULAR, MaterialProperty.FINENESS, 0.5f)).build();
@@ -211,14 +223,45 @@ public class Material implements IMaterial {
 		LAVA = STONE.buildCopy("lava")
 				.prop(ImmutableMap.of(MaterialProperty.FLUIDITY, 0.25f, MaterialProperty.STICKINESS, 0.5f,
 						MaterialProperty.COLD_TRANSITION_MATERIAL, STONE, MaterialProperty.COLD_TRANSITION_ENERGY,
-						1000f, MaterialProperty.DENSITY, 3.1f))
+						1000f, MaterialProperty.DENSITY, 3.1f, MaterialProperty.COLOR, Color.ORANGE))
 				.build();
 		stoneBuilder.prop(MaterialProperty.HEAT_TRANSITION_MATERIAL, LAVA);
 
+		// wood
+		MaterialBuilder woodBuilder = IMaterial.builder("wood")
+				.prop(ImmutableMap.of(MaterialProperty.COARSENESS, 1f, MaterialProperty.CORRODIBILITY, 0.9f,
+						MaterialProperty.DENSITY, 1.5f, MaterialProperty.FLAMMABLE, true, MaterialProperty.ORGANIC,
+						true, MaterialProperty.RESISTANCE, 500f, MaterialProperty.ROUGHNESS, 0.4f,
+						MaterialProperty.SOFTNESS, 0.1f, MaterialProperty.COLOR, new Color(92, 48, 15)));
+		WOOD = woodBuilder.build();
+		WOOD_ASH = WOOD.buildCopy("wood_ash")
+				.prop(ImmutableMap.of(MaterialProperty.DENSITY, 0.2f, MaterialProperty.CORRODIBILITY, 0.5f,
+						MaterialProperty.FLAMMABLE, false, MaterialProperty.ORGANIC, false, MaterialProperty.RESISTANCE,
+						1f, MaterialProperty.ROUGHNESS, 0.2f, MaterialProperty.COLOR, new Color(94, 81, 66)))
+				.build();
+		WOOD_SMOKE = AIR.buildCopy("wood_smoke")
+				.prop(ImmutableMap.of(MaterialProperty.OPACITY, 0.1f, MaterialProperty.COLOR, Color.black)).build();
+		woodBuilder.prop(
+				ImmutableMap.of(MaterialProperty.BURN_MATERIAL, WOOD_ASH, MaterialProperty.SMOKE_MATERIAL, WOOD_SMOKE));
+
 	}
 
-	public static final Material NERVE_TISSUE = builder("nerve_tissue").prop(ImmutableMap.of(MaterialProperty.ORGANIC,
-			true, MaterialProperty.SOFTNESS, 0.9f, MaterialProperty.FLEXIBILITY, 1f, MaterialProperty.FLAMMABLE, true))
+	/**
+	 * Flexible tissue
+	 */
+	public static final Material GENERIC_TISSUE = IMaterial.builder("generic_tissue")
+			.prop(ImmutableMap.of(MaterialProperty.ORGANIC, true, MaterialProperty.MEAT, true,
+					MaterialProperty.SOFTNESS, 0.9f, MaterialProperty.FLEXIBILITY, 1f, MaterialProperty.FLAMMABLE,
+					true))
+			.build();
+
+	/**
+	 * Flesh of an organism
+	 */
+	public static final Material GENERIC_FLESH = IMaterial.builder("generic_flesh")
+			.prop(ImmutableMap.of(MaterialProperty.ORGANIC, true, MaterialProperty.MEAT, true,
+					MaterialProperty.SOFTNESS, 0.5f, MaterialProperty.FLAMMABLE, true, MaterialProperty.COLOR,
+					new Color(179, 129, 82)))
 			.build();
 
 }

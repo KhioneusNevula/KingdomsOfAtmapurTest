@@ -1,5 +1,11 @@
 package things.form.shape;
 
+import static things.form.shape.IShape.builder;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+
 import things.form.shape.property.IShapeProperty;
 import things.form.shape.property.ShapeProperty;
 import things.form.shape.property.ShapeProperty.Shapedness;
@@ -13,9 +19,15 @@ public interface IShape {
 		}
 
 		@Override
-		public String name() {
-			return "_none";
+		public <E> IShape withProperty(IShapeProperty<E> property, E value) {
+			return builder().addProperty(property, value).build();
 		}
+
+		@Override
+		public Collection<IShapeProperty<?>> properties() {
+			return Collections.singleton(ShapeProperty.SHAPEDNESS);
+		}
+
 	};
 
 	public static class ShapeBuilder {
@@ -23,8 +35,17 @@ public interface IShape {
 		private Shape innerInstance;
 		private boolean closed;
 
-		private ShapeBuilder(String name) {
-			innerInstance = new Shape(name);
+		private ShapeBuilder(IShape other) {
+			innerInstance = new Shape();
+			innerInstance.properties = new HashMap<>();
+			for (IShapeProperty<?> prop : other.properties()) {
+				innerInstance.properties.put(prop, other.getProperty(prop));
+			}
+
+		}
+
+		private ShapeBuilder() {
+			innerInstance = new Shape();
 		}
 
 		public <E> ShapeBuilder addProperty(IShapeProperty<E> prop, E val) {
@@ -41,13 +62,22 @@ public interface IShape {
 		}
 	}
 
-	public static ShapeBuilder builder(String name) {
-		return new ShapeBuilder(name);
+	public static ShapeBuilder builder() {
+		return new ShapeBuilder();
 	}
 
 	/**
-	 * Get a property of this material; return default value if the material has no
-	 * value stored
+	 * Returns a shape builder that copies from this shape
+	 * 
+	 * @return
+	 */
+	public default ShapeBuilder copyBuilder() {
+		return new ShapeBuilder(this);
+	}
+
+	/**
+	 * Get a property of this shape; return default value if the shape has no value
+	 * stored
 	 * 
 	 * @param <E>
 	 * @param property
@@ -56,9 +86,20 @@ public interface IShape {
 	public <E> E getProperty(IShapeProperty<E> property);
 
 	/**
-	 * Get the name of this material
+	 * Return all properties set in this shape
 	 * 
 	 * @return
 	 */
-	public String name();
+	public Collection<IShapeProperty<?>> properties();
+
+	/**
+	 * Return a variant of this shape with the given property changed
+	 * 
+	 * @param <E>
+	 * @param property
+	 * @param value
+	 * @return
+	 */
+	public <E> IShape withProperty(IShapeProperty<E> property, E value);
+
 }

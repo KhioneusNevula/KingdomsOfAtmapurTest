@@ -129,7 +129,7 @@ public interface IChannelCenter extends IPartAbility {
 	 * @param consumable
 	 * @return
 	 */
-	default Pair<IChannelResource<?>, ?> intake(ISoma body, IComponentPart part, IThing consumable, long ticks) {
+	default Pair<IResource<?>, ?> intake(ISoma body, IComponentPart part, IThing consumable, long ticks) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -141,7 +141,7 @@ public interface IChannelCenter extends IPartAbility {
 	 * @param consumable
 	 * @return
 	 */
-	default Pair<IChannelResource<?>, ?> intake(ISoma body, IComponentPart part, IStain consumable, long ticks) {
+	default Pair<IResource<?>, ?> intake(ISoma body, IComponentPart part, IStain consumable, long ticks) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -149,13 +149,13 @@ public interface IChannelCenter extends IPartAbility {
 	 * Create an instance of something using a resource or return null if not
 	 * possible
 	 */
-	default IThing instantiateThing(ISoma body, IComponentPart part, IChannelResource<?> res, Object instance,
+	default IThing instantiateThing(ISoma body, IComponentPart part, IResource<?> res, Object instance,
 			long ticks) {
 		throw new UnsupportedOperationException();
 	}
 
 	/** Create a stain using a resource or return null if not possible */
-	default IStain instantiateStain(ISoma body, IComponentPart part, IChannelResource<?> res, Object instance,
+	default IStain instantiateStain(ISoma body, IComponentPart part, IResource<?> res, Object instance,
 			long ticks) {
 		throw new UnsupportedOperationException();
 	}
@@ -168,7 +168,7 @@ public interface IChannelCenter extends IPartAbility {
 	 * @param part
 	 * @return
 	 */
-	default Pair<IChannelResource<?>, ?> generate(ISoma body, IComponentPart part, long ticks) {
+	default Pair<IResource<?>, ?> generate(ISoma body, IComponentPart part, long ticks) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -180,7 +180,7 @@ public interface IChannelCenter extends IPartAbility {
 	 * @param instance
 	 * @return
 	 */
-	default Pair<IChannelResource<?>, ?> transform(ISoma body, IComponentPart part, IChannelResource<?> res,
+	default Pair<IResource<?>, ?> transform(ISoma body, IComponentPart part, IResource<?> res,
 			Object instance, long ticks) {
 		throw new UnsupportedOperationException();
 	}

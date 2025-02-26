@@ -27,4 +27,5 @@ public interface IVisage<P extends IPart> extends IForm<P>, IRenderable {
 	 * @return
 	 */
 	String visageReport();
+
 }

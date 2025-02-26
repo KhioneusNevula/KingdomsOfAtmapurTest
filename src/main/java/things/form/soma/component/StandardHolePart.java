@@ -22,4 +22,9 @@ public class StandardHolePart extends StandardComponentPart {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "((\"" + this.getName() + "\" [hole]))";
+	}
+
 }

@@ -1,23 +1,23 @@
 package things.form.shape;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import things.form.shape.property.IShapeProperty;
+import utilities.collections.ImmutableCollection;
 
 /**
- * implementation of material
+ * implementation of Shape concept
  * 
  * @author borah
  *
  */
 public class Shape implements IShape {
 
-	String name;
 	Map<IShapeProperty<?>, Object> properties;
 
-	Shape(String name) {
-		this.name = name;
+	Shape() {
 		this.properties = new HashMap<>();
 	}
 
@@ -27,8 +27,16 @@ public class Shape implements IShape {
 	}
 
 	@Override
-	public String name() {
-		return this.name;
+	public Collection<IShapeProperty<?>> properties() {
+		return ImmutableCollection.from(properties.keySet());
+	}
+
+	@Override
+	public <E> IShape withProperty(IShapeProperty<E> property, E value) {
+		Shape ret = new Shape();
+		ret.properties = new HashMap<>(this.properties);
+		ret.properties.put(property, value);
+		return ret;
 	}
 
 	@Override
@@ -36,8 +44,6 @@ public class Shape implements IShape {
 		if (super.equals(obj))
 			return true;
 		if (obj instanceof IShape mat) {
-			if (!this.name.equals(mat.name()))
-				return false;
 			for (Map.Entry<IShapeProperty<?>, Object> entry : this.properties.entrySet()) {
 				if (!mat.getProperty(entry.getKey()).equals(entry.getValue())) {
 					return false;
@@ -50,12 +56,12 @@ public class Shape implements IShape {
 
 	@Override
 	public int hashCode() {
-		return this.name.hashCode() + this.properties.hashCode();
+		return this.properties.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return "|:" + name + ":|";
+		return "|:" + this.properties + ":|";
 	}
 
 }

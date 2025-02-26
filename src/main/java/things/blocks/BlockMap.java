@@ -95,6 +95,8 @@ public class BlockMap {
 
 	@Override
 	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
 		if (obj instanceof IBlockState[]ls) {
 			return Arrays.equals(this.blockmap, ls);
 		} else if (obj instanceof BlockMap mp) {

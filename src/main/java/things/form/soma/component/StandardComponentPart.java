@@ -9,12 +9,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
+
 import _sim.plane.Plane;
 import things.form.IForm;
 import things.form.IPart;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
-import things.form.channelsystems.IChannelResource;
+import things.form.channelsystems.IChannelSystem;
+import things.form.channelsystems.IResource;
 import things.form.material.IMaterial;
 import things.form.shape.IShape;
 import things.form.soma.ISoma;
@@ -22,6 +25,8 @@ import things.form.soma.abilities.IPartAbility;
 import things.form.soma.stats.IPartStat;
 import things.spirit.ISpirit;
 import things.stains.IStain;
+import things.status_effect.IPartStatusEffect;
+import things.status_effect.IPartStatusEffectInstance;
 import utilities.collections.ImmutableCollection;
 
 public class StandardComponentPart implements IComponentPart {
@@ -34,10 +39,11 @@ public class StandardComponentPart implements IComponentPart {
 	private IShape shape;
 	private Collection<IPartAbility> abilities;
 	private Collection<IMaterial> embedded;
-	private Map<IChannelResource<?>, Object> channelResources;
+	private Map<IResource<?>, Comparable<?>> channelResources;
 	private Set<IChannelCenter> autos;
 	private Set<ChannelRole> roles;
 	private Set<ISpirit> spirits;
+	private Map<IPartStatusEffect, IPartStatusEffectInstance> effects;
 	private Map<IPartStat<?>, Object> stats;
 	private IForm<? super StandardComponentPart> owner;
 	private Set<IStain> stains;
@@ -62,6 +68,7 @@ public class StandardComponentPart implements IComponentPart {
 				.map((a) -> ((IChannelCenter) a).getRole()).collect(Collectors.toSet());
 		spirits = new HashSet<>();
 		this.stats = new HashMap<>(stats);
+		this.effects = new HashMap<>();
 	}
 
 	@Override
@@ -208,13 +215,13 @@ public class StandardComponentPart implements IComponentPart {
 	}
 
 	@Override
-	public <E> E getResourceAmount(IChannelResource<E> resource) {
+	public <E extends Comparable<?>> E getResourceAmount(IResource<E> resource) {
 		return (E) this.channelResources.getOrDefault(resource, resource.getEmptyValue());
 	}
 
 	@Override
-	public void changeResourceAmount(IChannelResource<?> resource, Object value, boolean callUpdate) {
-		Object returnV = this.channelResources.put(resource, value);
+	public void changeResourceAmount(IResource<?> resource, Comparable<?> value, boolean callUpdate) {
+		Comparable<?> returnV = this.channelResources.put(resource, value);
 		if (!value.equals(returnV) && callUpdate && this.owner instanceof ISoma soma) {
 			soma.onChannelResourceChanged(this, resource, returnV);
 		}
@@ -278,6 +285,13 @@ public class StandardComponentPart implements IComponentPart {
 	}
 
 	@Override
+	public Collection<IChannelCenter> getChannelCenters(IChannelSystem role) {
+		return abilities.stream()
+				.filter((a) -> a instanceof IChannelCenter ? ((IChannelCenter) a).getSystem().equals(role) : false)
+				.map((a) -> (IChannelCenter) a).collect(Collectors.toSet());
+	}
+
+	@Override
 	public Collection<IChannelCenter> getAutomaticChannelCenters() {
 		return autos;
 	}
@@ -331,6 +345,43 @@ public class StandardComponentPart implements IComponentPart {
 	}
 
 	@Override
+	public void applyEffect(IPartStatusEffectInstance effect, boolean callUpdate) {
+		Object ret = this.effects.put(effect.getEffect(), effect);
+		if (callUpdate && ret == null) {
+			((ISoma) owner).onApplyEffect(effect, this);
+		}
+	}
+
+	@Override
+	public IPartStatusEffectInstance removeEffect(IPartStatusEffect effect, boolean callUpdate) {
+		IPartStatusEffectInstance ret = this.effects.remove(effect);
+		if (callUpdate && ret != null) {
+			((ISoma) owner).onRemoveEffect(ret, this);
+		}
+		return ret;
+	}
+
+	@Override
+	public IPartStatusEffectInstance getEffectInstance(IPartStatusEffect effect) {
+		return this.effects.get(effect);
+	}
+
+	@Override
+	public Collection<IPartStatusEffectInstance> getEffectInstances() {
+		return this.effects.values();
+	}
+
+	@Override
+	public Collection<IPartStatusEffect> getEffectTypes() {
+		return this.effects.keySet();
+	}
+
+	@Override
+	public boolean hasEffect(IPartStatusEffect effect) {
+		return this.effects.get(effect) != null;
+	}
+
+	@Override
 	public <E> E getStat(IPartStat<E> forStat) {
 		return (E) stats.getOrDefault(forStat, forStat.getDefaultValue(this));
 	}
@@ -359,6 +410,7 @@ public class StandardComponentPart implements IComponentPart {
 		newPart.stats = new HashMap<>(this.stats);
 		newPart.spirits = new HashSet<>(this.spirits);
 		newPart.channelResources = new HashMap<>(this.channelResources);
+		newPart.effects = new HashMap<>(Maps.asMap(this.effects.keySet(), (eff) -> this.effects.get(eff).clone()));
 		return newPart;
 	}
 
@@ -382,7 +434,7 @@ public class StandardComponentPart implements IComponentPart {
 
 	@Override
 	public String toString() {
-		return "{{\"" + this.name + "\", [" + this.material.name() + "," + this.shape.name() + "] }}";
+		return "{{\"" + this.name + "\", [" + this.material.name() + "] }}";
 	}
 
 	@Override
@@ -391,7 +443,8 @@ public class StandardComponentPart implements IComponentPart {
 				+ (planes != 1 ? ",planes=" + Plane.separate(planes) : "")
 				+ (abilities.isEmpty() ? "" : ",abs=" + abilities) + (spirits.isEmpty() ? "" : ",spirits=" + spirits)
 				+ (stats.isEmpty() ? "" : ",stats=" + stats) + (embedded.isEmpty() ? "" : ",embedded=" + embedded)
-				+ "}";
+				+ (this.channelResources.isEmpty() ? "" : ",resources=" + this.channelResources)
+				+ (effects.isEmpty() ? "" : ",effects=" + this.effects.values()) + "}";
 	}
 
 	@Override

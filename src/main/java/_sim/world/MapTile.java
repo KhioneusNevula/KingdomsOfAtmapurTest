@@ -6,8 +6,8 @@ public class MapTile {
 
 	/** default name of contiguous map tiles */
 	public static final String DEFAULT_NAME = "<map>";
-	private int r = -1;
-	private int c = -1;
+	private int row = -1;
+	private int col = -1;
 	private boolean isContiguous;
 	private IDimensionTag dimension;
 	private String name;
@@ -35,8 +35,8 @@ public class MapTile {
 		if (r < 0 || c < 0) {
 			throw new IllegalArgumentException(r + " " + c);
 		}
-		this.r = r;
-		this.c = c;
+		this.row = r;
+		this.col = c;
 		this.isContiguous = true;
 	}
 
@@ -53,25 +53,38 @@ public class MapTile {
 	}
 
 	public int getRow() {
-		return r;
+		return row;
 	}
 
 	public int getCol() {
-		return c;
+		return col;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
+		if (super.equals(obj))
+			return true;
 		if (obj instanceof MapTile mt) {
-			return this.name.equals(mt.name) && this.r == mt.r && this.c == mt.c
-					&& this.isContiguous == mt.isContiguous;
+			return this.isContiguous == mt.isContiguous
+					&& (this.isContiguous ? (this.row == mt.row && this.col == mt.col) : (this.name.equals(mt.name)))
+					&& this.dimension.equals(mt.dimension);
 		}
-		return super.equals(obj);
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return (name.hashCode() + r * c) * (isContiguous ? 1 : -1);
+		return ((isContiguous ? row * col : name.hashCode())) + this.dimension.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		if (this.isContiguous) {
+			return "|[R=" + row + ",C=" + col + ",D=" + this.dimension.getId() + "]|";
+		} else {
+
+			return "|[N=" + this.name + ",D=" + this.dimension.getId() + "]|";
+		}
 	}
 
 }

@@ -1,6 +1,6 @@
 package things.form.channelsystems.signal;
 
-import things.form.channelsystems.IChannelResource;
+import things.form.channelsystems.IResource;
 
 /**
  * A Signal resource is just a boolean value indicating presence or absence of
@@ -9,7 +9,7 @@ import things.form.channelsystems.IChannelResource;
  * @author borah
  *
  */
-public class SignalChannelResource implements IChannelResource<Boolean> {
+public class SignalChannelResource implements IResource<Boolean> {
 
 	private String name;
 
@@ -25,6 +25,11 @@ public class SignalChannelResource implements IChannelResource<Boolean> {
 	@Override
 	public Boolean getEmptyValue() {
 		return false;
+	}
+
+	@Override
+	public Boolean getMaxValue() {
+		return true;
 	}
 
 	@Override
@@ -46,7 +51,7 @@ public class SignalChannelResource implements IChannelResource<Boolean> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof IChannelResource rs) {
+		if (obj instanceof IResource rs) {
 			return this.name.equals(rs.name()) && this.getMeasureClass().equals(rs.getMeasureClass());
 		}
 		return super.equals(obj);

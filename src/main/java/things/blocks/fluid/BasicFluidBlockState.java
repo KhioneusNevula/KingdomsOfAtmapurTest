@@ -69,6 +69,8 @@ public class BasicFluidBlockState implements IBlockState {
 
 	@Override
 	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
 		if (obj instanceof IBlockState bs) {
 			return this.material.equals(bs.getBlock()) && bs.getValue(IBlock.FLUID_LEVEL).equals(level);
 		}
