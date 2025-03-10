@@ -1,6 +1,6 @@
 package things.biology.genes;
 
-import utilities.property.IProperty;
+import _utilities.property.IProperty;
 
 /**
  * A gene is a unique thing that controls traits in an organism

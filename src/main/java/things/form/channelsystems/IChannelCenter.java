@@ -1,11 +1,11 @@
 package things.form.channelsystems;
 
+import _utilities.couplets.Pair;
 import things.form.soma.ISoma;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.component.IComponentPart;
 import things.interfaces.IThing;
 import things.stains.IStain;
-import utilities.couplets.Pair;
 
 /**
  * A descriptor of a part that plays a specific role in a channel system
@@ -103,7 +103,7 @@ public interface IChannelCenter extends IPartAbility {
 	 * @param ticks
 	 * @return
 	 */
-	default boolean canIntake(ISoma body, IComponentPart part, IThing consumable) {
+	default boolean canIntake(ISoma body, IComponentPart part, IComponentPart consumable) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -122,26 +122,27 @@ public interface IChannelCenter extends IPartAbility {
 	}
 
 	/**
-	 * accept a Thing and turn it into a resource or return null if not possible
+	 * accept a Thing and turn it into a resource or return false if not possible
 	 * 
 	 * @param body
 	 * @param part
 	 * @param consumable
 	 * @return
 	 */
-	default Pair<IResource<?>, ?> intake(ISoma body, IComponentPart part, IThing consumable, long ticks) {
+	default boolean intake(ISoma body, IComponentPart part, IComponentPart consumable, long ticks) {
 		throw new UnsupportedOperationException();
 	}
 
 	/**
-	 * accept a Stain and turn it into a resource or return null if not possible
+	 * accept a Stain and turn it into a resource as relevant, or return false if
+	 * not possible
 	 * 
 	 * @param body
 	 * @param part
 	 * @param consumable
 	 * @return
 	 */
-	default Pair<IResource<?>, ?> intake(ISoma body, IComponentPart part, IStain consumable, long ticks) {
+	default boolean intake(ISoma body, IComponentPart part, IStain consumable, long ticks) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -149,14 +150,12 @@ public interface IChannelCenter extends IPartAbility {
 	 * Create an instance of something using a resource or return null if not
 	 * possible
 	 */
-	default IThing instantiateThing(ISoma body, IComponentPart part, IResource<?> res, Object instance,
-			long ticks) {
+	default IThing instantiateThing(ISoma body, IComponentPart part, IResource<?> res, Object instance, long ticks) {
 		throw new UnsupportedOperationException();
 	}
 
 	/** Create a stain using a resource or return null if not possible */
-	default IStain instantiateStain(ISoma body, IComponentPart part, IResource<?> res, Object instance,
-			long ticks) {
+	default IStain instantiateStain(ISoma body, IComponentPart part, IResource<?> res, Object instance, long ticks) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -180,8 +179,8 @@ public interface IChannelCenter extends IPartAbility {
 	 * @param instance
 	 * @return
 	 */
-	default Pair<IResource<?>, ?> transform(ISoma body, IComponentPart part, IResource<?> res,
-			Object instance, long ticks) {
+	default Pair<IResource<?>, ?> transform(ISoma body, IComponentPart part, IResource<?> res, Object instance,
+			long ticks) {
 		throw new UnsupportedOperationException();
 	}
 

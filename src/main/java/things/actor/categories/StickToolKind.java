@@ -4,6 +4,10 @@ import java.util.Collections;
 import java.util.UUID;
 
 import _sim.RelativeSide;
+import _utilities.graph.IModifiableRelationGraph;
+import _utilities.graph.RelationGraph;
+import _utilities.property.IProperty;
+import _utilities.property.PropertyImpl;
 import things.form.graph.connections.CoverageType;
 import things.form.graph.connections.IPartConnection;
 import things.form.graph.connections.PartConnection;
@@ -19,10 +23,6 @@ import things.form.shape.property.ShapeProperty.RollableShape;
 import things.form.shape.property.ShapeProperty.Thickness;
 import things.form.soma.component.IComponentPart;
 import things.form.soma.component.StandardComponentPart;
-import utilities.graph.IModifiableRelationGraph;
-import utilities.graph.RelationGraph;
-import utilities.property.IProperty;
-import utilities.property.PropertyImpl;
 
 public class StickToolKind extends MultipartKind {
 
@@ -83,7 +83,7 @@ public class StickToolKind extends MultipartKind {
 	protected IComponentPart identifyCenter(IModifiableRelationGraph<IComponentPart, IPartConnection> graph,
 			IKindSettings settings) {
 
-		return graph.stream().filter((a) -> a.getID().equals(handleID)).findAny().orElseThrow();
+		return graph.stream().filter((a) -> a.getUUID().equals(handleID)).findAny().orElseThrow();
 	}
 
 }

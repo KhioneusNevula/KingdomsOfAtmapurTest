@@ -1,5 +1,7 @@
 package thinker.social;
 
+import thinker.IParty;
+
 public interface ICollective extends IParty {
 
 	@Override

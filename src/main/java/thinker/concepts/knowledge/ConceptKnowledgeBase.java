@@ -14,9 +14,13 @@ import java.util.function.Supplier;
 import com.google.common.base.Functions;
 import com.google.common.collect.Sets;
 
+import _utilities.graph.IRelationGraph;
+import _utilities.graph.ImmutableGraphView;
 import thinker.IIndividualKnowledgeBase;
 import thinker.IKnowledgeBase;
 import thinker.concepts.IConcept;
+import thinker.concepts.IConcept.ConceptType;
+import thinker.concepts.general_types.ILogicConcept.LogicType;
 import thinker.concepts.relations.ConceptRelationType;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.concepts.relations.RelationProperties;
@@ -26,8 +30,6 @@ import thinker.mind.memory.TruthType;
 import thinker.mind.memory.node.ConceptNode;
 import thinker.mind.memory.node.IConceptNode;
 import thinker.social.relations.social_bond.ISocialBondTrait;
-import utilities.graph.IRelationGraph;
-import utilities.graph.ImmutableGraphView;
 
 public class ConceptKnowledgeBase implements IIndividualKnowledgeBase {
 
@@ -271,6 +273,45 @@ public class ConceptKnowledgeBase implements IIndividualKnowledgeBase {
 		return () -> conceptGraph.getNeighbors(new ConceptNode(from)).stream().map(IConceptNode::getConcept).iterator();
 	}
 
+	private void getCCLogicRecHelper(IConceptRelationType t, LogicType lt, IConceptNode node,
+			Collection<IConcept> already) {
+
+		Collection<IConceptNode> neibs = null;
+		if (t != null)
+			neibs = conceptGraph.getNeighbors(node, t);
+		else
+			neibs = conceptGraph.getNeighbors(node);
+		neibs.stream().filter((b) -> !already.contains(b.getConcept())).sequential().forEach((neighbor) -> {
+			if (neighbor.getConceptType() == ConceptType.LOGIC_CONNECTOR
+					&& neighbor.getConcept().asLogic().getLogicType() == lt) {
+				getCCLogicRecHelper(t, lt, neighbor, already);
+			} else {
+				already.add(neighbor.getConcept());
+			}
+		});
+
+	}
+
+	/** if the given relation is null, do for all relations */
+	private Collection<IConcept> getCCLogicRecursive(IConcept from, IConceptRelationType t, LogicType lt) {
+		Set<IConcept> alr = Sets.newHashSet(from);
+		getCCLogicRecHelper(t, lt, new ConceptNode(from), alr);
+		alr.remove(from);
+		alr.removeIf((x) -> x.getConceptType() == ConceptType.LOGIC_CONNECTOR && x.asLogic().getLogicType() == lt);
+		return alr;
+	}
+
+	@Override
+	public Iterable<? extends IConcept> getConnectedConceptsWithLogicalConnector(IConcept from,
+			IConceptRelationType type, LogicType logicType) {
+		return getCCLogicRecursive(from, type, logicType);
+	}
+
+	@Override
+	public Iterable<? extends IConcept> getConnectedConceptsWithLogicalConnector(IConcept from, LogicType logicType) {
+		return getCCLogicRecursive(from, null, logicType);
+	}
+
 	@Override
 	public IMultiKnowledgeBaseIterator<? extends IConcept> getConnectedConceptsCheckParent(IConcept from) {
 		return new ConceptStorageParentIterator<>(() -> conceptGraph.getNeighbors(new ConceptNode(from)).stream()
@@ -303,9 +344,85 @@ public class ConceptKnowledgeBase implements IIndividualKnowledgeBase {
 	}
 
 	@Override
+	public IMultiKnowledgeBaseIterator<? extends IConcept> getConnectedConceptsWithLogicalConnectorCheckParent(
+			IConcept from, IConceptRelationType type, LogicType ltype) {
+		return new ConceptStorageParentIterator<>(() -> conceptGraph.getNeighbors(new ConceptNode(from)).stream()
+				.map(IConceptNode::getConcept).iterator(), (parent) -> {
+					if (parent instanceof IIndividualKnowledgeBase ikb)
+						return ikb.getConnectedConceptsWithLogicalConnectorCheckParent(from, type, ltype);
+					else
+						return new SingleParentConceptStorageParentIterator<>(parent,
+								parent.getConnectedConceptsWithLogicalConnector(from, type, ltype).iterator());
+				});
+	}
+
+	@Override
+	public IMultiKnowledgeBaseIterator<? extends IConcept> getConnectedConceptsWithLogicalConnectorCheckParent(
+			IConcept from, LogicType ltype) {
+		return new ConceptStorageParentIterator<>(() -> conceptGraph.getNeighbors(new ConceptNode(from)).stream()
+				.map(IConceptNode::getConcept).iterator(), (parent) -> {
+					if (parent instanceof IIndividualKnowledgeBase ikb)
+						return ikb.getConnectedConceptsWithLogicalConnectorCheckParent(from, ltype);
+					else
+						return new SingleParentConceptStorageParentIterator<>(parent,
+								parent.getConnectedConceptsWithLogicalConnector(from, ltype).iterator());
+				});
+	}
+
+	@Override
 	public StorageType getStorageTypeOfRelation(IConcept from, IConceptRelationType type, IConcept to) {
 		return conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to),
 				RelationProperties.STORAGE_TYPE, false);
+	}
+
+	@Override
+	public boolean isOpposite(IConcept from, IConceptRelationType type, IConcept to) {
+		if (!conceptGraph.containsEdge(new ConceptNode(from), type, new ConceptNode(to))) {
+			return false;
+		}
+		return conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to), RelationProperties.OPPOSITE);
+	}
+
+	@Override
+	public Set<IKnowledgeBase> isOppositeCheckParents(IConcept from, IConceptRelationType type, IConcept to) {
+		Set<IKnowledgeBase> types = new HashSet<>();
+		if (this.isNot(from, type, to))
+			types.add(this);
+		for (IKnowledgeBase para : parents) {
+			if (para instanceof IIndividualKnowledgeBase ikb)
+				types.addAll(ikb.isNotCheckParents(from, type, to));
+			else {
+				if (para.isOpposite(from, type, to)) {
+					types.add(para);
+				}
+			}
+		}
+		return types;
+	}
+
+	@Override
+	public boolean isNot(IConcept from, IConceptRelationType type, IConcept to) {
+		if (!conceptGraph.containsEdge(new ConceptNode(from), type, new ConceptNode(to))) {
+			return true;
+		}
+		return conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to), RelationProperties.NOT);
+	}
+
+	@Override
+	public Set<IKnowledgeBase> isNotCheckParents(IConcept from, IConceptRelationType type, IConcept to) {
+		Set<IKnowledgeBase> types = new HashSet<>();
+		if (this.isNot(from, type, to))
+			types.add(this);
+		for (IKnowledgeBase para : parents) {
+			if (para instanceof IIndividualKnowledgeBase ikb)
+				types.addAll(ikb.isNotCheckParents(from, type, to));
+			else {
+				if (para.isNot(from, type, to)) {
+					types.add(para);
+				}
+			}
+		}
+		return types;
 	}
 
 	@Override
@@ -365,8 +482,8 @@ public class ConceptKnowledgeBase implements IIndividualKnowledgeBase {
 
 	@Override
 	public float getSocialBondValue(IConcept from, ISocialBondTrait trait, IConcept to) {
-		return conceptGraph.getProperty(new ConceptNode(from), ConceptRelationType.KNOWS, new ConceptNode(to), trait,
-				false);
+		return conceptGraph.getProperty(new ConceptNode(from), ConceptRelationType.HAS_SOCIAL_BOND_TO,
+				new ConceptNode(to), trait, false);
 	}
 
 	@Override
@@ -386,7 +503,8 @@ public class ConceptKnowledgeBase implements IIndividualKnowledgeBase {
 
 	@Override
 	public void setSocialBondValue(IConcept from, ISocialBondTrait trait, IConcept to, float value) {
-		conceptGraph.setProperty(new ConceptNode(from), ConceptRelationType.KNOWS, new ConceptNode(to), trait, value);
+		conceptGraph.setProperty(new ConceptNode(from), ConceptRelationType.HAS_SOCIAL_BOND_TO, new ConceptNode(to),
+				trait, value);
 	}
 
 	@Override

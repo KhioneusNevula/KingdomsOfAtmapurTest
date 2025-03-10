@@ -11,12 +11,13 @@ import java.util.UUID;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 
+import _utilities.collections.ImmutableCollection;
+import _utilities.graph.RelationGraph;
+import _utilities.property.IProperty;
 import thinker.IIndividualKnowledgeBase;
+import thinker.IParty;
 import thinker.concepts.IConcept;
 import thinker.social.relations.party_relations.IPartyRelationType;
-import utilities.collections.ImmutableCollection;
-import utilities.graph.RelationGraph;
-import utilities.property.IProperty;
 
 /**
  * A relation graph which encodes relations between parties and sometimes

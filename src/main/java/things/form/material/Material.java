@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
+import _utilities.collections.ImmutableSetView;
 import things.form.material.condition.IMaterialCondition;
 import things.form.material.property.IMaterialProperty;
 import things.form.material.property.MaterialProperty;
@@ -14,7 +15,6 @@ import things.form.material.property.Phase;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.stains.IStain;
-import utilities.collections.ImmutableSetView;
 
 /**
  * implementation of material

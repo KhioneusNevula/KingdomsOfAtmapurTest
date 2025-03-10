@@ -3,13 +3,13 @@ package things.form.channelsystems.energy;
 import java.util.Collection;
 import java.util.Collections;
 
+import _utilities.couplets.Pair;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelSystem;
 import things.form.channelsystems.IResource;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.form.soma.stats.IPartStat;
-import utilities.couplets.Pair;
 
 /**
  * A ChannelCenter representing something that generates some energy

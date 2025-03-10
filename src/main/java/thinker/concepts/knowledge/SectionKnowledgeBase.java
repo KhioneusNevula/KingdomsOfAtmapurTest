@@ -6,16 +6,17 @@ import java.util.UUID;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
+import _utilities.couplets.Pair;
+import _utilities.graph.IRelationGraph;
 import thinker.IKnowledgeBase;
 import thinker.concepts.IConcept;
+import thinker.concepts.general_types.ILogicConcept.LogicType;
 import thinker.concepts.general_types.IProfile;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.mind.memory.StorageType;
 import thinker.mind.memory.TruthType;
 import thinker.mind.memory.node.IConceptNode;
 import thinker.social.relations.social_bond.ISocialBondTrait;
-import utilities.couplets.Pair;
-import utilities.graph.IRelationGraph;
 
 /**
  * Implementation of {@link ISectionKnowledgeBase}
@@ -162,6 +163,17 @@ public class SectionKnowledgeBase implements ISectionKnowledgeBase {
 	}
 
 	@Override
+	public Iterable<? extends IConcept> getConnectedConceptsWithLogicalConnector(IConcept from,
+			IConceptRelationType type, LogicType logicType) {
+		return noosphere.groupGetConnectedConceptsWithLogicalConnector(from, logicType, type, self);
+	}
+
+	@Override
+	public Iterable<? extends IConcept> getConnectedConceptsWithLogicalConnector(IConcept from, LogicType logicType) {
+		return noosphere.groupGetConnectedConceptsWithLogicalConnector(from, logicType, self);
+	}
+
+	@Override
 	public StorageType getStorageTypeOfRelation(IConcept from, IConceptRelationType type, IConcept to) {
 		return noosphere.groupGetStorageTypeOfRelation(from, type, to, self);
 	}
@@ -174,6 +186,16 @@ public class SectionKnowledgeBase implements ISectionKnowledgeBase {
 	@Override
 	public TruthType getTruthTypeOfRelation(IConcept from, IConceptRelationType type, IConcept to) {
 		return noosphere.groupGetTruthTypeOfRelation(from, type, to, self);
+	}
+
+	@Override
+	public boolean isNot(IConcept from, IConceptRelationType type, IConcept to) {
+		return noosphere.groupIsNot(from, type, to, self);
+	}
+
+	@Override
+	public boolean isOpposite(IConcept from, IConceptRelationType type, IConcept to) {
+		return noosphere.groupIsOpposite(from, type, to, self);
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import _utilities.couplets.Triplet;
 import things.form.channelsystems.GeneticMaterialResource;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelCenter;
@@ -15,7 +16,6 @@ import things.form.material.IMaterial;
 import things.form.material.property.MaterialProperty;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import utilities.couplets.Triplet;
 
 public class BloodChannelSystem implements IChannelSystem {
 

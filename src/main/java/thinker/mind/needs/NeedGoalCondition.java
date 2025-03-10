@@ -1,15 +1,15 @@
 package thinker.mind.needs;
 
+import _utilities.graph.IRelationGraph;
+import _utilities.graph.RelationGraph;
+import thinker.IParty;
 import thinker.concepts.IConcept;
 import thinker.concepts.relations.ActionRelationType;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.goals.IGoalCondition;
-import thinker.social.IParty;
 import thinker.social.PartyRelationGraph;
 import thinker.social.relations.party_relations.PartyRelationType;
 import thinker.social.systems.IRole;
-import utilities.graph.IRelationGraph;
-import utilities.graph.RelationGraph;
 
 public class NeedGoalCondition implements IGoalCondition {
 

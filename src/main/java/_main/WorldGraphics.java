@@ -5,10 +5,10 @@ import java.util.Set;
 
 import _sim.IRenderable;
 import _sim.world.GameUniverse;
+import _utilities.graph.GraphRenderer;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
 import thinker.concepts.relations.ConceptRelationType;
-import utilities.graph.GraphRenderer;
 
 public class WorldGraphics extends PApplet {
 

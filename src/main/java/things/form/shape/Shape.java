@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import _utilities.collections.ImmutableCollection;
 import things.form.shape.property.IShapeProperty;
-import utilities.collections.ImmutableCollection;
 
 /**
  * implementation of Shape concept

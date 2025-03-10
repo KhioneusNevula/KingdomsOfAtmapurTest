@@ -11,7 +11,7 @@ import things.form.soma.stats.IPartStat;
 public enum PartAbility implements IPartAbility {
 	/** indicates a part can heal */
 	HEAL(false),
-	/** indicates a part allows for walking */
+	/** indicates a part allows for motion */
 	WALK(true, FloatPartStats.WALK_SPEED),
 	/** indicates a part allows for grasping */
 	GRASP(true, FloatPartStats.GRASP_STRENGTH);

@@ -3,6 +3,8 @@ package things.form.sensing;
 import java.util.Collection;
 import java.util.Map;
 
+import _utilities.MathUtils;
+import _utilities.property.IProperty;
 import things.actor.IActor;
 import things.form.IPart;
 import things.form.soma.abilities.IPartAbility;
@@ -10,7 +12,6 @@ import things.form.soma.component.IComponentPart;
 import things.form.soma.stats.IPartStat;
 import things.form.visage.ISensableProperty;
 import things.form.visage.IVisage;
-import utilities.MathUtils;
 
 public interface ISensor extends IPartAbility {
 
@@ -46,18 +47,36 @@ public interface ISensor extends IPartAbility {
 	};
 
 	/**
-	 * Return the values of sensable properties for a visage part, taking relevant
-	 * stats into account
+	 * Return the values of sensable properties for a visage part based on one's own
+	 * sensing parts
 	 */
-	public Map<ISensableProperty<?>, Object> senseProperties(IPart part, Collection<IPartStat<?>> relevantStats);
+	public Map<ISensableProperty<?>, Object> senseProperties(IPart part, IComponentPart sensorPart);
+
+	/**
+	 * Return what perceptible properties (location, distance, direction) this
+	 * sensor can sense
+	 */
+	public Collection<IProperty<?>> getPerceptibleProperties(IComponentPart sensor);
+
+	/**
+	 * Return all sensed perceptible properties (location, distance, direction) of
+	 * the given Visage
+	 */
+	public Map<IProperty<?>, Object> getPerceptibleProperties(IVisage<?> forVis, IComponentPart sensor);
 
 	/**
 	 * Return all parts of a visage which are sensable by this sensor; empty set if
-	 * none are
+	 * none
 	 * 
 	 * @return
 	 */
-	public Collection<IPart> sensableParts(IVisage<?> sensing, IActor sensingActor);
+	public Collection<IPart> sensableParts(IVisage<?> sensing, IActor sensingActor, IComponentPart sensor);
+
+	/**
+	 * Get the max distance this sensor can sense, or INFINITY if it can sense
+	 * infinitely far.
+	 */
+	public float getMaxDistance(IComponentPart sensor);
 
 	@Override
 	default boolean sensor() {

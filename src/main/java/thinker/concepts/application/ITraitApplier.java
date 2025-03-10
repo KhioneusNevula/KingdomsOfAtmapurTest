@@ -1,7 +1,5 @@
 package thinker.concepts.application;
 
-import things.interfaces.IThing;
-
 /**
  * TODO Used to apply an enumerated trait for a trait concept
  * 
@@ -10,10 +8,11 @@ import things.interfaces.IThing;
  */
 public interface ITraitApplier<T> extends IConceptApplier {
 	/**
-	 * Returns the trait to be applied to some given thing
+	 * Returns the trait to be applied to some given thing, or null if none can be
+	 * applied
 	 * 
 	 * @param forThing
 	 * @return
 	 */
-	public T getTraitFor(IThing forThing);
+	public T getTraitFor(Object forThing);
 }

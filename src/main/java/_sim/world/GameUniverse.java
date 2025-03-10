@@ -15,11 +15,11 @@ import com.google.common.collect.Iterators;
 import _main.WorldGraphics;
 import _sim.dimension.DimensionBuilder;
 import _sim.dimension.IDimensionTag;
+import _utilities.collections.CollectionUtils;
+import _utilities.couplets.Pair;
 import thinker.concepts.knowledge.INoosphereKnowledgeBase;
 import thinker.concepts.knowledge.NoosphereKnowledgeBase;
 import thinker.social.PartyRelationGraph;
-import utilities.collections.CollectionUtils;
-import utilities.couplets.Pair;
 
 /**
  * A game universe with maps

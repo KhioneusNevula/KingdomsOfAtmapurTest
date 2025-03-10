@@ -5,10 +5,10 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 
 import _sim.MapLayer;
+import _utilities.property.IProperty;
 import things.blocks.IBlockState;
 import things.blocks.basic.BasicBlock;
 import things.blocks.fluid.BasicFluidBlock;
-import utilities.property.IProperty;
 
 /**
  * Class for general properties that can be assigned to worlds

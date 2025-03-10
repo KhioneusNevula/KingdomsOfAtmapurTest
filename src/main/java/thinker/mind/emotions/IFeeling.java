@@ -1,7 +1,7 @@
 package thinker.mind.emotions;
 
+import _utilities.property.IProperty;
 import thinker.concepts.IConcept;
-import utilities.property.IProperty;
 
 public interface IFeeling extends IProperty<Float>, IConcept {
 

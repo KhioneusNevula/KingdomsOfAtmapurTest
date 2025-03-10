@@ -4,10 +4,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import _utilities.property.IProperty;
 import thinker.concepts.general_types.IProfile;
 import thinker.mind.memory.StorageType;
 import thinker.mind.memory.TruthType;
-import utilities.property.IProperty;
 
 public class RelationProperties {
 
@@ -15,9 +15,19 @@ public class RelationProperties {
 	}
 
 	/**
-	 * A property representing if this relation is negative, i.e. NOT X
+	 * A property representing if this relation is negated, i.e. NOT X. This is the
+	 * default state of any situation where there is NO relation. For a full,
+	 * logical negation, see {@link #OPPOSITE}
 	 */
-	public static final IProperty<Boolean> NEGATED = IProperty.make("negated", boolean.class, false);
+	public static final IProperty<Boolean> NOT = IProperty.make("not", boolean.class, false);
+
+	/**
+	 * A property representing if this relation is fully opposite (Existence
+	 * IS(OPPOSITE) Nothing, so anything that doesn't match existence MUST match
+	 * nothing), i.e. OPPOSITE_OF X. This is equivalent to a logical not. For a
+	 * weaker "Not" that only indicates a lack of a relation, see {@link #NOT}
+	 */
+	public static final IProperty<Boolean> OPPOSITE = IProperty.make("opposite", boolean.class, false);
 
 	/**
 	 * This property represents the source of a given social relation, i.e. who

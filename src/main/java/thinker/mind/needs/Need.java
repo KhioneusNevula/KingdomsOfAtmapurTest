@@ -3,8 +3,8 @@ package thinker.mind.needs;
 import java.util.function.BiFunction;
 
 import things.form.soma.component.IComponentPart;
-import things.spirit.ISpirit;
 import thinker.goals.IGoalCondition;
+import thinker.individual.IMindSpirit;
 
 public enum Need implements INeedConcept {
 	HEALTH((spirit, part) -> {
@@ -12,10 +12,10 @@ public enum Need implements INeedConcept {
 		return 0f;
 	});
 
-	private BiFunction<ISpirit, IComponentPart, Float> checker;
+	private BiFunction<IMindSpirit, IComponentPart, Float> checker;
 	private NeedGoalCondition cond;
 
-	private Need(BiFunction<ISpirit, IComponentPart, Float> checker) {
+	private Need(BiFunction<IMindSpirit, IComponentPart, Float> checker) {
 		this.checker = checker;
 		this.cond = new NeedGoalCondition(this);
 	}
@@ -56,7 +56,12 @@ public enum Need implements INeedConcept {
 	}
 
 	@Override
-	public float getNeedLevel(ISpirit forSpirit, IComponentPart body) {
+	public String getSystemName() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public float getNeedLevel(IMindSpirit forSpirit, IComponentPart body) {
 		return checker.apply(forSpirit, body);
 	}
 

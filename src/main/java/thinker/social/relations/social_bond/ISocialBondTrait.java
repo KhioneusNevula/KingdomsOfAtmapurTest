@@ -1,6 +1,6 @@
 package thinker.social.relations.social_bond;
 
-import utilities.property.IProperty;
+import _utilities.property.IProperty;
 
 public interface ISocialBondTrait extends IProperty<Float> {
 

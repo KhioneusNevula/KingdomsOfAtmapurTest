@@ -11,6 +11,10 @@ import java.util.stream.Collectors;
 
 import _main.WorldGraphics;
 import _sim.RelativeSide;
+import _utilities.graph.EmptyGraph;
+import _utilities.graph.IRelationGraph;
+import _utilities.graph.NodeNotFoundException;
+import _utilities.graph.SingletonGraph;
 import processing.core.PConstants;
 import things.actor.IActor;
 import things.form.IPart;
@@ -29,16 +33,11 @@ import things.form.soma.IPartDestructionCondition;
 import things.form.soma.ISoma;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.component.IComponentPart;
-import things.form.soma.component.StandardComponentPart;
 import things.form.soma.stats.IPartStat;
 import things.form.visage.IVisage;
-import things.spirit.ISpirit;
 import things.stains.IStain;
 import things.status_effect.IPartStatusEffectInstance;
-import utilities.graph.EmptyGraph;
-import utilities.graph.IRelationGraph;
-import utilities.graph.NodeNotFoundException;
-import utilities.graph.SingletonGraph;
+import thinker.individual.IMindSpirit;
 
 public class SingleComponentSoma implements ISoma, IVisage<IComponentPart> {
 
@@ -53,6 +52,7 @@ public class SingleComponentSoma implements ISoma, IVisage<IComponentPart> {
 	private IPartDestructionCondition descondition;
 	private boolean isDestroyed;
 	private IKind kind = IKind.MISCELLANEOUS;
+	private UUID id = new UUID(0, 0);
 
 	public SingleComponentSoma(IComponentPart part, float size, float mass,
 			Collection<? extends IChannelSystem> systems, Color color, IPartDestructionCondition descondition) {
@@ -72,6 +72,15 @@ public class SingleComponentSoma implements ISoma, IVisage<IComponentPart> {
 		for (IChannelSystem sys : this.systems.values()) {
 			sys.populateBody(this);
 		}
+	}
+
+	@Override
+	public UUID getUUID() {
+		return id;
+	}
+
+	public void setUUID(UUID id) {
+		this.id = id;
 	}
 
 	@Override
@@ -96,7 +105,7 @@ public class SingleComponentSoma implements ISoma, IVisage<IComponentPart> {
 
 	@Override
 	public IComponentPart getPartById(UUID id) {
-		return this.part.getID().equals(id) ? part : null;
+		return this.part.getUUID().equals(id) ? part : null;
 	}
 
 	@Override
@@ -345,14 +354,27 @@ public class SingleComponentSoma implements ISoma, IVisage<IComponentPart> {
 	}
 
 	@Override
-	public void onAttachSpirit(ISpirit spirit, IComponentPart part) {
+	public Collection<IMindSpirit> getAllTetheredSpirits() {
+		return part.getTetheredSpirits();
+	}
+
+	@Override
+	public IComponentPart getPartForSpirit(IMindSpirit spirit) {
+		if (part.getTetheredSpirits().contains(spirit)) {
+			return part;
+		}
+		return null;
+	}
+
+	@Override
+	public void onAttachSpirit(IMindSpirit spirit, IComponentPart part) {
 		if (!part.equals(this.part)) {
 			throw new IllegalArgumentException(spirit + " " + part + " =/= " + this.part);
 		}
 	}
 
 	@Override
-	public void onRemoveSpirit(ISpirit spirit, IComponentPart part) {
+	public void onRemoveSpirit(IMindSpirit spirit, IComponentPart part) {
 		if (!part.equals(this.part))
 			throw new IllegalArgumentException(spirit + " " + part + " =/= " + this.part);
 	}
@@ -364,7 +386,7 @@ public class SingleComponentSoma implements ISoma, IVisage<IComponentPart> {
 	}
 
 	@Override
-	public void onRemoveEffect(IPartStatusEffectInstance ret, StandardComponentPart part) {
+	public void onRemoveEffect(IPartStatusEffectInstance ret, IComponentPart part) {
 		if (!part.equals(this.part))
 			throw new IllegalArgumentException(ret + " " + part + " =/= " + this.part);
 	}

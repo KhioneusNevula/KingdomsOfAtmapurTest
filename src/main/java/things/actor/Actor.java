@@ -46,7 +46,7 @@ public class Actor implements IActor {
 
 	public Actor(UUID id, String name) {
 		this.id = id;
-		this.profile = new Profile(id, ProfileType.INDIVIDUAL).setIdentifierName(name);
+		this.profile = new Profile(id, ProfileType.FORM).setIdentifierName(name);
 		this.name = name == null ? "Actor" + id.getMostSignificantBits() : name;
 		this.location = IVector.of(0, 0);
 		this.velocity = IVector.of(0, 0);
@@ -63,6 +63,7 @@ public class Actor implements IActor {
 		if (kind == null)
 			throw new IllegalStateException(this + "");
 		this.setBody(kind.generate(settings));
+		this.body.setUUID(this.id);
 		if (setVisage)
 			this.setVisage((IVisage<?>) this.body);
 		return this.body;
@@ -229,7 +230,7 @@ public class Actor implements IActor {
 
 	public void setUUID(UUID id) {
 		this.id = id;
-		this.profile = new Profile(id, ProfileType.INDIVIDUAL).setIdentifierName(this.profile.getIdentifierName());
+		this.profile = new Profile(id, ProfileType.FORM).setIdentifierName(this.profile.getIdentifierName());
 	}
 
 	@Override

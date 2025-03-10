@@ -1,9 +1,11 @@
 package thinker.concepts.relations;
 
 /**
- * TODO Partial satisfactions, i.e. an action relation can have the Partial
- * trait to indicate the action only partially satisfies? <br>
- * Action Relations encode state changes in the relational space,
+ * 
+ * Action Relations encode state changes in the relational space, as opposed to
+ * ConceptRelations which indicate static states. Usually meant to be drawn from
+ * the "THIS_ACTION" or "SATISFIER" concept to something else, or an action to
+ * something else in the Concept Space.
  * 
  * @author borah
  *
@@ -11,33 +13,29 @@ package thinker.concepts.relations;
 public enum ActionRelationType implements IConceptRelationType {
 	/** describes that the action or Process satisfies Y need/condition */
 	SATISFIES, SATISFIED_BY(SATISFIES),
+	/** Describes that an action relation creates things with Y concept */
+	CREATES, CREATED_BY(CREATES),
+	/** Describes that an action relation fixes things with Y concept */
+	FIXES, FIXED_BY(FIXES),
 	/**
-	 * describes that the action relation creates or brings Y thing closer to the
-	 * doer
+	 * To convey a relation which causes a Thing with label Y to change location
 	 */
-	ACQUIRES, ACQUIRED_BY(ACQUIRES),
+	MOVES, MOVED_BY(MOVES),
 	/**
-	 * describes that the action relation destroys or brings Y thing further from
-	 * the doer
+	 * describes that the action relation destroys Y thing
 	 */
-	REMOVES, REMOVED_BY(REMOVES),
-	/** Y is the target location that action X relation moves the target thing to */
-	TARGET_TO, TARGET_LOCATION_OF(TARGET_TO),
-	/** Y is the Part which the action X moves the target to */
-	TARGET_TO_PART, TARGET_PART_OF(TARGET_TO_PART),
+	DESTROYS, DESTROYED_BY(DESTROYS),
+	/** Describes that the action relation damages Y thing */
+	DAMAGES, DAMAGED_BY(DAMAGES),
+	/** Describes an action that relabels something of concept Y */
+	RELABELS, RELABELED_BY(RELABELS),
+	/** Describes an action that transforms the nature of something of concept Y */
+	TRANSFORMS, TRANSFORMED_BY(TRANSFORMS),
 	/** For objects the action uses to complete itself */
 	USES, USED_BY(USES),
-	/** What the action moves the Self to */
-	SELF_TO, SELF_TARGET_LOCATION_OF(SELF_TO),
-	/** The action applies this label or trait to the target */
-	APPLIES, APPLIED_BY(APPLIES),
-	/** what kind of conditions the action expects of its targets */
-	TARGETS, TARGETED_BY(TARGETS),
-	/** what kind of conditions the action expects of the self */
-	EXPECTS_SELF, SELF_EXPECTED_BY(EXPECTS_SELF),
-	/** what the action increases */
+	/** what the action increases, which may be a feeling or a stat */
 	INCREASES, INCREASED_BY(INCREASES),
-	/** what the action decreases */
+	/** what the action decreases, which may be a feeling or a stat */
 	DECREASES, DECREASED_BY(DECREASES),
 	/** What question the action answers */
 	ANSWERS, ANSWERED_BY(ANSWERS);

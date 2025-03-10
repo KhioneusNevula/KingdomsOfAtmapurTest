@@ -43,8 +43,6 @@ public interface IConcept {
 		ENUM_TRAIT,
 		/** TODO a trait that can be sensed */
 		SENSABLE_TRAIT,
-		/** TODO a concept to hold the name of a body part, to characterize something */
-		PART,
 		/** a concept to hold a group identity */
 		IDENTITY,
 		/** TODO a concept that describes a historical event */
@@ -61,24 +59,31 @@ public interface IConcept {
 		RITUAL,
 		/** a profile representing an individual */
 		PROFILE,
-		/** TODO a linguistic name */
-		NAME,
+		/** TODO a linguistic lexical item */
+		WORD,
+		/** TODO a linguistic feature, used for stuff like featural marking of gender */
+		LFEATURE,
 		/**
 		 * an identity-less profile-like concept that acts as the answer to a question,
 		 * e.g. "(WH_Question) -place_of-> Food. These are often associated with Actions
 		 * and have independent ids
 		 */
 		WH_QUESTION,
-		/** something else */
-		OTHER,
 		/** An AND or OR connector to connect multiple relations */
 		LOGIC_CONNECTOR,
+		/**
+		 * Used to designate a pseudo-concept storing info about associations between
+		 * concepts and physical phenomena
+		 */
+		ASSOCIATION_INFO,
 		/**
 		 * the concept type representing the Concept that represents something itself.
 		 * In the case of a GoalCondition, this indicates whatever satisfies the goal.
 		 * In the case of a Noosphere, the Existence concept is used
 		 */
 		THE_CONCEPT_ITSELF,
+		/** something else */
+		OTHER,
 		/** nothing, only applies to {@link #NONE} */
 		NONE
 	}

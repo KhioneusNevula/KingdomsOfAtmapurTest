@@ -1,7 +1,7 @@
 package things.form.graph.connections;
 
-import utilities.graph.IInvertibleRelationType;
-import utilities.property.IProperty;
+import _utilities.graph.IInvertibleRelationType;
+import _utilities.property.IProperty;
 
 public interface IPartConnection extends IInvertibleRelationType {
 

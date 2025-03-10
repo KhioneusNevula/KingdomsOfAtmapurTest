@@ -9,7 +9,7 @@ import thinker.concepts.general_types.IProfile.ProfileType;
 public class IdentityConcept implements IIdentityConcept {
 
 	private UUID group;
-	private static final Set<ProfileType> matches = Set.of(ProfileType.GROUP, ProfileType.INDIVIDUAL);
+	private static final Set<ProfileType> matches = Set.of(ProfileType.GROUP, ProfileType.FORM);
 
 	public IdentityConcept(UUID group) {
 		this.group = group;

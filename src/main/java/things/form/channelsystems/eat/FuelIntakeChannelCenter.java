@@ -4,13 +4,10 @@ import java.util.Collection;
 import java.util.Collections;
 
 import things.form.channelsystems.IChannelCenter;
-import things.form.channelsystems.IResource;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.form.soma.stats.IPartStat;
-import things.interfaces.IThing;
 import things.stains.IStain;
-import utilities.couplets.Pair;
 
 /**
  * A ChannelCenter representing something that intakes fuel (to make energy)
@@ -66,13 +63,23 @@ public class FuelIntakeChannelCenter implements IChannelCenter {
 	}
 
 	@Override
-	public Pair<IResource<?>, ?> intake(ISoma body, IComponentPart part, IStain consumable, long ticks) {
+	public boolean canIntake(ISoma body, IComponentPart part, IStain consumable) {
+		return this.foodResource.isAllowedFood(consumable.getSubstance());
+	}
+
+	@Override
+	public boolean canIntake(ISoma body, IComponentPart part, IComponentPart consumable) {
+		return this.foodResource.isAllowedFood(consumable.getMaterial());
+	}
+
+	@Override
+	public boolean intake(ISoma body, IComponentPart part, IStain consumable, long ticks) {
 		// TODO Food intake
 		return IChannelCenter.super.intake(body, part, consumable, ticks);
 	}
 
 	@Override
-	public Pair<IResource<?>, ?> intake(ISoma body, IComponentPart part, IThing consumable, long ticks) {
+	public boolean intake(ISoma body, IComponentPart part, IComponentPart consumable, long ticks) {
 		// TODO food intake
 		return IChannelCenter.super.intake(body, part, consumable, ticks);
 	}

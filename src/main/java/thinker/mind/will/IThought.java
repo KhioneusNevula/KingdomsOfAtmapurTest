@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 import things.form.soma.component.IComponentPart;
-import things.spirit.ISpirit;
+import thinker.individual.IMindSpirit;
 
 /**
  * An individual entity in the mind
@@ -33,7 +33,7 @@ public interface IThought {
 	 * @param onPart
 	 * @param gameTicks
 	 */
-	public void tickThoughtActively(IWill owner, int ticksSinceCreation, ISpirit inSpirit, IComponentPart onPart,
+	public void tickThoughtActively(IWill owner, int ticksSinceCreation, IMindSpirit inSpirit, IComponentPart onPart,
 			long gameTicks);
 
 	/**
@@ -46,7 +46,7 @@ public interface IThought {
 	 * @param onPart
 	 * @param gameTicks
 	 */
-	public default void tickThoughtPassively(IWill owner, int ticksSinceCreation, ISpirit inSpirit,
+	public default void tickThoughtPassively(IWill owner, int ticksSinceCreation, IMindSpirit inSpirit,
 			IComponentPart onPart, long gameTicks) {
 
 	}
@@ -61,12 +61,12 @@ public interface IThought {
 	 * @param gameTicks
 	 * @return
 	 */
-	public boolean shouldDelete(IWill owner, int ticksSinceCreation, ISpirit inSpirit, IComponentPart onPart,
+	public boolean shouldDelete(IWill owner, int ticksSinceCreation, IMindSpirit inSpirit, IComponentPart onPart,
 			long gameTicks);
 
 	/**
 	 * Run if either
-	 * {@link #shouldDelete(IWill, int, ISpirit, IComponentPart, long)} returns
+	 * {@link #shouldDelete(IWill, int, IMindSpirit, IComponentPart, long)} returns
 	 * true, or if the thought is interrupted and must be deleted. This can be where
 	 * memories, feelings, etc are created, for example.
 	 * 
@@ -76,7 +76,7 @@ public interface IThought {
 	 * @param onPart
 	 * @param gameTicks
 	 */
-	public void aboutToDelete(IWill owner, int ticksSinceCreation, ISpirit inSpirit, IComponentPart onPart,
+	public void aboutToDelete(IWill owner, int ticksSinceCreation, IMindSpirit inSpirit, IComponentPart onPart,
 			long gameTicks);
 
 	/**

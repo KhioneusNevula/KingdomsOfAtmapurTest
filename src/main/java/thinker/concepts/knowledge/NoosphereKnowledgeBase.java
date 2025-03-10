@@ -12,7 +12,15 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 
+import _utilities.couplets.Pair;
+import _utilities.graph.IModifiableRelationGraph;
+import _utilities.graph.IRelationGraph;
+import _utilities.graph.ImmutableGraphView;
+import _utilities.graph.NodeNotFoundException;
+import _utilities.property.IProperty;
 import thinker.concepts.IConcept;
+import thinker.concepts.IConcept.ConceptType;
+import thinker.concepts.general_types.ILogicConcept.LogicType;
 import thinker.concepts.general_types.IProfile;
 import thinker.concepts.relations.ConceptRelationType;
 import thinker.concepts.relations.IConceptRelationType;
@@ -22,12 +30,6 @@ import thinker.mind.memory.TruthType;
 import thinker.mind.memory.node.ConceptNode;
 import thinker.mind.memory.node.IConceptNode;
 import thinker.social.relations.social_bond.ISocialBondTrait;
-import utilities.couplets.Pair;
-import utilities.graph.IModifiableRelationGraph;
-import utilities.graph.IRelationGraph;
-import utilities.graph.ImmutableGraphView;
-import utilities.graph.NodeNotFoundException;
-import utilities.property.IProperty;
 
 /**
  * The sum of all knowledge.
@@ -633,11 +635,82 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 		}).iterator();
 	}
 
+	private void getCCLogicRecHelper(IConceptRelationType t, LogicType lt, GroupConceptNode node,
+			Collection<IConcept> already, IProfile cg) {
+
+		Collection<GroupConceptNode> neibs = null;
+		if (t != null)
+			neibs = conceptGraph.getNeighbors(node, t);
+		else
+			neibs = conceptGraph.getNeighbors(node);
+		neibs.stream().filter((b) -> !already.contains(b.getConcept())).sequential().forEach((neighbor) -> {
+			boolean canuse = true;
+			if (cg != null) { // if we have to check group knowledge
+				canuse = neighbor.knownByGroup(cg);
+				if (canuse) { // also check relations in group knowledge
+					if (lt != null) {
+						if (!conceptGraph.getProperty(node, t, neighbor, REL_GROUPS, false).contains(cg)) {
+							canuse = false;
+						}
+					} else {
+						canuse = false;
+						for (IConceptRelationType inxt : conceptGraph.getEdgeTypesBetween(node, neighbor)) {
+							if (conceptGraph.getProperty(node, inxt, neighbor, REL_GROUPS, false).contains(cg)) {
+								canuse = true;
+							}
+						}
+					}
+				}
+			}
+			if (canuse) {
+				if (neighbor.getConceptType() == ConceptType.LOGIC_CONNECTOR
+						&& neighbor.getConcept().asLogic().getLogicType() == lt) {
+					getCCLogicRecHelper(t, lt, neighbor, already, cg);
+				} else {
+					already.add(neighbor.getConcept());
+				}
+			}
+		});
+
+	}
+
+	/** if the given relation is null, do for all relations. cg = checkGroup */
+	private Collection<IConcept> getCCLogicRecursive(IConcept from, IConceptRelationType t, LogicType lt, IProfile cg) {
+		Set<IConcept> alr = Sets.newHashSet(from);
+		getCCLogicRecHelper(t, lt, new GroupConceptNode(from), alr, cg);
+		alr.remove(from);
+		alr.removeIf((x) -> x.getConceptType() == ConceptType.LOGIC_CONNECTOR && x.asLogic().getLogicType() == lt);
+		return alr;
+	}
+
 	@Override
 	public Iterable<IConcept> getConnectedConcepts(IConcept from) {
 
 		return () -> conceptGraph.getNeighbors(new GroupConceptNode(from)).stream().map(IConceptNode::getConcept)
 				.iterator();
+	}
+
+	@Override
+	public Iterable<? extends IConcept> getConnectedConceptsWithLogicalConnector(IConcept from,
+			IConceptRelationType type, LogicType logicType) {
+		return getCCLogicRecursive(from, type, logicType, null);
+	}
+
+	@Override
+	public Iterable<? extends IConcept> getConnectedConceptsWithLogicalConnector(IConcept from, LogicType logicType) {
+		return getCCLogicRecursive(from, null, logicType, null);
+	}
+
+	@Override
+	public Iterable<? extends IConcept> groupGetConnectedConceptsWithLogicalConnector(IConcept from, LogicType ltype,
+			IConceptRelationType type, IProfile group) {
+		return getCCLogicRecursive(from, type, ltype, group);
+	}
+
+	@Override
+	public Iterable<? extends IConcept> groupGetConnectedConceptsWithLogicalConnector(IConcept from, LogicType ltype,
+			IProfile group) {
+		return getCCLogicRecursive(from, null, ltype, group);
 	}
 
 	@Override
@@ -709,6 +782,62 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 			throw new NodeNotFoundException(to);
 		conceptGraph.getProperty(froma, type, toa, GROUP_BASED_PROPERTIES, true).put(group,
 				RelationProperties.STORAGE_TYPE, stype);
+	}
+
+	@Override
+	public boolean isNot(IConcept from, IConceptRelationType type, IConcept to) {
+		if (!conceptGraph.containsEdge(new GroupConceptNode(from), type, new GroupConceptNode(to))) {
+			return true;
+		}
+		return conceptGraph.getProperty(new GroupConceptNode(from), type, new GroupConceptNode(to),
+				RelationProperties.NOT);
+	}
+
+	@Override
+	public boolean isOpposite(IConcept from, IConceptRelationType type, IConcept to) {
+		if (!conceptGraph.containsEdge(new GroupConceptNode(from), type, new GroupConceptNode(to))) {
+			return false;
+		}
+		return conceptGraph.getProperty(new GroupConceptNode(from), type, new GroupConceptNode(to),
+				RelationProperties.OPPOSITE);
+	}
+
+	@Override
+	public boolean groupIsOpposite(IConcept from, IConceptRelationType type, IConcept to, IProfile group) {
+		GroupConceptNode froma = new GroupConceptNode(from);
+		GroupConceptNode toa = new GroupConceptNode(to);
+		if (!groupKnowsConcept(from, group))
+			throw new NodeNotFoundException(from);
+		if (!groupKnowsConcept(to, group))
+			throw new NodeNotFoundException(to);
+		if (!conceptGraph.containsEdge(froma, type, toa)) {
+			return true;
+		}
+		Table<IProfile, IProperty<?>, Object> props = conceptGraph.getProperty(froma, type, toa, GROUP_BASED_PROPERTIES,
+				false);
+		if (props == null)
+			return false;
+		Boolean b = (Boolean) props.get(group, RelationProperties.OPPOSITE);
+		return b == null ? false : b;
+	}
+
+	@Override
+	public boolean groupIsNot(IConcept from, IConceptRelationType type, IConcept to, IProfile group) {
+		GroupConceptNode froma = new GroupConceptNode(from);
+		GroupConceptNode toa = new GroupConceptNode(to);
+		if (!groupKnowsConcept(from, group))
+			throw new NodeNotFoundException(from);
+		if (!groupKnowsConcept(to, group))
+			throw new NodeNotFoundException(to);
+		if (!conceptGraph.containsEdge(froma, type, toa)) {
+			return true;
+		}
+		Table<IProfile, IProperty<?>, Object> props = conceptGraph.getProperty(froma, type, toa, GROUP_BASED_PROPERTIES,
+				false);
+		if (props == null)
+			return true;
+		Boolean b = (Boolean) props.get(group, RelationProperties.NOT);
+		return b == null ? true : b;
 	}
 
 	@Override
@@ -838,7 +967,7 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 
 	@Override
 	public float getSocialBondValue(IConcept from, ISocialBondTrait trait, IConcept to) {
-		Float f = conceptGraph.getProperty(new GroupConceptNode(from), ConceptRelationType.KNOWS,
+		Float f = conceptGraph.getProperty(new GroupConceptNode(from), ConceptRelationType.HAS_SOCIAL_BOND_TO,
 				new GroupConceptNode(to), RelationProperties.CONFIDENCE, false);
 		if (f == null)
 			return 1f;
@@ -847,8 +976,8 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 
 	@Override
 	public void setSocialBondValue(IConcept from, ISocialBondTrait trait, IConcept to, float value) {
-		conceptGraph.setProperty(new GroupConceptNode(from), ConceptRelationType.KNOWS, new GroupConceptNode(to), trait,
-				value);
+		conceptGraph.setProperty(new GroupConceptNode(from), ConceptRelationType.HAS_SOCIAL_BOND_TO,
+				new GroupConceptNode(to), trait, value);
 	}
 
 	@Override

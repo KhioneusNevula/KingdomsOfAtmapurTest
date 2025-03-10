@@ -3,6 +3,7 @@ package things.form.soma;
 import java.util.Collection;
 
 import _sim.RelativeSide;
+import _utilities.graph.IRelationGraph;
 import things.form.IForm;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelCenter;
@@ -13,11 +14,9 @@ import things.form.graph.connections.PartConnection;
 import things.form.material.IMaterial;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.component.IComponentPart;
-import things.form.soma.component.StandardComponentPart;
 import things.form.soma.stats.IPartStat;
-import things.spirit.ISpirit;
 import things.status_effect.IPartStatusEffectInstance;
-import utilities.graph.IRelationGraph;
+import thinker.individual.IMindSpirit;
 
 /**
  * Representation of a "body" or the physical structure of an object
@@ -27,13 +26,6 @@ import utilities.graph.IRelationGraph;
  * @param <IComponentPart>
  */
 public interface ISoma extends IForm<IComponentPart> {
-
-	/**
-	 * Indicates this soma consists only of hole parts
-	 * 
-	 * @return
-	 */
-	public boolean isAllHoles();
 
 	/**
 	 * Whether this soma is now destroyed (i.e. it has lost all its non-hole parts)
@@ -284,13 +276,22 @@ public interface ISoma extends IForm<IComponentPart> {
 	 */
 	public void onChannelResourceChanged(IComponentPart part, IResource<?> resource, Comparable<?> formerValue);
 
+	/** Returns all spirits tethered to this soma */
+	Collection<IMindSpirit> getAllTetheredSpirits();
+
+	/**
+	 * Returns the component part this spirit is tied to (or null obviously if the
+	 * spirit isn't here)
+	 */
+	public IComponentPart getPartForSpirit(IMindSpirit spirit);
+
 	/**
 	 * Called when a spirit is added to a part
 	 * 
 	 * @param spirit
 	 * @param part
 	 */
-	void onAttachSpirit(ISpirit spirit, IComponentPart part);
+	void onAttachSpirit(IMindSpirit spirit, IComponentPart part);
 
 	/**
 	 * Called when a spirit is removed from a part
@@ -298,7 +299,7 @@ public interface ISoma extends IForm<IComponentPart> {
 	 * @param spirit
 	 * @param part
 	 */
-	void onRemoveSpirit(ISpirit spirit, IComponentPart part);
+	void onRemoveSpirit(IMindSpirit spirit, IComponentPart part);
 
 	/**
 	 * Called when an effect is applied newly (not attempted, but actually applied
@@ -315,5 +316,5 @@ public interface ISoma extends IForm<IComponentPart> {
 	 * @param effect
 	 * @param part
 	 */
-	public void onRemoveEffect(IPartStatusEffectInstance effect, StandardComponentPart part);
+	public void onRemoveEffect(IPartStatusEffectInstance effect, IComponentPart part);
 }

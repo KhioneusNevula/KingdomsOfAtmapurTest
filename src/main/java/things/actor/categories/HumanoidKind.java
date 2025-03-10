@@ -7,6 +7,8 @@ import java.util.function.Function;
 
 import _sim.RelativeSide;
 import _sim.plane.Plane;
+import _utilities.graph.IModifiableRelationGraph;
+import _utilities.graph.RelationGraph;
 import things.biology.genes.IGenome;
 import things.biology.kinds.OrganicKindProperties;
 import things.form.channelsystems.eat.FuelChannelSystem;
@@ -28,8 +30,6 @@ import things.form.shape.property.ShapeProperty.Thickness;
 import things.form.soma.abilities.PartAbility;
 import things.form.soma.component.IComponentPart;
 import things.form.soma.component.StandardComponentPart;
-import utilities.graph.IModifiableRelationGraph;
-import utilities.graph.RelationGraph;
 
 /**
  * TODO better humanoid kind

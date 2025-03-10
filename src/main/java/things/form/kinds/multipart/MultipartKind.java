@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
+import _utilities.graph.IModifiableRelationGraph;
 import things.form.channelsystems.IChannelSystem;
 import things.form.graph.connections.CoverageType;
 import things.form.graph.connections.IPartConnection;
@@ -12,7 +13,6 @@ import things.form.kinds.IKind;
 import things.form.kinds.settings.IKindSettings;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import utilities.graph.IModifiableRelationGraph;
 
 public abstract class MultipartKind implements IKind {
 

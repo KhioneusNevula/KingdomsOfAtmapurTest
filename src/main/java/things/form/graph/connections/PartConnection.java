@@ -15,15 +15,11 @@ public enum PartConnection implements IPartConnection {
 	MERGED,
 	/**
 	 * indicates two things are not joined but instead one is exerting pressure on
-	 * the other
+	 * the other, i.e. holding it or wearing it
 	 */
 	HOLDING,
 	/** inverse of {@link #HOLDING} */
-	HELD_BY(HOLDING),
-	/** indicates one thing is draped over the other as clothing or whatever */
-	WEARING,
-	/** inverse of {@link #WEARING} */
-	WORN(WEARING);
+	HELD_BY(HOLDING);
 
 	private PartConnection reverse;
 

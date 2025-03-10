@@ -1,13 +1,13 @@
 package thinker.goals;
 
+import _utilities.graph.EmptyGraph;
+import _utilities.graph.IRelationGraph;
+import _utilities.property.IProperty;
+import thinker.IParty;
 import thinker.concepts.IConcept;
 import thinker.concepts.relations.IConceptRelationType;
-import thinker.social.IParty;
 import thinker.social.PartyRelationGraph;
 import thinker.social.systems.IRole;
-import utilities.graph.EmptyGraph;
-import utilities.graph.IRelationGraph;
-import utilities.property.IProperty;
 
 /**
  * A general goal condition, i.e. a state of affairs that is desired

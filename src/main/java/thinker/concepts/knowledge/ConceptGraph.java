@@ -9,15 +9,15 @@ import java.util.function.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+import _utilities.graph.EmptyGraph;
+import _utilities.graph.IModifiableRelationGraph;
+import _utilities.graph.IRelationGraph;
+import _utilities.graph.RelationGraph;
+import _utilities.property.IProperty;
 import thinker.concepts.IConcept.ConceptType;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.concepts.relations.RelationProperties;
 import thinker.mind.memory.node.IConceptNode;
-import utilities.graph.EmptyGraph;
-import utilities.graph.IModifiableRelationGraph;
-import utilities.graph.IRelationGraph;
-import utilities.graph.RelationGraph;
-import utilities.property.IProperty;
 
 /**
  * A concept-node graph has an extra property from a normal graph, in that it
@@ -29,7 +29,7 @@ import utilities.property.IProperty;
 public class ConceptGraph<E extends IConceptNode> extends RelationGraph<E, IConceptRelationType> {
 
 	public ConceptGraph() {
-		this(EmptyGraph.instance());
+		this((IRelationGraph<E, IConceptRelationType>) EmptyGraph.<E, IConceptRelationType>instance());
 	}
 
 	public ConceptGraph(IRelationGraph<? extends E, ? extends IConceptRelationType> other) {
@@ -39,8 +39,9 @@ public class ConceptGraph<E extends IConceptNode> extends RelationGraph<E, IConc
 				RelationProperties.KNOWN_BY_GROUPS, RelationProperties.KNOWN_BY_GROUPS::defaultValue,
 				RelationProperties.LIKELIHOOD, RelationProperties.LIKELIHOOD::defaultValue,
 				RelationProperties.STORAGE_TYPE, RelationProperties.STORAGE_TYPE::defaultValue,
-				RelationProperties.TRUTH_TYPE, RelationProperties.TRUTH_TYPE::defaultValue, RelationProperties.NEGATED,
-				RelationProperties.NEGATED::defaultValue);
+				RelationProperties.TRUTH_TYPE, RelationProperties.TRUTH_TYPE::defaultValue, RelationProperties.NOT,
+				RelationProperties.NOT::defaultValue, RelationProperties.OPPOSITE,
+				RelationProperties.OPPOSITE::defaultValue);
 	}
 
 	public ConceptGraph(Set<? extends IProperty<?>> props) {
@@ -52,7 +53,7 @@ public class ConceptGraph<E extends IConceptNode> extends RelationGraph<E, IConc
 
 	/**
 	 * Equivalent to
-	 * {@link IModifiableRelationGraph#addEdge(Object, utilities.graph.IInvertibleRelationType, Object)};
+	 * {@link IModifiableRelationGraph#addEdge(Object, _utilities.graph.IInvertibleRelationType, Object)};
 	 * however, if the concept is a logical-connector, then it will be automatically
 	 * added to the graph (whereas for other concepts, if it doesn't exist, we would
 	 * throw an error)

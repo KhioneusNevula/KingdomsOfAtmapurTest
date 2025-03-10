@@ -8,15 +8,16 @@ import java.util.UUID;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
+import _utilities.graph.IRelationGraph;
+import _utilities.property.IProperty;
 import thinker.IKnowledgeBase;
 import thinker.concepts.IConcept;
+import thinker.concepts.general_types.ILogicConcept.LogicType;
 import thinker.concepts.general_types.IProfile;
 import thinker.concepts.relations.ConceptRelationType;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.mind.memory.StorageType;
 import thinker.mind.memory.TruthType;
-import utilities.graph.IRelationGraph;
-import utilities.property.IProperty;
 
 /**
  * A Noosphere is the graph of all knowledge available in a
@@ -302,6 +303,24 @@ public interface INoosphereKnowledgeBase extends IKnowledgeBase {
 			IProfile group);
 
 	/**
+	 * Get all concepts this concept has a relation to
+	 * 
+	 * @param from
+	 * @return
+	 */
+	public Iterable<? extends IConcept> groupGetConnectedConceptsWithLogicalConnector(IConcept from, LogicType ltype,
+			IProfile group);
+
+	/**
+	 * Get all concepts this concept has a relation of the given type to
+	 * 
+	 * @param from
+	 * @return
+	 */
+	public Iterable<? extends IConcept> groupGetConnectedConceptsWithLogicalConnector(IConcept from, LogicType ltype,
+			IConceptRelationType type, IProfile group);
+
+	/**
 	 * Return the storage type of the given relation between concepts
 	 * 
 	 * @param from
@@ -466,4 +485,16 @@ public interface INoosphereKnowledgeBase extends IKnowledgeBase {
 	 */
 	void groupsLearnConceptSubgraph(IRelationGraph<IConcept, IConceptRelationType> graph,
 			Collection<? extends IProfile> groups);
+
+	/**
+	 * See {@link #isNot(IConcept, IConceptRelationType, IConcept)}. This version
+	 * checks if the given group recognizes this property.
+	 */
+	boolean groupIsNot(IConcept from, IConceptRelationType type, IConcept to, IProfile group);
+
+	/**
+	 * See {@link #isOpposite(IConcept, IConceptRelationType, IConcept)}. This
+	 * version checks if the given group recognizes this property.
+	 */
+	boolean groupIsOpposite(IConcept from, IConceptRelationType type, IConcept to, IProfile group);
 }

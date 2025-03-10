@@ -123,7 +123,7 @@ public interface IWhQuestionConcept extends IConcept {
 	}
 
 	public enum QuestionType {
-		/** A question type that represents an entity or group */
+		/** A question type that represents an entity, item, or group */
 		ENTITY("what"),
 		/** A question type that represents a location */
 		PLACE("where"),

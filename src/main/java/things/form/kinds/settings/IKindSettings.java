@@ -3,7 +3,7 @@ package things.form.kinds.settings;
 import java.util.Collection;
 import java.util.Collections;
 
-import utilities.property.IProperty;
+import _utilities.property.IProperty;
 
 /**
  * An interface that functions as settings for generating an object based on a

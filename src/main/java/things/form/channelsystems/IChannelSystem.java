@@ -9,7 +9,7 @@ import things.form.graph.connections.IPartConnection;
 import things.form.material.Material;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import things.spirit.ISpirit;
+import thinker.individual.IMindSpirit;
 
 /**
  * A singleton representation of a specific kind of channelSystem
@@ -62,7 +62,7 @@ public interface IChannelSystem {
 	 * @param part
 	 * @return
 	 */
-	public default float getNeedLevel(ISpirit spirit, IComponentPart part, ChannelNeed forNeed) {
+	public default float getNeedLevel(IMindSpirit spirit, IComponentPart part, ChannelNeed forNeed) {
 		return 1f;
 	}
 

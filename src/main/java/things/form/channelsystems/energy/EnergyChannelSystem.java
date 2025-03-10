@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import _utilities.couplets.Triplet;
 import things.form.channelsystems.ChannelNeed;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelCenter;
@@ -13,8 +14,7 @@ import things.form.graph.connections.IPartConnection;
 import things.form.graph.connections.PartConnection;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import things.spirit.ISpirit;
-import utilities.couplets.Triplet;
+import thinker.individual.IMindSpirit;
 
 public class EnergyChannelSystem implements IChannelSystem {
 
@@ -50,7 +50,7 @@ public class EnergyChannelSystem implements IChannelSystem {
 	}
 
 	@Override
-	public float getNeedLevel(ISpirit spirit, IComponentPart body, ChannelNeed forNeed) {
+	public float getNeedLevel(IMindSpirit spirit, IComponentPart body, ChannelNeed forNeed) {
 		// TODO energy channel need
 		return IChannelSystem.super.getNeedLevel(spirit, body, forNeed);
 	}

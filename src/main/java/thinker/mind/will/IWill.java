@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 import things.form.soma.component.IComponentPart;
-import things.spirit.ISpirit;
+import thinker.individual.IMindSpirit;
 import thinker.mind.will.IThought.ThoughtType;
 
 public interface IWill {
@@ -82,7 +82,7 @@ public interface IWill {
 	 * @param inSpirit
 	 * @param ticks
 	 */
-	public void willTick(ISpirit inSpirit, IComponentPart onPart, Collection<? extends IComponentPart> access,
+	public void willTick(IMindSpirit inSpirit, IComponentPart onPart, Collection<? extends IComponentPart> access,
 			long ticks);
 
 }

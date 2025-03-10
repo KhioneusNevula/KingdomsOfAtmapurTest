@@ -1,6 +1,6 @@
 package thinker.concepts.relations;
 
-import utilities.graph.IInvertibleRelationType;
+import _utilities.graph.IInvertibleRelationType;
 
 public interface IConceptRelationType extends IInvertibleRelationType {
 

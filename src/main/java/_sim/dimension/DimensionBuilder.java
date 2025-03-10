@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import _sim.world.MapTile;
-import utilities.property.IProperty;
+import _utilities.property.IProperty;
 
 /**
  * A simple object to "design" dimensions; for now, just need to pass in the

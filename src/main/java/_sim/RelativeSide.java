@@ -6,7 +6,7 @@ import java.util.Set;
 import com.google.common.collect.ImmutableList;
 
 import _sim.vectors.IVector;
-import utilities.graph.IInvertibleRelationType;
+import _utilities.graph.IInvertibleRelationType;
 
 /**
  * L: {@link #LEFT} <br>

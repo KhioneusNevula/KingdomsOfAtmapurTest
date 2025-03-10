@@ -2,12 +2,19 @@ package thinker.concepts.general_types;
 
 import java.util.UUID;
 
+import things.form.IForm;
+import things.form.IPart;
 import things.interfaces.IUnique;
 import thinker.concepts.IConcept;
+import thinker.constructs.IPlace;
+import thinker.individual.IFigure;
+import thinker.social.group.IGroup;
+import thinker.social.systems.IRole;
 
 /**
  * A profile represents a unique individual thing in the world, which may be an
- * Actor, Phenomenon (e.g. the Sun), Group, Place, Language, System
+ * Actor, Phenomenon (e.g. the Sun), Group, Place, Language, System, or possibly
+ * a Part
  * 
  * @author borah
  *
@@ -52,38 +59,55 @@ public interface IProfile extends IConcept, IUnique {
 
 	public enum ProfileType {
 		/**
-		 * A profile representing an individual person or even object
+		 * A profile representing (the form/visage of) an individual person or object
 		 */
-		INDIVIDUAL,
+		FORM(IForm.class),
+		/**
+		 * A profile representing an individual figure that can have perceptions thought
+		 * about it and seemingly take actions, whether person, god, animal, etc. It
+		 * also may or may not be real!
+		 */
+		FIGURE(IFigure.class),
+		/** A specific part of a specific individual */
+		PART(IPart.class),
 		/**
 		 * A profile representing a specific phenomenon, typically World phenomena like
 		 * the Sun
 		 */
-		PHENOMENON,
+		PHENOMENON(null /** TODO phenomenon profile type */
+		),
 		/** A profile representing a specific group or collective entity */
-		GROUP,
+		GROUP(IGroup.class),
 		/**
 		 * A profile representing a role in a social system (technically a type of
 		 * Group, but distinguished due to having different purpose and significance
 		 */
-		ROLE,
-		/** A profile representing a specific location in space */
-		PLACE,
-		/** A profile representing a specific language */
-		LANGUAGE,
-		/** A profile representing a specific system */
-		SYSTEM,
+		ROLE(IRole.class),
+		/** A profile representing a specific location of interest */
+		PLACE(IPlace.class),
 		/** Represents "any profile", useful for actions */
-		ANY
+		ANY(IUnique.class);
+
+		private Class<? extends IUnique> superclass;
+
+		private ProfileType(Class<? extends IUnique> superclass) {
+			this.superclass = superclass;
+		}
+
+		/** Returns the class associated with this profile type, if any */
+		public Class<? extends IUnique> getAssociatedClass() {
+			return superclass;
+		}
 	}
 
 	/**
-	 * Returns an indefinite profile to match the given profile type
+	 * Returns an indefinite profile to match the given profile type, representing
+	 * any of the given type
 	 * 
 	 * @param forType
 	 * @return
 	 */
-	public static IProfile indefiniteProfile(ProfileType forType) {
+	public static IProfile anyTypeOf(ProfileType forType) {
 		return IndefiniteProfile.ALL.get(forType);
 	}
 
@@ -104,6 +128,18 @@ public interface IProfile extends IConcept, IUnique {
 			return one.getProfileType() == two.getProfileType();
 		}
 		return one.equals(two);
+	}
+
+	public static boolean match(IProfile p, IUnique with) {
+		if (p.getProfileType().getAssociatedClass().isAssignableFrom(with.getClass())) {
+			if (p.isIndefinite()) {
+				return true;
+			} else {
+				return p.getUUID().equals(with.getUUID());
+			}
+		} else {
+			return false;
+		}
 	}
 
 	/**

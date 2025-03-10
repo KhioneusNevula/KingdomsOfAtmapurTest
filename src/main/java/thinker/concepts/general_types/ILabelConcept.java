@@ -2,9 +2,9 @@ package thinker.concepts.general_types;
 
 import java.util.Collection;
 
+import _utilities.property.IProperty;
 import thinker.concepts.IConcept;
 import thinker.concepts.general_types.IProfile.ProfileType;
-import utilities.property.IProperty;
 
 /**
  * A label-concept. Also functions as a kind of property

@@ -2,8 +2,10 @@ package thinker;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import thinker.concepts.IConcept;
+import thinker.concepts.general_types.ILogicConcept.LogicType;
 import thinker.concepts.relations.ConceptRelationType;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.mind.memory.IMultiKnowledgeBaseIterator;
@@ -81,6 +83,26 @@ public interface IIndividualKnowledgeBase extends IKnowledgeBase {
 			IConceptRelationType type);
 
 	/**
+	 * Return an iterator for all concepts connected to this concept, including
+	 * every parent storage in the hierarchy
+	 * 
+	 * @param from
+	 * @return
+	 */
+	public IMultiKnowledgeBaseIterator<? extends IConcept> getConnectedConceptsWithLogicalConnectorCheckParent(
+			IConcept from, LogicType ltype);
+
+	/**
+	 * Return iterator of all concepts this concept has a relation of the given type
+	 * to, acknowledging the storages
+	 * 
+	 * @param from
+	 * @return
+	 */
+	public IMultiKnowledgeBaseIterator<? extends IConcept> getConnectedConceptsWithLogicalConnectorCheckParent(
+			IConcept from, IConceptRelationType type, LogicType ltype);
+
+	/**
 	 * Return a map mapping what each parent storage considers to be the truth type
 	 * of this relation
 	 * 
@@ -94,8 +116,8 @@ public interface IIndividualKnowledgeBase extends IKnowledgeBase {
 
 	/**
 	 * Return the value of this social bond trait from the first concept to the
-	 * second, using a {@link ConceptRelationType#KNOWS} relation, mapped to each
-	 * parent storage and this storage
+	 * second, using a {@link ConceptRelationType#HAS_SOCIAL_BOND_TO} relation,
+	 * mapped to each parent storage and this storage
 	 * 
 	 * @param from
 	 * @param to
@@ -126,5 +148,17 @@ public interface IIndividualKnowledgeBase extends IKnowledgeBase {
 	void removeParents(Iterable<? extends IKnowledgeBase> parents);
 
 	public IIndividualKnowledgeBase clone();
+
+	/**
+	 * See {@link #isNot(IConcept, IConceptRelationType, IConcept)}. This also
+	 * checks parents
+	 */
+	Set<IKnowledgeBase> isNotCheckParents(IConcept from, IConceptRelationType type, IConcept to);
+
+	/**
+	 * See {@link #isOpposite(IConcept, IConceptRelationType, IConcept)}. This also
+	 * checks parents.
+	 */
+	Set<IKnowledgeBase> isOppositeCheckParents(IConcept from, IConceptRelationType type, IConcept to);
 
 }

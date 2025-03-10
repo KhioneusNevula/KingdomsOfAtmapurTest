@@ -7,8 +7,8 @@ import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
 
 import _sim.RelativeSide;
-import utilities.graph.IInvertibleRelationType;
-import utilities.property.IProperty;
+import _utilities.graph.IInvertibleRelationType;
+import _utilities.property.IProperty;
 
 /**
  * TODO add parameters for the nature of the cover (solidness, transparency, and

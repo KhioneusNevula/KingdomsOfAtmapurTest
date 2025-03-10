@@ -1,6 +1,6 @@
 package thinker.social.relations.party_relations;
 
-import utilities.graph.IInvertibleRelationType;
+import _utilities.graph.IInvertibleRelationType;
 
 /**
  * The type of relation two parties can have

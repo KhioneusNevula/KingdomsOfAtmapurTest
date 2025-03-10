@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import _sim.RelativeSide;
+import _utilities.graph.IRelationGraph;
 import things.actor.IActor;
 import things.form.graph.connections.CoverageType;
 import things.form.graph.connections.CoverageType.CoverageDirection;
@@ -16,9 +17,8 @@ import things.form.graph.connections.IPartConnection;
 import things.form.kinds.IKind;
 import things.form.material.IMaterial;
 import things.form.shape.IShape;
-import things.form.soma.component.IComponentPart;
+import things.interfaces.IUnique;
 import things.stains.IStain;
-import utilities.graph.IRelationGraph;
 
 /**
  * Representation of a "body" or "visage" using graphs
@@ -27,7 +27,7 @@ import utilities.graph.IRelationGraph;
  *
  * @param <P>
  */
-public interface IForm<P extends IPart> extends Cloneable {
+public interface IForm<P extends IPart> extends Cloneable, IUnique {
 
 	/**
 	 * Return the kind used to generate this body
@@ -35,6 +35,9 @@ public interface IForm<P extends IPart> extends Cloneable {
 	 * @return
 	 */
 	public IKind getKind();
+
+	/** Set the UUID of what this form presents as */
+	public void setUUID(UUID id);
 
 	/**
 	 * Create a copy of this Form, cloning each constituent part as well
@@ -83,8 +86,7 @@ public interface IForm<P extends IPart> extends Cloneable {
 	 * @param newPart
 	 * @param coveringsides the sides of the other part that this body part covers
 	 */
-	public boolean attach(IComponentPart newPart, IComponentPart toPart, IPartConnection connectionType,
-			Collection<RelativeSide> coveringsides);
+	public boolean attach(P newPart, P toPart, IPartConnection connectionType, Collection<RelativeSide> coveringsides);
 
 	/**
 	 * Called when part of this Form experiences a change in material (e.g.
@@ -216,5 +218,12 @@ public interface IForm<P extends IPart> extends Cloneable {
 		}
 		return sides;
 	}
+
+	/**
+	 * Indicates this form consists only of hole parts
+	 * 
+	 * @return
+	 */
+	boolean isAllHoles();
 
 }

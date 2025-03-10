@@ -6,7 +6,9 @@ import java.util.UUID;
 import things.form.material.IMaterial;
 import things.form.shape.IShape;
 import things.form.soma.component.IComponentPart;
+import things.form.visage.ISensableProperty;
 import things.form.visage.IVisage;
+import things.interfaces.IUnique;
 import things.stains.IStain;
 
 /**
@@ -16,7 +18,7 @@ import things.stains.IStain;
  * @author borah
  *
  */
-public interface IPart extends Cloneable {
+public interface IPart extends Cloneable, IUnique {
 
 	/**
 	 * Creates a "dummy part", i.e. a single-use part whose sole purpose is to be
@@ -43,14 +45,14 @@ public interface IPart extends Cloneable {
 	 * 
 	 * @return
 	 */
-	public IPart setID(UUID id);
+	public IPart setUUID(UUID id);
 
 	/**
 	 * The ID of this part to distinguish it from others for internal purposes
 	 * 
 	 * @return
 	 */
-	public UUID getID();
+	public UUID getUUID();
 
 	/**
 	 * The name of this part with respect to other parts
@@ -172,6 +174,15 @@ public interface IPart extends Cloneable {
 	public Collection<IStain> getStains();
 
 	/**
+	 * Get a sensable property of this Part based on its internal state
+	 * 
+	 * @param <T>
+	 * @param prop
+	 * @return
+	 */
+	public <T> T getSensableProperty(ISensableProperty<T> prop);
+
+	/**
 	 * 
 	 * @author borah
 	 *
@@ -185,13 +196,13 @@ public interface IPart extends Cloneable {
 		}
 
 		@Override
-		public DummyPart setID(UUID id) {
+		public DummyPart setUUID(UUID id) {
 			this.uuid = id;
 			return this;
 		}
 
 		@Override
-		public UUID getID() {
+		public UUID getUUID() {
 			return uuid;
 		}
 
@@ -205,7 +216,7 @@ public interface IPart extends Cloneable {
 			if (this == obj)
 				return true;
 			if (obj instanceof IComponentPart ico) {
-				return this.uuid.equals(ico.getID());
+				return this.uuid.equals(ico.getUUID());
 			}
 			return super.equals(obj);
 		}
@@ -218,6 +229,11 @@ public interface IPart extends Cloneable {
 		@Override
 		public String getName() {
 			return toString();
+		}
+
+		@Override
+		public <T> T getSensableProperty(ISensableProperty<T> prop) {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

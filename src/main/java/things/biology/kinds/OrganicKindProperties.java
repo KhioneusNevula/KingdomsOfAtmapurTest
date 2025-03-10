@@ -2,9 +2,9 @@ package things.biology.kinds;
 
 import java.awt.Color;
 
+import _utilities.property.IProperty;
 import things.biology.genes.IGenome;
 import things.form.material.condition.IMaterialCondition;
-import utilities.property.IProperty;
 
 public class OrganicKindProperties {
 

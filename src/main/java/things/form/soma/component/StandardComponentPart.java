@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 
 import _sim.plane.Plane;
+import _utilities.collections.ImmutableCollection;
 import things.form.IForm;
 import things.form.IPart;
 import things.form.channelsystems.IChannelCenter;
@@ -23,11 +24,11 @@ import things.form.shape.IShape;
 import things.form.soma.ISoma;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.stats.IPartStat;
-import things.spirit.ISpirit;
+import things.form.visage.ISensableProperty;
 import things.stains.IStain;
 import things.status_effect.IPartStatusEffect;
 import things.status_effect.IPartStatusEffectInstance;
-import utilities.collections.ImmutableCollection;
+import thinker.individual.IMindSpirit;
 
 public class StandardComponentPart implements IComponentPart {
 
@@ -42,10 +43,11 @@ public class StandardComponentPart implements IComponentPart {
 	private Map<IResource<?>, Comparable<?>> channelResources;
 	private Set<IChannelCenter> autos;
 	private Set<ChannelRole> roles;
-	private Set<ISpirit> spirits;
+	private Set<IMindSpirit> spirits;
 	private Map<IPartStatusEffect, IPartStatusEffectInstance> effects;
 	private Map<IPartStat<?>, Object> stats;
 	private IForm<? super StandardComponentPart> owner;
+	private ISoma trueOwner;
 	private Set<IStain> stains;
 
 	public StandardComponentPart(String name, UUID id, IMaterial mat, IShape shape, float size, int planes,
@@ -109,12 +111,12 @@ public class StandardComponentPart implements IComponentPart {
 	}
 
 	@Override
-	public UUID getID() {
+	public UUID getUUID() {
 		return id;
 	}
 
 	@Override
-	public IPart setID(UUID id) {
+	public IPart setUUID(UUID id) {
 		this.id = id;
 		return this;
 	}
@@ -132,6 +134,11 @@ public class StandardComponentPart implements IComponentPart {
 	@Override
 	public boolean isHole() {
 		return false;
+	}
+
+	@Override
+	public <T> T getSensableProperty(ISensableProperty<T> prop) {
+		return prop.getPropertyFromPart(this);
 	}
 
 	@Override
@@ -191,7 +198,7 @@ public class StandardComponentPart implements IComponentPart {
 	 * 
 	 * @param forSpirit
 	 */
-	private void spiritStateChange(ISpirit forSpirit) {
+	private void spiritStateChange(IMindSpirit forSpirit) {
 		IComponentPart newPart = forSpirit.onHostStateChange(this, (ISoma) owner);
 		if (newPart != null) {
 			if (newPart.equals(this)) {
@@ -312,17 +319,17 @@ public class StandardComponentPart implements IComponentPart {
 	}
 
 	@Override
-	public Collection<ISpirit> getTetheredSpirits() {
+	public Collection<IMindSpirit> getTetheredSpirits() {
 		return this.spirits;
 	}
 
 	@Override
-	public boolean canAttachSpirit(ISpirit spirit) {
+	public boolean canAttachSpirit(IMindSpirit spirit) {
 		return true;
 	}
 
 	@Override
-	public void attachSpirit(ISpirit spirit, boolean callUpdate) {
+	public void attachSpirit(IMindSpirit spirit, boolean callUpdate) {
 		if (!(owner instanceof ISoma))
 			throw new UnsupportedOperationException();
 		boolean worked = this.spirits.add(spirit);
@@ -333,7 +340,7 @@ public class StandardComponentPart implements IComponentPart {
 	}
 
 	@Override
-	public void removeSpirit(ISpirit toRemove, boolean callUpdate) {
+	public void removeSpirit(IMindSpirit toRemove, boolean callUpdate) {
 		if (!(owner instanceof ISoma))
 			throw new UnsupportedOperationException();
 		boolean worked = this.spirits.remove(toRemove);
@@ -421,8 +428,11 @@ public class StandardComponentPart implements IComponentPart {
 
 	@Override
 	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
 		if (obj instanceof IPart part) {
-			return this.id.equals(part.getID());
+			return this.id.equals(part.getUUID());
 		}
 		return super.equals(obj);
 	}
@@ -460,6 +470,18 @@ public class StandardComponentPart implements IComponentPart {
 	@Override
 	public void setOwner(ISoma owner) {
 		this.setOwner((IForm<? super StandardComponentPart>) owner);
+		if (this.trueOwner == null)
+			this.trueOwner = owner;
+	}
+
+	@Override
+	public ISoma getTrueOwner() {
+		return this.trueOwner;
+	}
+
+	@Override
+	public void setTrueOwner(ISoma so) {
+		this.trueOwner = so;
 	}
 
 }

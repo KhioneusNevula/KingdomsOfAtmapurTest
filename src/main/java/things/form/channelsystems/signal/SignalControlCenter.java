@@ -3,14 +3,14 @@ package things.form.channelsystems.signal;
 import java.util.Collection;
 import java.util.Collections;
 
+import _utilities.graph.IRelationGraph;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelSystem;
 import things.form.graph.connections.IPartConnection;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.form.soma.stats.IPartStat;
-import things.spirit.ISpirit;
-import utilities.graph.IRelationGraph;
+import thinker.individual.IMindSpirit;
 
 /**
  * A ChannelCenter representing the brain, or other signal- controller
@@ -69,7 +69,7 @@ public class SignalControlCenter implements IChannelCenter {
 				}
 			}
 		}
-		for (ISpirit spirit : brain.getTetheredSpirits()) {
+		for (IMindSpirit spirit : brain.getTetheredSpirits()) {
 			spirit.runTick(brain, connections, body, tick);
 		}
 	}

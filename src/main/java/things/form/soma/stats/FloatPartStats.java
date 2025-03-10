@@ -5,11 +5,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Streams;
 
+import _utilities.function.TriFunction;
 import things.form.soma.component.IComponentPart;
-import utilities.function.TriFunction;
 
 public enum FloatPartStats implements IPartStat<Float> {
-	WALK_SPEED(0f, false), GRASP_STRENGTH(0f, true);
+	WALK_SPEED(0f, false), GRASP_STRENGTH(0f, true), REACH(0f, true);
 
 	private Function<IComponentPart, Float> defaVal;
 	private Function<Iterable<Float>, Float> aggregator;

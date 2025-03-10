@@ -1,10 +1,10 @@
 package thinker.mind.needs;
 
+import _utilities.property.IProperty;
 import things.form.soma.component.IComponentPart;
-import things.spirit.ISpirit;
 import thinker.concepts.IConcept;
 import thinker.goals.IGoalCondition;
-import utilities.property.IProperty;
+import thinker.individual.IMindSpirit;
 
 /**
  * A conceptual need
@@ -20,12 +20,18 @@ public interface INeedConcept extends IProperty<Float>, IConcept {
 	public boolean isBiological();
 
 	/**
+	 * If this is a biological need, return the name of the associated system as a
+	 * string.
+	 */
+	public String getSystemName();
+
+	/**
 	 * Return the level of need for the given spirit
 	 * 
 	 * @param forSpirit
 	 * @return
 	 */
-	public float getNeedLevel(ISpirit forSpirit, IComponentPart bodyPart);
+	public float getNeedLevel(IMindSpirit forSpirit, IComponentPart bodyPart);
 
 	/**
 	 * Returns the graph of required states of affairs this need has and whether

@@ -2,18 +2,23 @@ package things.form.visage;
 
 import java.util.Collection;
 
+import _utilities.property.IProperty;
 import things.form.IPart;
 import things.form.sensing.ISensor;
-import utilities.property.IProperty;
 
 /**
- * Property of an object that can be sensed
+ * Property of an object that can be sensed; only accepts discrete values
  * 
  * @author borah
  *
  * @param <E>
  */
 public interface ISensableProperty<E> extends IProperty<E> {
+
+	/**
+	 * Return the proper value of this property using the given part.
+	 */
+	public E getPropertyFromPart(IPart fromPart);
 
 	/**
 	 * What sensors can sense this property

@@ -2,17 +2,24 @@ package thinker;
 
 import java.util.UUID;
 
+import _utilities.graph.IRelationGraph;
 import thinker.concepts.IConcept;
+import thinker.concepts.general_types.ILogicConcept.LogicType;
 import thinker.concepts.relations.ConceptRelationType;
 import thinker.concepts.relations.IConceptRelationType;
+import thinker.concepts.relations.RelationProperties;
 import thinker.mind.memory.StorageType;
 import thinker.mind.memory.TruthType;
 import thinker.mind.memory.node.IConceptNode;
 import thinker.social.relations.social_bond.ISocialBondTrait;
-import utilities.graph.IRelationGraph;
 
 /**
  * Interface representing a container of connections for an individual or group.
+ * Some rules:
+ * <ul>
+ * <li>Items connected with no logical connector are presumed to be AND by
+ * default. OR must be marked specially.
+ * </ul>
  * 
  * @author borah
  *
@@ -222,6 +229,19 @@ public interface IKnowledgeBase extends Cloneable {
 	public Iterable<? extends IConcept> getConnectedConcepts(IConcept from, IConceptRelationType type);
 
 	/**
+	 * gets connected concepts, returning concepts connected with the given logical
+	 * connector as well, and omitting other logical connectors
+	 */
+	public Iterable<? extends IConcept> getConnectedConceptsWithLogicalConnector(IConcept from, LogicType logicType);
+
+	/**
+	 * Recursively gets connected concepts, returning concepts connected with the
+	 * given logical connector as well, and omitting other logical connectors
+	 */
+	public Iterable<? extends IConcept> getConnectedConceptsWithLogicalConnector(IConcept from,
+			IConceptRelationType type, LogicType logicType);
+
+	/**
 	 * Return the storage type of the given relation between concepts
 	 * 
 	 * @param from
@@ -230,6 +250,22 @@ public interface IKnowledgeBase extends Cloneable {
 	 * @return
 	 */
 	public StorageType getStorageTypeOfRelation(IConcept from, IConceptRelationType type, IConcept to);
+
+	/**
+	 * Whether this relation is negated (i.e. {@link RelationProperties#NOT}).
+	 * Return TRUE if the relation doesn't exist as well, since that is de-facto
+	 * negation!
+	 */
+	public boolean isNot(IConcept from, IConceptRelationType type, IConcept to);
+
+	/**
+	 * Whether this relation is opposite (i.e. {@link RelationProperties#OPPOSITE}).
+	 * Return FALSE if the relation doesn't exist, since NOT is not the same as
+	 * OPPOSITE ; compare that to
+	 * {@link #isNot(IConcept, IConceptRelationType, IConcept)}, which returns
+	 * TRUE in the same case
+	 */
+	public boolean isOpposite(IConcept from, IConceptRelationType type, IConcept to);
 
 	/**
 	 * Set the storage type of the given relation
@@ -327,7 +363,7 @@ public interface IKnowledgeBase extends Cloneable {
 
 	/**
 	 * Return the value of this social bond trait from the first concept to the
-	 * second, using a {@link ConceptRelationType#KNOWS} relation
+	 * second, using a {@link ConceptRelationType#HAS_SOCIAL_BOND_TO} relation
 	 * 
 	 * @param from
 	 * @param to
@@ -337,7 +373,7 @@ public interface IKnowledgeBase extends Cloneable {
 
 	/**
 	 * Set the value of this social bond trait from the first concept to the second,
-	 * using a {@link ConceptRelationType#KNOWS} relation
+	 * using a {@link ConceptRelationType#HAS_SOCIAL_BOND_TO} relation
 	 * 
 	 * @param from
 	 * @param trait
@@ -348,8 +384,9 @@ public interface IKnowledgeBase extends Cloneable {
 
 	/**
 	 * Change the value of a specific social bond trait (using a
-	 * {@link ConceptRelationType#KNOWS} relation) by the given amount; return the
-	 * overflow (i.e. how much it went over 1f or under 0f) or 0f if no overflow
+	 * {@link ConceptRelationType#HAS_SOCIAL_BOND_TO} relation) by the given amount;
+	 * return the overflow (i.e. how much it went over 1f or under 0f) or 0f if no
+	 * overflow
 	 * 
 	 * @param from
 	 * @param type

@@ -6,14 +6,14 @@ import java.util.Map;
 import java.util.Set;
 
 import _sim.plane.Plane;
+import _utilities.property.IProperty;
+import _utilities.property.PropertyImpl;
 import things.form.channelsystems.IChannelSystem;
 import things.form.material.IMaterial;
 import things.form.shape.IShape;
 import things.form.soma.IPartDestructionCondition;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.stats.IPartStat;
-import utilities.property.IProperty;
-import utilities.property.PropertyImpl;
 
 public class BasicKindProperties {
 

@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
-import utilities.property.IProperty;
+import _utilities.property.IProperty;
 
 public class KindSettings implements IKindSettings {
 

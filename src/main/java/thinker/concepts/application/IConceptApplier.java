@@ -1,11 +1,9 @@
 package thinker.concepts.application;
 
-import com.google.common.base.Predicates;
-
-import things.interfaces.IThing;
+import thinker.concepts.IConcept;
 
 /**
- * A function to apply a concept to a world object
+ * An applicator for a cocnept to an associated physical thing or phenomenon
  * 
  * @author borah
  *
@@ -14,13 +12,18 @@ import things.interfaces.IThing;
 public interface IConceptApplier {
 
 	/**
-	 * An applier for a predicate which never applies. Useful for concepts which are
-	 * applied externally, eg. by a ritual
+	 * An applier for a predicate which never applies to anything. Not sure about
+	 * use?
 	 */
-	public static final IConceptApplier NONE = Predicates.alwaysFalse()::apply;
+	public static final IConceptApplier NONE = (a, b) -> false;
+
+	/** An applier for a predicate that always applies to everything */
+	public static final IConceptApplier ALL = (a, b) -> true;
 
 	/**
-	 * Determines whether this concept applies to the given Thing
+	 * Determines whether this concept applier can apply its concept to the given
+	 * Thing
 	 */
-	public boolean applies(IThing forThing);
+	public boolean applies(Object forThing, IConcept checker);
+
 }

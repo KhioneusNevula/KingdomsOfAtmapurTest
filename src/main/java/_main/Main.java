@@ -16,6 +16,9 @@ import _sim.dimension.DimensionBuilder;
 import _sim.vectors.IVector;
 import _sim.world.GameUniverse;
 import _sim.world.WorldProperty;
+import _utilities.couplets.Triplet;
+import _utilities.graph.IRelationGraph;
+import _utilities.graph.RelationGraph;
 import processing.core.PApplet;
 import things.actor.Actor;
 import things.actor.categories.HumanoidKind;
@@ -39,9 +42,6 @@ import thinker.concepts.general_types.ValueConcept;
 import thinker.concepts.knowledge.INoosphereKnowledgeBase;
 import thinker.concepts.relations.ConceptRelationType;
 import thinker.mind.needs.Need;
-import utilities.couplets.Triplet;
-import utilities.graph.IRelationGraph;
-import utilities.graph.RelationGraph;
 
 public class Main {
 
@@ -172,13 +172,13 @@ public class Main {
 		IConcept important = new LabelConcept("important");
 		IConcept death = new PrincipleConcept("death", true, false, true, false);
 		IConcept food = new LabelConcept("food");
-		IConcept zazagod = new Profile(UUID.randomUUID(), ProfileType.INDIVIDUAL).setIdentifierName("Zaza-god");
+		IConcept zazagod = new Profile(UUID.randomUUID(), ProfileType.FORM).setIdentifierName("Zaza-god");
 		IConcept loves = new Profile(UUID.randomUUID(), ProfileType.GROUP).setIdentifierName("The-Loves");
 		final int loveCount = 1000;
 		IConcept[] loveMems = new IConcept[loveCount];
 		String[] nums = { "one", "u", "ee", "or", "ive", "ix", "ven", "ate", "ine", "en", "leven", "elve" };
 		for (int i = 0; i < loveCount; i++) {
-			IConcept lovex = new Profile(UUID.randomUUID(), ProfileType.INDIVIDUAL)
+			IConcept lovex = new Profile(UUID.randomUUID(), ProfileType.FORM)
 					.setIdentifierName("Lovel" + (i >= nums.length ? "" + i : nums[i]));
 			loveMems[i] = lovex;
 			noo.learnConcept(lovex);
@@ -192,7 +192,7 @@ public class Main {
 		noo.addConfidentRelation(IConcept.EXISTENCE, ConceptRelationType.MUTUAL_EXCLUSION, IConcept.NOTHING);
 		noo.addConfidentRelation(IConcept.EXISTENCE, ConceptRelationType.QUANTIFIED_AS, twelve);
 		noo.addConfidentRelation(loves, ConceptRelationType.QUANTIFIED_AS, twelve);
-		noo.addConfidentRelation(IConcept.EXISTENCE, ConceptRelationType.CATEGORIZED_BY, important);
+		noo.addConfidentRelation(IConcept.EXISTENCE, ConceptRelationType.CHARACTERIZED_BY, important);
 		noo.addDubiousRelation(IConcept.EXISTENCE, ConceptRelationType.SUSTAINED_BY, Need.HEALTH, 0.5f);
 		noo.addConfidentRelation(IConcept.EXISTENCE, ConceptRelationType.CONSUMED_BY, death);
 		noo.addConfidentRelation(Need.HEALTH, ConceptRelationType.SUSTAINED_BY, food);

@@ -2,6 +2,7 @@ package things.actor.categories;
 
 import java.awt.Color;
 
+import _utilities.graph.IModifiableRelationGraph;
 import things.biology.kinds.OrganicKindProperties;
 import things.form.channelsystems.IChannelSystem;
 import things.form.channelsystems.blood.BloodChannelSystem;
@@ -15,7 +16,6 @@ import things.form.material.IMaterial;
 import things.form.material.Material;
 import things.form.material.property.MaterialProperty;
 import things.form.soma.component.IComponentPart;
-import utilities.graph.IModifiableRelationGraph;
 
 /**
  * All creatures of this nature have an intangible body part called a life_core

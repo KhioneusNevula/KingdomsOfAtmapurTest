@@ -23,6 +23,14 @@ import com.google.common.collect.Table.Cell;
 import _main.WorldGraphics;
 import _sim.RelativeSide;
 import _sim.vectors.IVector;
+import _utilities.MathUtils;
+import _utilities.collections.ImmutableCollection;
+import _utilities.collections.ImmutableSetView;
+import _utilities.couplets.Pair;
+import _utilities.couplets.Triplet;
+import _utilities.graph.IModifiableRelationGraph;
+import _utilities.graph.IRelationGraph;
+import _utilities.graph.ImmutableGraphView;
 import processing.core.PConstants;
 import things.actor.IActor;
 import things.form.IPart;
@@ -45,19 +53,11 @@ import things.form.soma.IPartDestructionCondition;
 import things.form.soma.ISoma;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.component.IComponentPart;
-import things.form.soma.component.StandardComponentPart;
 import things.form.soma.stats.IPartStat;
 import things.form.visage.IVisage;
-import things.spirit.ISpirit;
 import things.stains.IStain;
 import things.status_effect.IPartStatusEffectInstance;
-import utilities.MathUtils;
-import utilities.collections.ImmutableCollection;
-import utilities.couplets.Pair;
-import utilities.couplets.Triplet;
-import utilities.graph.IModifiableRelationGraph;
-import utilities.graph.IRelationGraph;
-import utilities.graph.ImmutableGraphView;
+import thinker.individual.IMindSpirit;
 
 public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 
@@ -85,6 +85,8 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 	private boolean isDestroyed;
 	private List<ISoma> brokenParts;
 	private IKind kind = IKind.MISCELLANEOUS;
+	private UUID uuid = new UUID(0, 0);
+	private Map<IMindSpirit, IComponentPart> spirits = new HashMap<>();
 
 	public MultipartSoma(IModifiableRelationGraph<IComponentPart, IPartConnection> parts,
 			IModifiableRelationGraph<IComponentPart, CoverageType> coverage, float size, float mass,
@@ -104,7 +106,7 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 		this.centerPart = centerPart;
 		float checkSize = 0;
 		for (IComponentPart part : parts) {
-			this.partsByNameAndId.put(part.getName(), part.getID(), part);
+			this.partsByNameAndId.put(part.getName(), part.getUUID(), part);
 			part.setOwner((ISoma) this);
 			checkSize += part.getRelativeSize();
 			visplanes = MathUtils.primeUnion(visplanes, part.detectionPlanes());
@@ -150,6 +152,14 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 			this.aggregateStats.put(stat, Pair.of(newv, val.getSecond() - 1));
 			return newv;
 		}
+	}
+
+	public UUID getUUID() {
+		return uuid;
+	}
+
+	public void setUUID(UUID id) {
+		this.uuid = id;
 	}
 
 	/**
@@ -576,36 +586,28 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 				.getFirst();
 	}
 
-	@Override
-	public void onAttachSpirit(ISpirit spirit, IComponentPart part) {
-		if (!this.partGraph.contains(part)) {
-			throw new IllegalArgumentException(part + "");
-		}
+	public Collection<IMindSpirit> getAllTetheredSpirits() {
+		return ImmutableSetView.from(this.spirits.keySet());
+	}
+
+	public IComponentPart getPartForSpirit(IMindSpirit spirit) {
+		return this.spirits.get(spirit);
 	}
 
 	@Override
-	public void onRemoveSpirit(ISpirit spirit, IComponentPart part) {
+	public void onAttachSpirit(IMindSpirit spirit, IComponentPart part) {
 		if (!this.partGraph.contains(part)) {
 			throw new IllegalArgumentException(part + "");
 		}
+		this.spirits.put(spirit, part);
 	}
 
-	public void onApplyEffect(IPartStatusEffectInstance effect, IComponentPart part) {
+	@Override
+	public void onRemoveSpirit(IMindSpirit spirit, IComponentPart part) {
 		if (!this.partGraph.contains(part)) {
 			throw new IllegalArgumentException(part + "");
 		}
-		for (ISpirit spir : part.getTetheredSpirits()) {
-			spir.onHostEffectApplied(part, this, effect);
-		}
-	}
-
-	public void onRemoveEffect(IPartStatusEffectInstance effect, StandardComponentPart part) {
-		if (!this.partGraph.contains(part)) {
-			throw new IllegalArgumentException(part + "");
-		}
-		for (ISpirit spir : part.getTetheredSpirits()) {
-			spir.onHostEffectRemoved(part, this, effect);
-		}
+		this.spirits.remove(spirit, part);
 	}
 
 	@Override
@@ -620,9 +622,69 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 				+ this.coverage.representation() + "}";
 	}
 
+	/** Removes spirit and spits it out onto map */
+	private void ejectSpirit(IMindSpirit spirit, IComponentPart original) {
+		if (this.owner != null && this.owner.getMap() != null) {
+			this.owner.getMap().queueAction(() -> this.owner.getMap().addUntetheredBeingToWorld(spirit));
+		}
+		original.removeSpirit(spirit, true);
+	}
+
+	/**
+	 * Handles whether or not to retether the spirit, or even whether to eject the
+	 * spirit into the map
+	 */
+	private void maybeRetetherSpirit(IMindSpirit spirit, IComponentPart result, IComponentPart original) {
+		if (original.getOwner() != this) {
+			this.spirits.remove(spirit);
+		}
+		if (result == null) {
+			ejectSpirit(spirit, original);
+		} else if (result == original) {
+		} else {
+			original.removeSpirit(spirit, true);
+			result.attachSpirit(spirit, true);
+		}
+
+	}
+
+	private void onAnyPartStateChange(IComponentPart part, Collection<IMindSpirit> alreadyUpdated) {
+		for (IMindSpirit spir : new HashSet<>(this.getAllTetheredSpirits())) {
+			if (alreadyUpdated.contains(spir)) {
+				continue;
+			}
+			maybeRetetherSpirit(spir, spir.onAnyPartStateChange(this.getPartForSpirit(spir), this, part),
+					this.getPartForSpirit(spir));
+
+		}
+	}
+
+	public void onApplyEffect(IPartStatusEffectInstance effect, IComponentPart part) {
+		if (!this.partGraph.contains(part)) {
+			throw new IllegalArgumentException(part + "");
+		}
+		for (IMindSpirit spir : new HashSet<>(part.getTetheredSpirits())) {
+			maybeRetetherSpirit(spir, spir.onHostEffectApplied(part, this, effect), getPartForSpirit(spir));
+		}
+		onAnyPartStateChange(part, part.getTetheredSpirits());
+	}
+
+	public void onRemoveEffect(IPartStatusEffectInstance effect, IComponentPart part) {
+		if (!this.partGraph.contains(part)) {
+			throw new IllegalArgumentException(part + "");
+		}
+		for (IMindSpirit spir : new HashSet<>(part.getTetheredSpirits())) {
+			maybeRetetherSpirit(spir, spir.onHostEffectRemoved(part, this, effect), getPartForSpirit(spir));
+		}
+		onAnyPartStateChange(part, part.getTetheredSpirits());
+	}
+
 	@Override
 	public void onPartEmbeddedMaterialsChanged(IComponentPart part, Collection<IMaterial> changedEmbeddeds) {
-
+		if (!this.partGraph.contains(part)) {
+			throw new IllegalArgumentException(part + "");
+		}
+		onAnyPartStateChange(part, Collections.emptySet());
 	}
 
 	@Override
@@ -643,6 +705,7 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 			if (part.getChannelCenters(sys).isEmpty())
 				this.channelSystemParts.remove(sys, part);
 		}
+		this.onAnyPartStateChange(part, Collections.emptySet());
 	}
 
 	@Override
@@ -651,13 +714,17 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 			return;
 		}
 		IComponentPart p = (IComponentPart) part;
-		if (this.destructCondition.isDestroyed(this, p)) {
+		Set<IMindSpirit> partOSpirits = Sets.newHashSet(p.getTetheredSpirits());
+
+		if (this.destructCondition.isDestroyed(this, p)) { // if we get severance
 			if (this.centerPart.equals(part)) {
 				this.isDestroyed = true;
 			}
 			this.onRemovePartWithoutRemovingMass(p);
 			SingleComponentSoma singlesoma = new SingleComponentSoma(p, size * p.getRelativeSize(),
 					mass * p.getRelativeSize(), systems.values(), Color.gray, destructCondition);
+
+			singlesoma.setUUID(UUID.randomUUID());
 			brokenParts.add(singlesoma);
 			IModifiableRelationGraph<IComponentPart, IPartConnection> centerGraph = this.partGraph; // nodes which are
 																									// meant to
@@ -672,6 +739,7 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 					centerGraph = cetera;
 				}
 				this.partGraph.removeAll(cetera);
+				cetera.forEach((a) -> this.onRemovePartWithoutRemovingMass(a));
 
 				partIter = partGraph.iterator();
 				float fraction = (float) cetera.stream().mapToDouble((a) -> (double) a.getRelativeSize()).sum();
@@ -684,6 +752,15 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 				}
 				MultipartSoma multisoma = new MultipartSoma(cetera, coverage.subgraph(cetera).copy(), sizePortion,
 						massPortion, next);
+
+				Set<IMindSpirit> spirisev = new HashSet<>(this.spirits.keySet());
+
+				for (IMindSpirit spir : spirisev) {
+					maybeRetetherSpirit(spir,
+							spir.onAnySeverances(this.getPartForSpirit(spir), this, singlesoma, multisoma),
+							this.getPartForSpirit(spir));
+				}
+
 				for (IComponentPart parti : cetera) {
 					parti.changeSize(parti.getRelativeSize() / fraction, false);
 				}
@@ -695,6 +772,11 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 			this.isAllHoles = (this.partGraph.stream().allMatch(IPart::isHole));
 			if (this.isAllHoles)
 				this.isDestroyed = true;
+		} else {
+			for (IMindSpirit spir : partOSpirits) {
+				maybeRetetherSpirit(spir, spir.onHostStateChange(p, this), this.getPartForSpirit(spir));
+			}
+			onAnyPartStateChange(p, partOSpirits);
 		}
 	}
 
@@ -776,24 +858,24 @@ public class MultipartSoma implements ISoma, IVisage<IComponentPart> {
 			copy.partsByNameAndId.put(cell.getRowKey(), cell.getColumnKey(), newPart);
 			copy.allParts.add(newPart);
 		}
-		copy.partGraph = partGraph.deepCopy((part) -> copy.partsByNameAndId.get(part.getName(), part.getID()));
-		copy.coverage = coverage.deepCopy((part) -> copy.partsByNameAndId.get(part.getName(), part.getID()));
+		copy.partGraph = partGraph.deepCopy((part) -> copy.partsByNameAndId.get(part.getName(), part.getUUID()));
+		copy.coverage = coverage.deepCopy((part) -> copy.partsByNameAndId.get(part.getName(), part.getUUID()));
 		copy.brokenParts = new ArrayList<>();
-		copy.centerPart = copy.partsByNameAndId.get(centerPart.getName(), centerPart.getID());
+		copy.centerPart = copy.partsByNameAndId.get(centerPart.getName(), centerPart.getUUID());
 		copy.channelSystemCenters = MultimapBuilder.hashKeys().hashSetValues().build();
 		copy.channelSystemParts = MultimapBuilder.hashKeys().hashSetValues().build();
 		for (Map.Entry<IChannelCenter, IComponentPart> cell : this.channelSystemCenters.entries()) {
 			copy.channelSystemCenters.put(cell.getKey(),
-					copy.partsByNameAndId.get(cell.getValue().getName(), cell.getValue().getID()));
+					copy.partsByNameAndId.get(cell.getValue().getName(), cell.getValue().getUUID()));
 		}
 		for (Map.Entry<IChannelSystem, IComponentPart> cell : this.channelSystemParts.entries()) {
 			copy.channelSystemParts.put(cell.getKey(),
-					copy.partsByNameAndId.get(cell.getValue().getName(), cell.getValue().getID()));
+					copy.partsByNameAndId.get(cell.getValue().getName(), cell.getValue().getUUID()));
 		}
 		copy.systems = new HashMap<>(systems);
 		copy.contiguousParts = new HashSet<>();
 		for (IComponentPart part : this.contiguousParts) {
-			copy.contiguousParts.add(copy.partsByNameAndId.get(part.getName(), part.getID()));
+			copy.contiguousParts.add(copy.partsByNameAndId.get(part.getName(), part.getUUID()));
 		}
 		return copy;
 	}

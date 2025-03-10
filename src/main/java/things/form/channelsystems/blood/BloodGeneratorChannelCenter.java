@@ -3,12 +3,12 @@ package things.form.channelsystems.blood;
 import java.util.Collection;
 import java.util.Collections;
 
+import _utilities.couplets.Pair;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IResource;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.form.soma.stats.IPartStat;
-import utilities.couplets.Pair;
 
 public class BloodGeneratorChannelCenter implements IChannelCenter {
 

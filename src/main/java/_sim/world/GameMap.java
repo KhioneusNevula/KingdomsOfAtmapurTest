@@ -1,8 +1,9 @@
 package _sim.world;
 
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -11,10 +12,12 @@ import _main.WorldGraphics;
 import _sim.IRenderable;
 import _sim.dimension.DimensionBuilder;
 import _sim.vectors.IVector;
+import _utilities.collections.ImmutableCollection;
+import _utilities.property.IProperty;
 import processing.core.PConstants;
 import things.actor.IActor;
 import things.blocks.BlockMap;
-import utilities.property.IProperty;
+import thinker.individual.IBeing;
 
 /**
  * A world map for a game
@@ -39,6 +42,8 @@ public class GameMap implements IRenderable {
 	private Map<IProperty<?>, Object> worldProperties = new HashMap<>();
 	private BlockMap blockMap;
 	private Map<UUID, IActor> actorsById = new HashMap<>();
+	/** Return a map of all beings untethered to the world */
+	private Map<UUID, IBeing> untetheredBeings = new HashMap<>();
 	private long ticks = 0;
 	private List<Runnable> nextTicksQueue = new ArrayList<>();
 
@@ -59,25 +64,69 @@ public class GameMap implements IRenderable {
 	}
 
 	/**
-	 * Queue a process to run the next tick
+	 * Returns all actors in this map.
+	 */
+	public Collection<IActor> getActors() {
+		return ImmutableCollection.from(actorsById.values());
+	}
+
+	/** Returns an actor by id */
+	public IActor getActorByUUID(IActor act) {
+		synchronized (actorsById) {
+			return actorsById.get(act);
+		}
+	}
+
+	/** Returns an untethered being by its id */
+	public IBeing getUntetheredByUUID(IBeing being) {
+		synchronized (untetheredBeings) {
+			return untetheredBeings.get(being);
+		}
+	}
+
+	/** Return all untethered beings on this map */
+	public Collection<IBeing> getUntetheredBeings() {
+		return ImmutableCollection.from(untetheredBeings.values());
+	}
+
+	/**
+	 * Queue a process to run the next tick. Use this whenever you need to
+	 * synchronize stuff.
 	 * 
 	 * @param action
 	 */
 	public void queueAction(Runnable action) {
-		this.nextTicksQueue.add(action);
+		synchronized (nextTicksQueue) {
+			this.nextTicksQueue.add(action);
+		}
 	}
 
 	/**
 	 * TODO Run a tick on this game map
 	 */
 	public void tick(float ticksPerSecond) {
-		for (Runnable run : nextTicksQueue) {
-			run.run();
+		synchronized (nextTicksQueue) {
+			for (Runnable run : nextTicksQueue) {
+				run.run();
+			}
+			nextTicksQueue.clear();
 		}
-		nextTicksQueue.clear();
+		synchronized (untetheredBeings) {
+			Iterator<IBeing> unteth = untetheredBeings.values().iterator();
+			if (unteth.hasNext()) {
+				for (IBeing being = unteth.next(); unteth.hasNext(); being = unteth.next()) {
+					being.runUntetheredTick(this, ticks);
+					if (being.readyForDeletion(this, ticks)) {
+						unteth.remove();
+					}
+				}
+			}
+		}
 		this.actorsTicking = true;
-		for (IActor actor : actorsById.values()) {
-			actor.tick(ticks, ticksPerSecond);
+		synchronized (actorsById) {
+			for (IActor actor : actorsById.values()) {
+				actor.tick(ticks, ticksPerSecond);
+			}
 		}
 		this.actorsTicking = false;
 
@@ -89,29 +138,51 @@ public class GameMap implements IRenderable {
 	}
 
 	/**
-	 * This method will schedule an actor to spawn the next tick
+	 * Spawn actor into world. Please queue this into the next tick to avoid race
+	 * conditions!
 	 * 
 	 * @param actor
 	 */
 	public void spawnIntoWorld(IActor actor) {
-		if (this.actorsDrawing || this.actorsTicking) {
-			throw new ConcurrentModificationException("Tried to spawn " + actor + " concurrently with "
-					+ (actorsDrawing ? (actorsTicking ? "drawing and ticking actors(?)" : "drawing actors")
-							: (actorsTicking ? "ticking actors" : "(why was this thrown?)")));
+		synchronized (actorsById) {
+			this.actorsById.put(actor.getUUID(), actor);
+			actor.onSpawnIntoMap(this);
 		}
-		this.actorsById.put(actor.getUUID(), actor);
-		actor.onSpawnIntoMap(this);
 
 	}
 
-	public void removeFromWorld(IActor actor) {
-		if (this.actorsDrawing || this.actorsTicking) {
-			throw new ConcurrentModificationException("Tried to remove " + actor + " concurrently with "
-					+ (actorsDrawing ? (actorsTicking ? "drawing and ticking actors(?)" : "drawing actors")
-							: (actorsTicking ? "ticking actors" : "(why was this thrown?)")));
+	/**
+	 * Spawns an untethered being into this world. Please queue this to avoid race
+	 * conditions!
+	 */
+	public void addUntetheredBeingToWorld(IBeing being) {
+		synchronized (untetheredBeings) {
+			this.untetheredBeings.put(being.getUUID(), being);
+			being.onUntethering(this, this.ticks);
 		}
-		actor.onRemoveFromMap(this);
-		this.actorsById.remove(actor.getUUID());
+	}
+
+	/**
+	 * Remove an untethered being from the world. Please queue this into the next
+	 * tick to avoid race conditions!
+	 */
+	public void removeFromWorld(IBeing being) {
+		synchronized (untetheredBeings) {
+			being.onRemoveFromMap(this, ticks);
+			this.untetheredBeings.remove(being.getUUID());
+		}
+
+	}
+
+	/**
+	 * Remove actor from world. Please queue this into the next tick to avoid race
+	 * conditions!
+	 */
+	public void removeFromWorld(IActor actor) {
+		synchronized (actorsById) {
+			actor.onRemoveFromMap(this);
+			this.actorsById.remove(actor.getUUID());
+		}
 
 	}
 
@@ -121,15 +192,18 @@ public class GameMap implements IRenderable {
 	@Override
 	public void draw(WorldGraphics g) {
 		this.drawBackground(g);
-		actorsDrawing = true;
-		for (IActor actor : actorsById.values()) {
-			g.push();
-			g.translate((float) (actor.getPosition().getUnadjustedX() * blockRenderSize),
-					(float) (actor.getPosition().getUnadjustedY() * blockRenderSize));
-			actor.draw(g);
-			g.pop();
+		synchronized (actorsById) {
+			actorsDrawing = true;
+			for (IActor actor : actorsById.values()) {
+
+				g.push();
+				g.translate((float) (actor.getPosition().getUnadjustedX() * blockRenderSize),
+						(float) (actor.getPosition().getUnadjustedY() * blockRenderSize));
+				actor.draw(g);
+				g.pop();
+			}
+			actorsDrawing = false;
 		}
-		actorsDrawing = false;
 
 	}
 

@@ -3,6 +3,7 @@ package thinker.concepts.general_types;
 import java.util.UUID;
 
 import thinker.concepts.IConcept;
+import thinker.concepts.relations.ActionRelationType;
 import thinker.concepts.relations.ConceptRelationType;
 
 /**
@@ -120,9 +121,19 @@ public interface ILogicConcept extends IConcept {
 		PROPERTY_AND_VALUE,
 		/**
 		 * Indicates that the part connected to this connector by the
-		 * {@link ConceptRelationType#CONSTITUTES} has the given property indicated by
+		 * {@link ConceptRelationType#PART_OF} has the given property indicated by
 		 * the {@link ConceptRelationType#CHARACTERIZED_BY} connection from this
 		 */
-		ELEMENT_AND_PROPERTY
+		ELEMENT_AND_PROPERTY,
+		/**
+		 * Indicates that the part connected to this connector by the
+		 * {@link ConceptRelationType#ACTS_UPON} relation is an event, with the argument
+		 * linked by {@link ConceptRelationType#AFFECTS} being the patient of this
+		 * occurrence, and the relations linked by {@link ConceptRelationType#CAUSED_BY}
+		 * being the subject or {@link ConceptRelationType#DONE_BY},
+		 * {@link ActionRelationType#USES} being the instrument, and such being the
+		 * arguments of the event.
+		 */
+		EVENTIVE
 	}
 }

@@ -6,17 +6,35 @@ import java.util.UUID;
 import things.form.IPart;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
-import things.form.channelsystems.IResource;
 import things.form.channelsystems.IChannelSystem;
+import things.form.channelsystems.IResource;
 import things.form.material.IMaterial;
 import things.form.soma.ISoma;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.stats.IPartStat;
-import things.spirit.ISpirit;
 import things.status_effect.IPartStatusEffect;
 import things.status_effect.IPartStatusEffectInstance;
+import thinker.individual.IMindSpirit;
 
+/**
+ * Note: a component part can be linked to one in another entity, representing
+ * the idea of 'holding' something
+ * 
+ * @author borah
+ *
+ */
 public interface IComponentPart extends IPart {
+
+	/**
+	 * returns the Form that this part Actually belongs to, i.e. when it is being
+	 * held
+	 */
+	public ISoma getTrueOwner();
+
+	/**
+	 * Sets the form that this part Actually belongs to, i.e. when it is being held
+	 */
+	public void setTrueOwner(ISoma so);
 
 	/**
 	 * Creates a "dummy part" (cast as an {@link IComponentPart}, as opposed to the
@@ -124,7 +142,7 @@ public interface IComponentPart extends IPart {
 	 * 
 	 * @return
 	 */
-	public Collection<ISpirit> getTetheredSpirits();
+	public Collection<IMindSpirit> getTetheredSpirits();
 
 	/**
 	 * Wehther this component part would allow the given spirit to attach to it.
@@ -133,21 +151,21 @@ public interface IComponentPart extends IPart {
 	 * @param spirit
 	 * @return
 	 */
-	public boolean canAttachSpirit(ISpirit spirit);
+	public boolean canAttachSpirit(IMindSpirit spirit);
 
 	/**
 	 * Attach the given spirit to this component. Only call this from the Soma!
 	 * 
 	 * @param spirit
 	 */
-	public void attachSpirit(ISpirit spirit, boolean callUpdate);
+	public void attachSpirit(IMindSpirit spirit, boolean callUpdate);
 
 	/**
 	 * Remove this spirit. Only call this from a Soma!
 	 * 
 	 * @param toRemove
 	 */
-	public void removeSpirit(ISpirit toRemove, boolean callUpdate);
+	public void removeSpirit(IMindSpirit toRemove, boolean callUpdate);
 
 	/**
 	 * Return all effect instances on this part
@@ -376,22 +394,22 @@ public interface IComponentPart extends IPart {
 		}
 
 		@Override
-		public Collection<ISpirit> getTetheredSpirits() {
+		public Collection<IMindSpirit> getTetheredSpirits() {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public boolean canAttachSpirit(ISpirit spirit) {
+		public boolean canAttachSpirit(IMindSpirit spirit) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void attachSpirit(ISpirit spirit, boolean callUpdate) {
+		public void attachSpirit(IMindSpirit spirit, boolean callUpdate) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void removeSpirit(ISpirit toRemove, boolean callUpdate) {
+		public void removeSpirit(IMindSpirit toRemove, boolean callUpdate) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -422,6 +440,16 @@ public interface IComponentPart extends IPart {
 
 		@Override
 		public void setOwner(ISoma soma) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public ISoma getTrueOwner() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setTrueOwner(ISoma so) {
 			throw new UnsupportedOperationException();
 		}
 
