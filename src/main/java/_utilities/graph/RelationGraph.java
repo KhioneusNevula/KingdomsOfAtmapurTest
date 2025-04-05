@@ -13,6 +13,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.Stack;
 import java.util.WeakHashMap;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -36,6 +37,7 @@ import com.google.common.collect.Table;
 
 import _utilities.MathUtils;
 import _utilities.collections.CollectionUtils;
+import _utilities.collections.FilteredCollectionView;
 import _utilities.collections.ImmutableSetView;
 import _utilities.couplets.Pair;
 import _utilities.couplets.Triplet;
@@ -667,6 +669,50 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	}
 
 	/**
+	 * A "one-line" way to build a graph; this method adds an edge to the graph and
+	 * allows the addition of properties, making sure to add the given nodes
+	 * beforehand, and returns the graph object
+	 */
+	@SafeVarargs
+	public final RelationGraph<E, R> plusEdge(E node, R edge, E node2,
+			@SuppressWarnings("unchecked") Pair<IProperty<?>, Object>... properties) {
+		this.add(node);
+		this.add(node2);
+		this.addEdge(node, edge, node2);
+		for (Pair<IProperty<?>, Object> pair : properties) {
+			if (pair.getFirst().getType().isInstance(pair.getSecond())) {
+				this.setProperty(node, edge, node2, (IProperty) pair.getFirst(), pair.getSecond());
+			} else {
+				throw new IllegalArgumentException(
+						"Property " + pair.getFirst() + " (type=" + pair.getFirst().getType().toString() + ")"
+								+ " is not applicable for argument " + pair.getSecond() + " (type="
+								+ (pair.getSecond() == null ? "(null)" : pair.getSecond().getClass().toString()) + ")");
+			}
+		}
+		return this;
+	}
+
+	/** Adds multiple edges from the first node to a series of other nodes */
+	public RelationGraph<E, R> plusEdges(E node, R edge, Iterable<? extends E> nodes) {
+		for (E n : nodes) {
+			this.plusEdge(node, edge, n);
+		}
+		return this;
+	}
+
+	/**
+	 * Adds multiple edges from each of the first nodes to each of the other nodes
+	 */
+	public RelationGraph<E, R> plusEdges(Iterable<E> nodez, R edge, Iterable<? extends E> nodes) {
+		for (E n1 : nodez) {
+			for (E n : nodes) {
+				this.plusEdge(n1, edge, n);
+			}
+		}
+		return this;
+	}
+
+	/**
 	 * Add a node to this graph with the given value
 	 */
 	@Override
@@ -734,7 +780,45 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 	@Override
 	public boolean addEdge(E first, R type, E second) {
-		return addNewEdgeOrNothing(node(first, 1), type, node(second, 2)) != null;
+		Pair<Object, Object> edgmsg = checkEdgeEndsPermissible(first, type, second);
+		if ((edgmsg.getFirst() == null || edgmsg.getFirst() instanceof Integer)
+				&& (edgmsg.getSecond() == null || edgmsg.getSecond() instanceof Integer)) {
+			Integer firstCount = (Integer) edgmsg.getFirst();
+			Integer secondCount = (Integer) edgmsg.getSecond();
+			INode<E, R> firstNode = node(first, 1);
+			INode<E, R> secondNode = node(second, 2);
+			if (firstCount != null && secondNode.getEdgesOfType((R) type.invert()).size() >= firstCount) {
+				throw new IllegalArgumentException("Cannot add edge between " + first + " and " + second + " of type "
+						+ type + ", because (inverse) " + type.invert() + " caps count at " + firstCount
+						+ " and these edges already exist: " + secondNode.getEdgesOfType((R) type.invert()));
+			}
+			if (secondCount != null && firstNode.getEdgesOfType(type).size() >= secondCount) {
+				throw new IllegalArgumentException("Cannot add edge between " + first + " and " + second + " of type "
+						+ type + ", because " + type + " caps count at " + secondCount
+						+ " and these edges already exist " + firstNode.getEdgesOfType(type));
+			}
+			return addNewEdgeOrNothing(firstNode, type, secondNode) != null;
+		}
+		throw new IllegalArgumentException("Cannot add edge between " + first + " and " + second + " of type " + type
+				+ ", because of reasons: " + edgmsg);
+	}
+
+	@Override
+	public Pair<Object, Object> checkEdgeEndsPermissible(Object first, IInvertibleRelationType type, Object second) {
+		Pair<Object, Object> ends = Pair.of(null, null);
+		if (first != null) {
+			Object msg = type.invert().checkEndType(first);
+			if (msg != null) {
+				ends.setFirst(msg);
+			}
+		}
+		if (second != null) {
+			Object msg = type.checkEndType(second);
+			if (msg != null) {
+				ends.setSecond(msg);
+			}
+		}
+		return ends;
 	}
 
 	/**
@@ -848,6 +932,8 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	 */
 	protected Collection<? extends IInvertibleEdge<E, R>> removeConnections(INode<E, R> node) {
 		Collection<? extends IInvertibleEdge<E, R>> edges = node.removeAllEdges();
+		if (edges.isEmpty())
+			return edges;
 		this.weaks.keySet().forEach((sub) -> {
 			edges.forEach((edge) -> sub.edgeadd.remove(edge.asTriplet()));
 			edges.forEach((edge) -> sub.edgeadd.remove(edge.invert().asTriplet()));
@@ -856,6 +942,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		boolean removed = false;
 		for (IInvertibleEdge<E, R> edge : edges) {
 			removed = E.remove(edge.getType(), edge) || removed;
+			removed = E.remove(edge.invert().getType(), edge.invert()) || removed;
 		}
 		if (!removed) {
 			throw new IllegalArgumentException("Edgelist of graph does not contain all edges from " + node + ": \n"
@@ -872,6 +959,8 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	 */
 	protected Collection<? extends IInvertibleEdge<E, R>> removeConnections(INode<E, R> node, R type) {
 		Collection<? extends IInvertibleEdge<E, R>> edges = node.removeAllEdges(type);
+		if (edges.isEmpty())
+			return edges;
 		this.weaks.keySet().forEach((sub) -> {
 			edges.forEach((edge) -> sub.edgeadd.remove(edge.asTriplet()));
 			edges.forEach((edge) -> sub.edgeadd.remove(edge.invert().asTriplet()));
@@ -880,6 +969,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		boolean removed = false;
 		for (IInvertibleEdge<E, R> edge : edges) {
 			removed = E.remove(edge.getType(), edge) || removed;
+			removed = E.remove(edge.invert().getType(), edge.invert()) || removed;
 		}
 		if (!removed) {
 			throw new IllegalArgumentException("Edgelist of graph does not contain all edges from " + node + ": \n"
@@ -897,6 +987,8 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	 */
 	protected Collection<? extends IInvertibleEdge<E, R>> removeConnections(INode<E, R> node, INode<E, R> other) {
 		Collection<? extends IInvertibleEdge<E, R>> edges = node.removeAllEdges(other.getValue());
+		if (edges.isEmpty())
+			return edges;
 		this.weaks.keySet().forEach((sub) -> {
 			edges.forEach((edge) -> sub.edgeadd.remove(edge.asTriplet()));
 			edges.forEach((edge) -> sub.edgeadd.remove(edge.invert().asTriplet()));
@@ -905,6 +997,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		boolean removed = false;
 		for (IInvertibleEdge<E, R> edge : edges) {
 			removed = E.remove(edge.getType(), edge) || removed;
+			removed = E.remove(edge.invert().getType(), edge.invert()) || removed;
 		}
 		if (!removed) {
 			throw new IllegalArgumentException("Edgelist of graph does not contain all edges from " + node + ": \n"
@@ -1095,7 +1188,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		IInvertibleEdge<E, R> edge = node(one, 1).getEdge(two, type);
 		node(two, 2);
 		if (edge == null) {
-			throw new IllegalArgumentException("No edge of type " + type + " between " + one + " and " + two);
+			return null;
 		}
 		X obj = edge.getPropertyValue(prop);
 		if (obj == null) {
@@ -1285,7 +1378,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	}
 
 	@Override
-	public Set<R> getConnectingEdgeTypes(E node) {
+	public Set<R> getOutgoingEdgeTypes(E node) {
 		return this.node(node).getEdgeTypes();
 	}
 
@@ -1297,6 +1390,11 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	@Override
 	public Iterator<Triplet<E, R, E>> edgeIterator() {
 		return new EdgeIterator();
+	}
+
+	@Override
+	public Collection<R> getEdgeTypes() {
+		return E.keySet();
 	}
 
 	@Override
@@ -1394,7 +1492,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	 * @return
 	 */
 	@Override
-	public Iterator<E> nodeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
+	public NodeTraversalIterator nodeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 		return new NodeTraversalIterator(startPoint, allowedEdgeTypes,
 				constructPred(applyAcrossObject, this.edgeProperties), true);
@@ -1754,7 +1852,12 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		 */
 		public NodeTraversalIterator(E firstNode, Collection<? extends R> allowedEdgeTypes,
 				Predicate<IInvertibleEdge<E, R>> propertyPredicate, boolean BFS) {
-			this.visited = new RelationGraph<>();
+			this.visited = new RelationGraph<>() {
+				public _utilities.couplets.Pair<Object, Object> checkEdgeEndsPermissible(Object first,
+						IInvertibleRelationType type, Object second) {
+					return Pair.of(null, null);
+				};
+			};
 			this.allowedEdgeTypes = allowedEdgeTypes;
 			this.propertyPredicate = propertyPredicate;
 			if (BFS) {
@@ -1792,6 +1895,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			return toVisit == null ? !toVisit2.isEmpty() : !toVisit.isEmpty();
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public E next() {
 			if (toVisit == null ? toVisit2.isEmpty() : toVisit.isEmpty()) {
@@ -1810,7 +1914,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 					edgenew.setPropertyValue(prop, pair.getFirst().getPropertyValue(prop));
 				}
 			}
-			for (R type : allowedEdgeTypes == null ? List.of((R) null) : allowedEdgeTypes) {
+			for (R type : allowedEdgeTypes == null ? Sets.newHashSet((R) null) : allowedEdgeTypes) {
 				for (IInvertibleEdge<E, R> edge : type == null ? firstNode.getAllEdges()
 						: firstNode.getEdgesOfType(type)) {
 					if (!visited.contains(edge.getEnd().getValue())
@@ -1871,7 +1975,12 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		private EdgeTraversalIterator(E firstNode, Collection<? extends R> allowedEdgeTypes,
 				Predicate<IInvertibleEdge<E, R>> propertyPredicate, boolean BFS, Collection<? extends E> allowedNodes) {
-			this.visited = new RelationGraph<>();
+			this.visited = new RelationGraph<>() {
+				public _utilities.couplets.Pair<Object, Object> checkEdgeEndsPermissible(Object first,
+						IInvertibleRelationType type, Object second) {
+					return Pair.of(null, null);
+				};
+			};
 			this.allowedEdgeTypes = allowedEdgeTypes;
 			this.propertyPredicate = propertyPredicate;
 
@@ -2005,11 +2114,12 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 	@Override
 	public String representation(Function<E, String> converter) {
-		return this.representation(converter, Object::toString);
+		return this.representation(converter, (Function<R, String>) Object::toString);
 	}
 
 	@Override
-	public String representation(Function<E, String> converter, Function<R, String> edgeConverter) {
+	public String representation(Function<E, String> converter,
+			BiFunction<Triplet<E, R, E>, Map<IProperty<?>, Object>, String> edgeConverter) {
 		StringBuilder builder = new StringBuilder("{\n\tNodes (" + V.size() + ")={\n\t\t");
 
 		int cols = MathUtils.largestPrimeFactor(V.size());
@@ -2033,7 +2143,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		Iterator<IInvertibleEdge<E, R>> edgeit = E.values().iterator();
 		for (int i = 0; i < E.size(); i++) {
 			IInvertibleEdge<E, R> edge = edgeit.next();
-			builder.append(edge.convertToString(converter, edgeConverter));
+			builder.append(edgeConverter.apply(edge.asTriplet(), edge.getPropertiesMap()));
 			if (i % cols == 0) {
 				builder.append("\n\t\t");
 			} else {
@@ -2042,6 +2152,12 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		}
 		builder.append("\n\t}");
 		return builder.append("\n}").toString();
+
+	}
+
+	@Override
+	public String representation(Function<E, String> converter, Function<R, String> edgeConverter) {
+		return representation(converter, (t, p) -> this.edgeToString(t, true));
 
 	}
 
@@ -2056,10 +2172,19 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	}
 
 	@Override
+	public IRelationGraph<E, R> subgraph(Predicate<? super E> nodes, Predicate<Triplet<E, R, E>> edgePred) {
+		return new SubGraphView(Collections.emptySet(), nodes, edgePred);
+	}
+
+	@Override
 	public boolean addAll(IRelationGraph<E, R> subgraph) {
 		boolean[] mod = { false };
 		mod[0] = this.addAll((Collection<? extends E>) subgraph);
-		subgraph.edgeIterator().forEachRemaining((edge) -> mod[0] |= this.addEdge(edge));
+		subgraph.edgeIterator().forEachRemaining((edge) -> {
+
+			mod[0] |= this.addEdge(edge);
+
+		});
 		return mod[0];
 	}
 
@@ -2148,14 +2273,15 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 	protected class SubGraphView implements IModifiableRelationGraph<E, R>, Cloneable {
 
+		private Predicate<? super E> nodepred;
 		private Map<E, INode<E, R>> nodes;
 		private Predicate<Triplet<E, R, E>> edgepred;
 		private Map<Triplet<E, R, E>, IInvertibleEdge<E, R>> edgeadd = new HashMap<>();
 		private RelationGraph<E, R> self = RelationGraph.this;
 
 		private void check(Object nodea) {
-			node(nodea);
-			if (!nodes.containsKey(nodea)) {
+			INode<E, R> nod = node(nodea);
+			if (!nodepred.test(nod.getValue()) && !nodes.containsKey(nodea)) {
 				throw new NodeNotFoundException(nodea);
 			}
 		}
@@ -2163,16 +2289,25 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		/**
 		 * @param nodes
 		 */
-		public SubGraphView(Iterable<? extends E> nodes) {
+		public SubGraphView(Iterable<?> nodes) {
 			this(nodes, null);
 		}
 
 		/**
 		 * @param nodes
 		 */
-		public SubGraphView(Iterable<? extends E> nodes, Predicate<Triplet<E, R, E>> edger) {
+		public SubGraphView(Iterable<?> nodes, Predicate<Triplet<E, R, E>> edger) {
+			this(nodes, null, edger);
+		}
+
+		/**
+		 * @param nodes
+		 */
+		public SubGraphView(Iterable<?> nodes, Predicate<? super E> nods, Predicate<Triplet<E, R, E>> edger) {
 			this.edgepred = edger == null ? Predicates.alwaysTrue() : edger.or(edgeadd::containsKey);
-			this.nodes = new HashMap<>(Maps.toMap(nodes.iterator(), self::node));
+			this.nodepred = nods == null ? Predicates.alwaysFalse() : nods;
+			this.nodes = new HashMap<>(
+					Maps.toMap(Streams.stream(nodes.iterator()).map(self::get).iterator(), self::node));
 			if (!RelationGraph.this.containsAll(this.nodes.keySet())) {
 				throw new IllegalArgumentException("Not all in graph: " + this.nodes.keySet());
 			}
@@ -2184,7 +2319,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			self.add(e);
 			boolean con = nodes.containsKey(e);
 			this.nodes.put(e, node(e));
-			return con;
+			return !con;
 		}
 
 		@Override
@@ -2206,10 +2341,21 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		}
 
 		@Override
+		public Pair<Object, Object> checkEdgeEndsPermissible(Object first, IInvertibleRelationType type,
+				Object second) {
+			return self.checkEdgeEndsPermissible(first, type, second);
+		}
+
+		@Override
 		public E get(Object of) {
 			INode<E, R> node = this.nodes.get(of);
 			if (node != null) {
 				return node.getValue();
+			} else {
+				node = self.V.get(of);
+				if (node != null && nodepred.test(node.getValue())) {
+					return node.getValue();
+				}
 			}
 			return null;
 		}
@@ -2217,6 +2363,12 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		@Override
 		public void set(Object oldNode, E newNode) {
 			INode<E, R> nod = this.nodes.get(oldNode);
+			if (nod == null) {
+				nod = node(oldNode);
+				if (!nodepred.test(nod.getValue())) {
+					throw new IllegalArgumentException("Disallowed node " + oldNode);
+				}
+			}
 			nod.setValue(newNode);
 			V.remove(oldNode);
 			V.put(newNode, nod);
@@ -2234,27 +2386,39 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 						edger.remove();
 				}
 			}
+			self.removeIf(nodepred);
 			nodes.clear();
 			edgeadd.clear();
 		}
 
 		@Override
 		public boolean contains(Object o) {
-			if (!nodes.containsKey(o))
-				return false;
-			return self.contains(o);
+			INode<E, R> node = nodes.get(o);
+			if (node == null) {
+				node = self.V.get(o);
+				if (node == null) {
+					return false;
+				}
+				if (nodepred.test(node.getValue())) {
+					return true;
+				}
+			}
+			return true;
 		}
 
 		@Override
 		public boolean containsAll(Collection<?> c) {
-			if (!nodes.keySet().containsAll(c))
-				return false;
-			return self.containsAll(c);
+			for (Object x : c) {
+				if (!contains(x)) {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		@Override
 		public boolean containsEdge(Object one, Object two) {
-			if (!nodes.containsKey(one) || !nodes.containsKey(two))
+			if (!contains(one) || !contains(two))
 				return false;
 
 			return self.getEdgeTypesBetween((E) one, (E) two).stream().parallel()
@@ -2263,7 +2427,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		@Override
 		public boolean containsEdge(Object one, Object type, Object two) {
-			if (!nodes.containsKey(one) || !nodes.containsKey(two))
+			if (!contains(one) || !contains(two))
 				return false;
 			Triplet edge = Triplet.of(one, type, two);
 			return self.containsEdge(one, type, two) && edgepred.test(edge);
@@ -2271,46 +2435,60 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		@Override
 		public int degree(E node) {
-			if (!this.nodes.containsKey(node)) {
+			if (!contains(node)) {
 				return 0;
 			}
 
-			return (int) nodes.get(node).getAllEdges().stream().parallel()
-					.filter((e) -> this.nodes.containsKey(e.getEnd().getValue()) && this.edgepred.test(e.asTriplet()))
-					.count();
+			return (int) self.V.get(node).getAllEdges().stream().parallel()
+					.filter((e) -> contains(e.getEnd().getValue()) && this.edgepred.test(e.asTriplet())).count();
 		}
 
 		@Override
 		public int degree(E node, R type) {
-			if (!this.nodes.containsKey(node)) {
+			if (!contains(node)) {
 				return 0;
 			}
-			return (int) nodes.get(node).getEdgesOfType(type).stream().parallel()
-					.filter((e) -> this.nodes.containsKey(e.getEnd().getValue()) && this.edgepred.test(e.asTriplet()))
-					.count();
+			return (int) self.V.get(node).getEdgesOfType(type).stream().parallel()
+					.filter((e) -> contains(e.getEnd().getValue()) && this.edgepred.test(e.asTriplet())).count();
 		}
 
 		@Override
 		public int edgeCount() {
-			return (int) E.values().stream().filter((edge) -> nodes.containsKey(edge.getStart().getValue())
-					&& nodes.containsKey(edge.getEnd().getValue()) && edgepred.test(edge.asTriplet())).count();
+			return (int) E.values().stream().filter((edge) -> contains(edge.getStart().getValue())
+					&& contains(edge.getEnd().getValue()) && edgepred.test(edge.asTriplet())).count();
+		}
+
+		@Override
+		public Collection<R> getEdgeTypes() {
+			return self.E.entries().stream().filter((e) -> edgepred.test(e.getValue().asTriplet()))
+					.filter((e) -> nodepred.test(e.getValue().getStart().getValue())
+							&& nodepred.test(e.getValue().getEnd().getValue()))
+					.map((e) -> e.getKey()).collect(Collectors.toSet());
 		}
 
 		@Override
 		public Iterator<Triplet<E, R, E>> edgeIterator() {
-			return new EdgeIterator(Collections.emptySet(), nodes, (edge) -> this.edgepred.test(edge.asTriplet()));
+			Map<E, INode<E, R>> nset = Collections.synchronizedMap(new HashMap<>(nodes));
+			self.V.entrySet().parallelStream().filter((a) -> nodepred.test(a.getKey()))
+					.forEach((e) -> nset.put(e.getKey(), e.getValue()));
+
+			return new EdgeIterator(Collections.emptySet(), nset, (edge) -> this.edgepred.test(edge.asTriplet()));
 		}
 
 		@Override
 		public Iterator<Triplet<E, R, E>> edgeIterator(Collection<? extends R> forTypes) {
-			return new EdgeIterator(forTypes, nodes, (edge) -> this.edgepred.test(edge.asTriplet()));
+			Map<E, INode<E, R>> nset = Collections.synchronizedMap(new HashMap<>(nodes));
+			self.V.entrySet().parallelStream().filter((a) -> nodepred.test(a.getKey()))
+					.forEach((e) -> nset.put(e.getKey(), e.getValue()));
+
+			return new EdgeIterator(forTypes, nset, (edge) -> this.edgepred.test(edge.asTriplet()));
 		}
 
 		@Override
 		public Iterator<Triplet<E, R, E>> outgoingEdges(E forNode) {
 			check(forNode);
 			return self.node(forNode).getAllEdges().stream()
-					.filter((edg) -> nodes.containsKey(edg.getEnd().getValue()) && edgepred.test(edg.asTriplet()))
+					.filter((edg) -> contains(edg.getEnd().getValue()) && edgepred.test(edg.asTriplet()))
 					.map(IInvertibleEdge::asTriplet).iterator();
 		}
 
@@ -2318,7 +2496,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		public Iterator<Triplet<E, R, E>> outgoingEdges(E forNode, R type) {
 			check(forNode);
 			return self.node(forNode).getEdgesOfType(type).stream()
-					.filter((edg) -> nodes.containsKey(edg.getEnd().getValue()) && edgepred.test(edg.asTriplet()))
+					.filter((edg) -> contains(edg.getEnd().getValue()) && edgepred.test(edg.asTriplet()))
 					.map(IInvertibleEdge::asTriplet).iterator();
 		}
 
@@ -2326,43 +2504,46 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		public Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint,
 				Collection<? extends R> allowedEdgeTypes, BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 
+			Set<E> nset = self.V.keySet().parallelStream().filter((a) -> contains(a)).collect(Collectors.toSet());
+
 			return new EdgeTraversalIterator(startPoint, allowedEdgeTypes,
 					(edge) -> (RelationGraph.<E, R>constructPred(applyAcrossObject, edgeProperties).test(edge)
 							&& this.edgepred.test(edge.asTriplet())),
-					true, nodes.keySet());
+					true, nset);
 		}
 
 		@Override
 		public Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint,
 				Collection<? extends R> allowedEdgeTypes, BiPredicate<IProperty<?>, Object> applyAcrossObject) {
+			Set<E> nset = self.V.keySet().parallelStream().filter((a) -> contains(a)).collect(Collectors.toSet());
 			return new EdgeTraversalIterator(startPoint, allowedEdgeTypes,
 					(edge) -> (RelationGraph.<E, R>constructPred(applyAcrossObject, edgeProperties).test(edge)
 							&& this.edgepred.test(edge.asTriplet())),
-					false, nodes.keySet());
+					false, nset);
 		}
 
 		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof IRelationGraph g) {
-				return this.nodes.keySet().equals(g.getNodeSetImmutable())
-						&& Sets.newHashSet(this.edgeIterator()).equals(Sets.newHashSet(g.edgeIterator()));
+				return this.getNodeSetImmutable().equals(g.getNodeSetImmutable()) && ImmutableSet
+						.copyOf(() -> this.edgeIterator()).equals(ImmutableSet.copyOf(() -> g.edgeIterator()));
 			}
 			return super.equals(obj);
 		}
 
 		@Override
-		public Set<R> getConnectingEdgeTypes(E node) {
+		public Set<R> getOutgoingEdgeTypes(E node) {
 			check(node);
-			return nodes.get(node).getAllEdges().stream().parallel()
-					.filter((a) -> edgepred.test(a.asTriplet()) && nodes.containsKey(a.getEnd().getValue()))
+			return self.V.get(node).getAllEdges().stream().parallel()
+					.filter((a) -> edgepred.test(a.asTriplet()) && contains(a.getEnd().getValue()))
 					.map((a) -> a.getType()).sequential().collect(Collectors.toSet());
 		}
 
 		@Override
 		public Set<E> getNeighbors(E node) {
 			check(node);
-			return nodes.get(node).getAllEdges().stream().parallel()
-					.filter((edge) -> edgepred.test(edge.asTriplet()) && nodes.containsKey(edge.getEnd().getValue()))
+			return self.V.get(node).getAllEdges().stream().parallel()
+					.filter((edge) -> edgepred.test(edge.asTriplet()) && contains(edge.getEnd().getValue()))
 					.map((edge) -> edge.getEnd().getValue()).sequential().collect(Collectors.toSet());
 		}
 
@@ -2377,34 +2558,32 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		@Override
 		public String edgeToString(E first, R second, E third, boolean includeEnds) {
 
-			return edgeToString(first, second, third, includeEnds);
+			return RelationGraph.this.edgeToString(first, second, third, includeEnds);
 		}
 
 		@Override
 		public Set<E> getNeighbors(E node, R type) {
 			check(node);
-			return nodes.get(node).getEdgesOfType(type).stream().parallel()
-					.filter((edge) -> edgepred.test(edge.asTriplet()) && nodes.containsKey(edge.getEnd().getValue()))
+			return self.V.get(node).getEdgesOfType(type).stream().parallel()
+					.filter((edge) -> edgepred.test(edge.asTriplet()) && contains(edge.getEnd().getValue()))
 					.map((edge) -> edge.getEnd().getValue()).sequential().collect(Collectors.toSet());
 		}
 
 		@Override
 		public Set<E> getNodeSetImmutable() {
-			return ImmutableSetView.from(this.nodes.keySet());
+			return self.V.keySet().stream().filter(this::contains).collect(Collectors.toUnmodifiableSet());
 		}
 
 		@Override
 		public Iterable<E> getBareNodes() {
-			return (Iterable<E>) () -> nodes.values().stream()
-					.filter((a) -> a.getAllEdges().stream().noneMatch(
-							(edge) -> edgepred.test(edge.asTriplet()) && nodes.containsKey(edge.getEnd().getValue())))
+			return (Iterable<E>) () -> self.V.values().stream().filter((a) -> this.contains(a.getValue()))
+					.filter((a) -> a.getAllEdges().stream()
+							.noneMatch((edge) -> edgepred.test(edge.asTriplet()) && contains(edge.getEnd().getValue())))
 					.map((a) -> a.getValue()).iterator();
 		}
 
 		@Override
 		public void removeBareNodes() {
-			if (nodes.isEmpty())
-				return;
 			Iterator<INode<E, R>> nod = nodes.values().iterator();
 			for (INode<E, R> node = nod.next(); nod.hasNext(); node = nod.next()) {
 				if (node.getAllEdges().stream().noneMatch(
@@ -2413,6 +2592,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 					remove(node.getValue());
 				}
 			}
+			self.removeIf((a) -> nodepred.test(a) && self.degree(a) == 0);
 		}
 
 		@Override
@@ -2430,7 +2610,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			check(one);
 			check(two);
 			if (!edgepred.test(Triplet.of(one, type, two))) {
-				throw new IllegalArgumentException("No such edge");
+				return null;
 			}
 			return self.getProperty(one, type, two, prop, computeIfAbsent);
 		}
@@ -2442,20 +2622,20 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		@Override
 		public boolean isEmpty() {
-			return this.nodes.isEmpty();
+			return !self.V.keySet().stream().anyMatch(this::contains);
 		}
 
 		@Override
 		public Iterator<E> iterator() {
-			return new NodeIterator(nodes);
+			return self.V.keySet().stream().filter(this::contains).iterator();
 		}
 
 		@Override
 		public boolean nodeHasConnections(Object one, R type) {
-			if (!nodes.containsKey(one))
+			if (!contains(one))
 				return false;
-			return nodes.get(one).getEdgesOfType(type).stream()
-					.anyMatch((edge) -> edgepred.test(edge.asTriplet()) && nodes.containsKey(edge.getEnd().getValue()));
+			return self.V.get(one).getEdgesOfType(type).stream()
+					.anyMatch((edge) -> edgepred.test(edge.asTriplet()) && contains(edge.getEnd().getValue()));
 		}
 
 		@Override
@@ -2464,7 +2644,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			return new NodeTraversalIterator(startPoint, allowedEdgeTypes,
 					(edge) -> (RelationGraph.<E, R>constructPred(applyAcrossObject, edgeProperties).test(edge)
 							&& this.edgepred.test(edge.asTriplet())),
-					true, nodes.keySet());
+					true, new FilteredCollectionView<>(self.V.keySet(), this::contains));
 		}
 
 		@Override
@@ -2473,28 +2653,34 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			return new NodeTraversalIterator(startPoint, allowedEdgeTypes,
 					(edge) -> (RelationGraph.<E, R>constructPred(applyAcrossObject, edgeProperties).test(edge)
 							&& this.edgepred.test(edge.asTriplet())),
-					false, nodes.keySet());
+					false, new FilteredCollectionView<>(self.V.keySet(), this::contains));
 		}
 
 		@Override
 		public boolean remove(Object o) {
 			if (nodes.remove(o) != null) {
 				return self.remove(o);
+			} else {
+				INode<E, R> node = self.V.get(o);
+				if (node != null && nodepred.test(node.getValue())) {
+					return self.remove(o);
+				}
 			}
 			return false;
 		}
 
 		@Override
 		public boolean removeAll(Collection<?> c) {
-			if (nodes.keySet().removeAll(c)) {
-				return self.removeAll(c);
+			boolean mod = false;
+			for (Object x : c) {
+				mod = this.remove(x) || mod;
 			}
-			return false;
+			return mod;
 		}
 
 		@Override
 		public boolean removeAllConnections(Object value) {
-			if (nodes.containsKey(value)) {
+			if (contains(value)) {
 				return self.removeAllConnections(value);
 			}
 			return false;
@@ -2502,7 +2688,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		@Override
 		public boolean removeAllConnections(Object value, Object other) {
-			if (nodes.containsKey(value) && nodes.containsKey(other)) {
+			if (contains(value) && contains(other)) {
 				return self.removeAllConnections(value, other);
 			}
 			return false;
@@ -2510,7 +2696,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		@Override
 		public boolean removeAllConnections(Object value, R type) {
-			if (nodes.containsKey(value)) {
+			if (contains(value)) {
 				return self.removeAllConnections(value, type);
 			}
 			return false;
@@ -2518,7 +2704,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		@Override
 		public boolean removeEdge(Object value, R type, Object other) {
-			if (nodes.containsKey(value) && nodes.containsKey(other)) {
+			if (contains(value) && contains(other) && containsEdge(value, type, other)) {
 				return self.removeEdge(value, type, other);
 			}
 			return false;
@@ -2526,16 +2712,15 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		@Override
 		public boolean retainAll(Collection<?> c) {
-			Set<E> diff = Sets.difference(nodes.keySet(), Sets.newHashSet(c));
-			if (nodes.keySet().removeAll(diff)) {
-				return self.removeAll(diff);
-			}
-			return false;
+			Set<E> diff = Sets.newHashSet(new FilteredCollectionView<>(self.V.keySet(), this::contains));
+			diff.removeAll(c);
+			nodes.keySet().removeAll(diff);
+			return self.removeAll(diff);
 		}
 
 		@Override
 		public int size() {
-			return nodes.size();
+			return new FilteredCollectionView<>(self.V.keySet(), this::contains).size();
 		}
 
 		@Override
@@ -2549,9 +2734,14 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		}
 
 		@Override
+		public IRelationGraph<E, R> subgraph(Predicate<? super E> nodes, Predicate<Triplet<E, R, E>> edgePred) {
+			return new SubGraphView(Collections.emptySet(), nodes.and(this::contains), edgepred.and(edgePred));
+		}
+
+		@Override
 		public SubGraphView subgraph(Iterable<? extends E> nodes) {
 			Set<E> elements = Sets.newHashSet(nodes);
-			if (!this.nodes.keySet().containsAll(elements)) {
+			if (!new FilteredCollectionView<>(self.V.keySet(), this::contains).containsAll(elements)) {
 				throw new IllegalArgumentException(elements + " not in graph: " + this.nodes.keySet());
 			}
 			return new SubGraphView(elements, edgepred);
@@ -2560,10 +2750,15 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		@Override
 		public SubGraphView subgraph(Iterable<? extends E> nodes, Predicate<Triplet<E, R, E>> edgePred) {
 			Set<E> elements = Sets.newHashSet(nodes);
-			if (!this.nodes.keySet().containsAll(elements)) {
+			if (!new FilteredCollectionView<>(self.V.keySet(), this::contains).containsAll(elements)) {
 				throw new IllegalArgumentException(elements + " not in graph: " + this.nodes.keySet());
 			}
 			return new SubGraphView(elements, edgepred.and(edgePred));
+		}
+
+		@Override
+		public boolean subgraphRemove(E node) {
+			return nodes.remove(node) != null;
 		}
 
 		@Override
@@ -2575,12 +2770,12 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 		@Override
 		public Object[] toArray() {
-			return nodes.keySet().toArray();
+			return new FilteredCollectionView<>(self.V.keySet(), this::contains).toArray();
 		}
 
 		@Override
 		public <T> T[] toArray(T[] a) {
-			return nodes.keySet().toArray(a);
+			return new FilteredCollectionView<>(self.V.keySet(), this::contains).toArray(a);
 		}
 
 		@Override
@@ -2589,7 +2784,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			NodeTraversalIterator iter = new NodeTraversalIterator(startPoint, allowedEdgeTypes,
 					(edge) -> (RelationGraph.<E, R>constructPred(applyAcrossObject, edgeProperties).test(edge)
 							&& this.edgepred.test(edge.asTriplet())),
-					true, this.nodes.keySet());
+					true, new FilteredCollectionView<>(self.V.keySet(), this::contains));
 			iter.forEachRemaining(forEachNode);
 			return iter.visited;
 		}
@@ -2600,7 +2795,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			NodeTraversalIterator iter = new NodeTraversalIterator(startPoint, allowedEdgeTypes,
 					(edge) -> (RelationGraph.<E, R>constructPred(applyAcrossObject, edgeProperties).test(edge)
 							&& this.edgepred.test(edge.asTriplet())),
-					false, this.nodes.keySet());
+					false, new FilteredCollectionView<>(self.V.keySet(), this::contains));
 			iter.forEachRemaining(forEachNode);
 			return iter.visited;
 		}
@@ -2616,11 +2811,13 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		}
 
 		@Override
-		public String representation(Function<E, String> converter, Function<R, String> edgeConverter) {
-			Set<IInvertibleEdge<E, R>> E = Sets.newHashSet(self.E
-					.values().stream().filter((e) -> edgepred.test(e.asTriplet())
-							&& nodes.containsKey(e.getStart().getValue()) && nodes.containsKey(e.getEnd().getValue()))
-					.iterator());
+		public String representation(Function<E, String> converter,
+				BiFunction<Triplet<E, R, E>, Map<IProperty<?>, Object>, String> edgeConverter) {
+			Set<IInvertibleEdge<E, R>> E = Sets
+					.newHashSet(self.E
+							.values().stream().filter((e) -> edgepred.test(e.asTriplet())
+									&& contains(e.getStart().getValue()) && contains(e.getEnd().getValue()))
+							.iterator());
 			StringBuilder builder = new StringBuilder("{\n\tNodes (" + nodes.size() + "/" + self.size() + ")=");
 			builder.append(String.join(",", (Iterable<String>) () -> nodes.keySet().stream().map(converter).iterator()))
 					.append(", ");
@@ -2629,7 +2826,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			Iterator<IInvertibleEdge<E, R>> edgeit = E.iterator();
 			for (int i = 0; i < E.size(); i++) {
 				IInvertibleEdge<E, R> edge = edgeit.next();
-				builder.append(edge.convertToString(converter, edgeConverter));
+				builder.append(edgeConverter.apply(edge.asTriplet(), edge.getPropertiesMap()));
 				if (i % cols == 0) {
 					builder.append("\n\t\t");
 				} else {
@@ -2641,13 +2838,19 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		}
 
 		@Override
+		public String representation(Function<E, String> converter, Function<R, String> edgeConverter) {
+			return representation(converter, (t, p) -> edgeToString(t, true));
+		}
+
+		@Override
 		public String toString() {
-			Set<IInvertibleEdge<E, R>> E = Sets.newHashSet(self.E
-					.values().stream().filter((e) -> edgepred.test(e.asTriplet())
-							&& nodes.containsKey(e.getStart().getValue()) && nodes.containsKey(e.getEnd().getValue()))
-					.iterator());
-			return this.getClass().getSimpleName() + "[V=" + this.nodes.size() + "/" + self.size() + ",E=" + E.size()
-					+ "/" + self.edgeCount() + "]";
+			Set<IInvertibleEdge<E, R>> E = Sets
+					.newHashSet(self.E
+							.values().stream().filter((e) -> edgepred.test(e.asTriplet())
+									&& contains(e.getStart().getValue()) && contains(e.getEnd().getValue()))
+							.iterator());
+			return this.getClass().getSimpleName() + "[V=" + self.V.keySet().stream().filter(this::contains).count()
+					+ "/" + self.size() + ",E=" + E.size() + "/" + self.edgeCount() + "]";
 		}
 
 		@Override
@@ -2666,7 +2869,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			check(one);
 			check(two);
 
-			this.nodes.get(one).getAllEdgesTo(two).forEach((edge) -> {
+			self.V.get(one).getAllEdgesTo(two).forEach((edge) -> {
 				if (edgepred.test(edge.asTriplet())) {
 					self.forEachEdgeProperty(one, two, prop, getSet);
 				}
@@ -2677,16 +2880,16 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		public <X> void forEachEdgeProperty(E one, IProperty<X> prop, Consumer<X> get) {
 			check(one);
 
-			nodes.get(one).getAllEdges().stream()
-					.filter((a) -> edgepred.test(a.asTriplet()) && nodes.containsKey(a.getEnd().getValue()))
+			self.V.get(one).getAllEdges().stream()
+					.filter((a) -> edgepred.test(a.asTriplet()) && contains(a.getEnd().getValue()))
 					.forEach((e) -> get.accept(e.getPropertyValue(prop)));
 		}
 
 		@Override
 		public <X> void forEachEdgeProperty(E one, IProperty<X> prop, Function<X, X> getSet) {
 			check(one);
-			nodes.get(one).getAllEdges().stream()
-					.filter((a) -> edgepred.test(a.asTriplet()) && nodes.containsKey(a.getEnd().getValue()))
+			self.V.get(one).getAllEdges().stream()
+					.filter((a) -> edgepred.test(a.asTriplet()) && contains(a.getEnd().getValue()))
 					.map((e) -> Pair.of(e, getSet.apply(e.getPropertyValue(prop))))
 					.forEach((pair) -> pair.getFirst().setPropertyValue(prop, pair.getSecond()));
 		}
@@ -2694,16 +2897,16 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		@Override
 		public <X> void forEachEdgeProperty(E one, R type, IProperty<X> prop, Consumer<X> get) {
 			check(one);
-			nodes.get(one).getEdgesOfType(type).stream()
-					.filter((a) -> edgepred.test(a.asTriplet()) && nodes.containsKey(a.getEnd().getValue()))
+			self.V.get(one).getEdgesOfType(type).stream()
+					.filter((a) -> edgepred.test(a.asTriplet()) && contains(a.getEnd().getValue()))
 					.forEach((e) -> get.accept(e.getPropertyValue(prop)));
 		}
 
 		@Override
 		public <X> void forEachEdgeProperty(E one, R type, IProperty<X> prop, Function<X, X> getSet) {
 			check(one);
-			nodes.get(one).getEdgesOfType(type).stream()
-					.filter((a) -> edgepred.test(a.asTriplet()) && nodes.containsKey(a.getEnd().getValue()))
+			self.V.get(one).getEdgesOfType(type).stream()
+					.filter((a) -> edgepred.test(a.asTriplet()) && contains(a.getEnd().getValue()))
 					.map((e) -> Pair.of(e, getSet.apply(e.getPropertyValue(prop))))
 					.forEach((pair) -> pair.getFirst().setPropertyValue(prop, pair.getSecond()));
 		}
@@ -2717,13 +2920,13 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		public IModifiableRelationGraph<E, R> deepCopy(Function<E, E> cloner) {
 			RelationGraph<E, R> newGraph = new RelationGraph<>();
 			newGraph.edgeProperties = self.edgeProperties;
-			for (E node : this.nodes.keySet()) {
+			for (E node : new FilteredCollectionView<>(self.V.keySet(), this::contains)) {
 				E n = cloner.apply(node);
 				newGraph.V.put(n, newGraph.new Node(n));
 			}
 			for (IInvertibleEdge<E, R> edge : E.values()) {
-				if (!edgepred.test(edge.asTriplet()) || !nodes.containsKey(edge.getStart().getValue())
-						|| !nodes.containsKey(edge.getEnd().getValue())) {
+				if (!edgepred.test(edge.asTriplet()) || !contains(edge.getStart().getValue())
+						|| !contains(edge.getEnd().getValue())) {
 					continue;
 				}
 				INode<E, R> start = newGraph.V.get(edge.getStart().getValue());
@@ -2746,7 +2949,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			RelationGraph<E2, R2> newGraph = new RelationGraph<>();
 			newGraph.edgeProperties = self.edgeProperties;
 			Map<E, E2> mappeds = null;
-			for (E node : this.nodes.keySet()) {
+			for (E node : new FilteredCollectionView<>(self.V.keySet(), this::contains)) {
 				E2 n = nmapper.apply(node);
 				newGraph.V.put(n, newGraph.new Node(n));
 
@@ -2758,8 +2961,8 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 				}
 			}
 			for (IInvertibleEdge<E, R> edge : E.values()) {
-				if (!edgepred.test(edge.asTriplet()) || !nodes.containsKey(edge.getStart().getValue())
-						|| !nodes.containsKey(edge.getEnd().getValue())) {
+				if (!edgepred.test(edge.asTriplet()) || !contains(edge.getStart().getValue())
+						|| !contains(edge.getEnd().getValue())) {
 					continue;
 				}
 				Object s1 = null;
@@ -2794,7 +2997,8 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		}
 
 		class SubGraphNodeIterator implements Iterator<E> {
-			private Iterator<E> nodes = SubGraphView.this.nodes.keySet().iterator();
+			private Iterator<E> nodes = new FilteredCollectionView<>(self.V.keySet(), SubGraphView.this::contains)
+					.iterator();
 			private E prevNode = null;
 
 			@Override
@@ -2810,6 +3014,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 
 			@Override
 			public void remove() {
+
 				if (prevNode == null) {
 					throw new IllegalStateException();
 				}

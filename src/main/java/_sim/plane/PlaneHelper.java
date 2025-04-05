@@ -27,6 +27,8 @@ public class PlaneHelper {
 	 * @return
 	 */
 	public static boolean canInteract(int p1, int p2) {
+		if (p1 == 0 || p2 == 0)
+			return true;
 		return MathUtils.findFirstPrimeFactor(p1, p2) != 1;
 	}
 

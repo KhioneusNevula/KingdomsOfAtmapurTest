@@ -8,6 +8,8 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 
 import _utilities.collections.ImmutableSetView;
+import things.biology.genes.IGenomeEncoding;
+import things.form.kinds.settings.IKindSettings;
 import things.form.material.condition.IMaterialCondition;
 import things.form.material.property.IMaterialProperty;
 import things.form.material.property.MaterialProperty;
@@ -15,6 +17,7 @@ import things.form.material.property.Phase;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.stains.IStain;
+import things.stains.Stain;
 
 /**
  * implementation of material
@@ -52,12 +55,29 @@ public class Material implements IMaterial {
 				if (stain.equals(stainInstance))
 					continue;
 				if (washing > stain.getSubstance().getProperty(MaterialProperty.STAINING)) {
-					parentForm.getOwner().getMap().queueAction(() -> onPart.removeStain(stain, true));
+					parentForm.getOwner().getMap().queueAction(() -> onPart.removeStain(stain.getSubstance(), true));
 				}
 			}
 		}
 		if (corrosion != 0) {
 			// TODO corrosion?
+		}
+		float remAmount = 1;
+		double randa = Math.random() * 0.5 + Math.random() * 0.5;
+		if (this.getProperty(MaterialProperty.PHASE).isGaseous()
+				|| randa < 1 - this.getProperty(MaterialProperty.STAINING)) {
+			if (randa < 1 - this.getProperty(MaterialProperty.STAINING)) {
+				remAmount = 1 - this.getProperty(MaterialProperty.STAINING);
+			}
+			int amt = (int) (stainInstance.getAmount() - remAmount);
+			parentForm.getOwner().getMap().queueAction(() -> {
+				// TODO generate a puddle
+				onPart.removeStain(this, true);
+				if (amt > 0) {
+					onPart.addStain(new Stain(this, amt), true);
+				}
+			});
+
 		}
 	}
 
@@ -85,6 +105,8 @@ public class Material implements IMaterial {
 		if (obj instanceof IMaterial mat) {
 			if (!this.name.equals(mat.name()))
 				return false;
+			if (!this.getDistinctProperties().equals(mat.getDistinctProperties()))
+				return false;
 			for (Map.Entry<IMaterialProperty<?>, Object> entry : this.properties.entrySet()) {
 				if (!mat.getProperty(entry.getKey()).equals(entry.getValue())) {
 					return false;
@@ -102,6 +124,21 @@ public class Material implements IMaterial {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public IMaterial generateMaterialFromSettings(IKindSettings genome) {
+		return this;
+	}
+
+	@Override
+	public boolean isGenerator() {
+		return false;
+	}
+
+	@Override
+	public boolean isBasisOf(IMaterial other) {
+		return this.equals(other);
 	}
 
 	@Override

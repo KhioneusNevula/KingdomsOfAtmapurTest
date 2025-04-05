@@ -23,7 +23,7 @@ public interface IMaterialProperty<E> {
 	 * 
 	 * @return
 	 */
-	public Class<E> getType();
+	public Class<? super E> getType();
 
 	/**
 	 * Return a default value for this property for a given material
@@ -31,5 +31,25 @@ public interface IMaterialProperty<E> {
 	 * @return
 	 */
 	public E getDefaultValue(IMaterial mat);
+
+	/**
+	 * Return a max value for this property for a given material. Return the default
+	 * if this stat cannot be conceptualized as having a max value
+	 * 
+	 * @return
+	 */
+	public default E getMaxValue(IMaterial mat) {
+		return this.getDefaultValue(mat);
+	}
+
+	/**
+	 * Return a min value for this property for a given material. Return the default
+	 * if this stat cannot be conceptualized as having a min value
+	 * 
+	 * @return
+	 */
+	public default E getMinValue(IMaterial mat) {
+		return this.getDefaultValue(mat);
+	}
 
 }

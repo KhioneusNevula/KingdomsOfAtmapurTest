@@ -2,12 +2,16 @@ package thinker.mind.emotions;
 
 import _utilities.property.IProperty;
 import thinker.concepts.IConcept;
+import thinker.mind.memory.IFeelingReason;
+import thinker.mind.perception.IPerceptor;
 
-public interface IFeeling extends IProperty<Float>, IConcept {
+/** Something which can be felt in the mind as a goal or desire */
+public interface IFeeling extends IProperty<Float>, IConcept, IFeelingReason {
 
-	public float min();
-
-	public float max();
+	@Override
+	default FeelingReasonType getReasonType() {
+		return FeelingReasonType.FEELING;
+	}
 
 	/**
 	 * If this is one of the fundamental motivations of the body, i.e. Satisfaction,
@@ -23,4 +27,5 @@ public interface IFeeling extends IProperty<Float>, IConcept {
 	 * @return
 	 */
 	public boolean isEmotion();
+
 }

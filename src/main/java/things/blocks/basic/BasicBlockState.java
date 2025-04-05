@@ -46,7 +46,7 @@ class BasicBlockState implements IBlockState {
 		if (this == obj)
 			return true;
 		if (obj instanceof IBlockState s) {
-			return this.block.equals(s);
+			return this.block.equals(s.getBlock());
 		}
 		return super.equals(obj);
 	}

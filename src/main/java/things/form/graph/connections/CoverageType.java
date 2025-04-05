@@ -9,6 +9,7 @@ import com.google.common.collect.Table;
 import _sim.RelativeSide;
 import _utilities.graph.IInvertibleRelationType;
 import _utilities.property.IProperty;
+import things.form.IPart;
 
 /**
  * TODO add parameters for the nature of the cover (solidness, transparency, and
@@ -107,6 +108,13 @@ public class CoverageType implements IInvertibleRelationType {
 	@Override
 	public CoverageType invert() {
 		return coverages.get(side, dir.opposite());
+	}
+
+	@Override
+	public String checkEndType(Object node) {
+		if (node instanceof IPart)
+			return null;
+		return "Node must be instanceof " + IPart.class.getSimpleName();
 	}
 
 	@Override

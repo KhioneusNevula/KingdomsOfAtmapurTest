@@ -1,10 +1,12 @@
 package thinker.concepts.general_types;
 
+import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 
-import thinker.concepts.IConcept;
+import things.interfaces.UniqueType;
 
-public interface IWhQuestionConcept extends IConcept {
+public interface IWhQuestionConcept extends IDescriptiveConcept {
 
 	/**
 	 * Indicates any possible question
@@ -35,6 +37,11 @@ public interface IWhQuestionConcept extends IConcept {
 		public UUID getQuestionID() {
 			return new UUID(0, 0);
 		}
+
+		@Override
+		public Collection<UniqueType> getDescriptiveTypes() {
+			return QuestionType.ANY.matchableTypes;
+		}
 	};
 
 	/**
@@ -51,6 +58,11 @@ public interface IWhQuestionConcept extends IConcept {
 	 */
 	public QuestionType getQuestionType();
 
+	@Override
+	default Collection<UniqueType> getDescriptiveTypes() {
+		return this.getQuestionType().matchableTypes;
+	}
+
 	/**
 	 * Creates a WHAT question, i.e. {@link QuestionType#ENTITY}
 	 * 
@@ -59,6 +71,26 @@ public interface IWhQuestionConcept extends IConcept {
 	 */
 	public static IWhQuestionConcept what(UUID id) {
 		return new WhQuestionConcept(id, QuestionType.ENTITY);
+	}
+
+	/**
+	 * Creates a WHAT_PART question, i.e. {@link QuestionType#PART}
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public static IWhQuestionConcept whatPart(UUID id) {
+		return new WhQuestionConcept(id, QuestionType.PART);
+	}
+
+	/**
+	 * Creates a WHAT_PHENOMENON question, i.e. {@link QuestionType#PHENOMENON}
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public static IWhQuestionConcept whatPhenomenon(UUID id) {
+		return new WhQuestionConcept(id, QuestionType.PHENOMENON);
 	}
 
 	/**
@@ -124,9 +156,13 @@ public interface IWhQuestionConcept extends IConcept {
 
 	public enum QuestionType {
 		/** A question type that represents an entity, item, or group */
-		ENTITY("what"),
+		ENTITY("what", UniqueType.FIGURE, UniqueType.FORM, UniqueType.COLLECTIVE),
+		/** A question type that represents a part */
+		PART("what_part", UniqueType.PART),
+		/** A question type that represents a phenomenon */
+		PHENOMENON("what_phenomenon", UniqueType.PHENOMENON),
 		/** A question type that represents a location */
-		PLACE("where"),
+		PLACE("where", UniqueType.PLACE),
 		/** A question type representing a time in history */
 		TIMELINE_TIME("when_timeline"),
 		/** A question type representing a cyclic time */
@@ -146,9 +182,11 @@ public interface IWhQuestionConcept extends IConcept {
 		ANY("whatever");
 
 		public final String name;
+		private Set<UniqueType> matchableTypes;
 
-		private QuestionType(String name) {
+		private QuestionType(String name, UniqueType... cvT) {
 			this.name = name;
+			this.matchableTypes = Set.of(cvT);
 		}
 	}
 }

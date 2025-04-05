@@ -2,7 +2,9 @@ package _utilities.graph;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -34,13 +36,35 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Se
 	/**
 	 * Return the subgraph with only the given nodes of this graph and edges only
 	 * selected by the given condition. This subgraph is a *view* of the main graph,
-	 * and reflects changes made to it. Similarly, a modifiable version of this
+	 * and reflects changes made to it, Similarly, a modifiable version of this
 	 * graph should modify the parent.
 	 * 
 	 * @param nodes
 	 * @return
 	 */
 	public IRelationGraph<E, R> subgraph(Iterable<? extends E> nodes, Predicate<Triplet<E, R, E>> edgePred);
+
+	/**
+	 * Return the subgraph with only nodes selected by the given condition and edges
+	 * only selected by the given condition. This subgraph is a *view* of the main
+	 * graph, and reflects changes made to it, INCLUDING new nodes being added to
+	 * the main graph that fit this condition. However, the subbgraph must ALSO
+	 * retain a record of the nodes which are added to it that DON'T fit the
+	 * condition. Similarly, a modifiable version of this graph should modify the
+	 * parent.
+	 * 
+	 * @param nodes
+	 * @return
+	 */
+	public IRelationGraph<E, R> subgraph(Predicate<? super E> nodes, Predicate<Triplet<E, R, E>> edgePred);
+
+	/**
+	 * Only relevant for subgraphs; this removes a node from a subgraph's
+	 * representation, but not from a full and proper graph
+	 */
+	public default boolean subgraphRemove(E node) {
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * Returns a mapped VIEW of this graph, but not a copy. Changes made to this
@@ -91,9 +115,10 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Se
 
 	/**
 	 * Get the value of a specified property on a specified edge. Return null if no
-	 * such property was assigned for this edge. Return default value from
-	 * {@link #edgeProperties} if no such property was assigned but a default value
-	 * is available. The returned item may not be represented in the actual graph
+	 * such property was assigned for this edge or if edge is nonexistent. Return
+	 * default value from {@link #edgeProperties} if no such property was assigned
+	 * but a default value is available. The returned item may not be represented in
+	 * the actual graph
 	 * 
 	 * @param <E>
 	 * @param one
@@ -218,7 +243,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Se
 	 * @param node
 	 * @return
 	 */
-	Set<R> getConnectingEdgeTypes(E node);
+	Set<R> getOutgoingEdgeTypes(E node);
 
 	/**
 	 * Number of edges in graph
@@ -313,6 +338,17 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Se
 	 * @return
 	 */
 	String representation(Function<E, String> converter, Function<R, String> edgeConverter);
+
+	/**
+	 * Returns a string showing every connection in this graph; each item is passed
+	 * through the given function, and each edge and its properties through the
+	 * other function, so that it might have a more complex representation as well
+	 * 
+	 * @param converter
+	 * @return
+	 */
+	String representation(Function<E, String> converter,
+			BiFunction<Triplet<E, R, E>, Map<IProperty<?>, Object>, String> edgeConverter);
 
 	/**
 	 * Traverse graph via BFS using only allowed edges, and return spanning tree of
@@ -463,7 +499,7 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Se
 
 	/**
 	 * Return a string representation of the given edge, including all properties as
-	 * well. Return an invented string if edge does not exist.
+	 * well.
 	 * 
 	 * @param first
 	 * @param second
@@ -488,5 +524,8 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Se
 	public default String edgeToString(Triplet<E, R, E> trip, boolean includeEnds) {
 		return edgeToString(trip.getFirst(), trip.getSecond(), trip.getThird(), includeEnds);
 	}
+
+	/** All existing types of edges in this graph */
+	public Collection<R> getEdgeTypes();
 
 }

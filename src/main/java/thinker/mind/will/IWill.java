@@ -3,19 +3,26 @@ package thinker.mind.will;
 import java.util.Collection;
 import java.util.UUID;
 
-import things.form.soma.component.IComponentPart;
-import thinker.individual.IMindSpirit;
-import thinker.mind.will.IThought.ThoughtType;
+import thinker.mind.util.IMindAccess;
+import thinker.mind.will.thoughts.IThought;
+import thinker.mind.will.thoughts.IThought.ThoughtType;
 
 public interface IWill {
 
 	/**
 	 * Returns the chance that a focused thought will get deleted randomly each
-	 * tick. This chance increases with the number of focused thoughts, though it
-	 * never reaches 1. It picks the focused thought that has been around for the
-	 * shortest time.
+	 * tick. this should be 0 if the amount of focused thoughts is less than
+	 * {@link #focusedThoughtsCap()}, and the chance increases with more focused
+	 * thoughts above the cap (though it ought to never reach 1). It picks the
+	 * focused thought that has been around for the shortest time.
 	 */
 	public float getMindStrainChance();
+
+	/**
+	 * the max number of focused thoughts allowed before they start getting deleted
+	 * randomly
+	 */
+	public int focusedThoughtsCap();
 
 	/** Returns the number of thoughts currently being focused */
 	public int getNumberOfFocusedThoughts();
@@ -58,7 +65,7 @@ public interface IWill {
 	 * @param thought
 	 * @return
 	 */
-	public boolean removeThought(IThought thought);
+	public void removeThought(IThought thought);
 
 	/**
 	 * Returns all thoughts of the given type
@@ -74,15 +81,15 @@ public interface IWill {
 	 * @param ofType
 	 * @return
 	 */
-	public boolean removeAllThoughts(ThoughtType ofType);
+	public void removeAllThoughts(ThoughtType ofType);
 
 	/**
-	 * Runs one will tick, i.e. tick of the mind
+	 * Runs one will tick, i.e. tick of the mind.
 	 * 
+	 * @param onPart   MAY BE NULL if this is called while spirit is untethered
 	 * @param inSpirit
 	 * @param ticks
 	 */
-	public void willTick(IMindSpirit inSpirit, IComponentPart onPart, Collection<? extends IComponentPart> access,
-			long ticks);
+	public void willTick(IMindAccess info);
 
 }

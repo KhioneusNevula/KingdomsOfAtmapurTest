@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import _utilities.MathUtils;
+
 public enum Plane implements IPlane {
 	/**
 	 * for things which can touch on any plane or sense on any plane

@@ -1,5 +1,7 @@
 package things.status_effect;
 
+import things.form.soma.component.IComponentPart;
+
 public class PartStatusEffectInstance implements IPartStatusEffectInstance {
 
 	private IPartStatusEffect effect;
@@ -28,9 +30,10 @@ public class PartStatusEffectInstance implements IPartStatusEffectInstance {
 	}
 
 	@Override
-	public int tick() {
+	public int tick(IComponentPart part, long tick) {
 		if (duration < 0)
 			return -1;
+		this.effect.effectTick(part, duration, tick);
 		return --duration;
 	}
 

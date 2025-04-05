@@ -81,7 +81,9 @@ public class FuelIntakeChannelCenter implements IChannelCenter {
 	@Override
 	public boolean intake(ISoma body, IComponentPart part, IComponentPart consumable, long ticks) {
 		// TODO food intake
-		return IChannelCenter.super.intake(body, part, consumable, ticks);
+		System.out.println("[" + body + "] Gulp.");
+		part.changeResourceAmount(foodResource, part.getResourceAmount(foodResource) + 0.1f, true);
+		return true;
 	}
 
 	@Override

@@ -1,16 +1,28 @@
 package thinker.actions;
 
-import java.util.Collection;
-
+import _utilities.graph.IModifiableRelationGraph;
 import _utilities.graph.IRelationGraph;
 import _utilities.property.IProperty;
 import things.form.condition.IFormCondition;
-import things.form.soma.component.IComponentPart;
-import thinker.IKnowledgeBase;
+import things.interfaces.UniqueType;
 import thinker.concepts.IConcept;
+import thinker.concepts.general_types.IPrincipleConcept;
+import thinker.concepts.profile.IProfile;
+import thinker.concepts.profile.TypeProfile;
 import thinker.concepts.relations.IConceptRelationType;
-import thinker.individual.IMindSpirit;
-import thinker.mind.will.IWill;
+import thinker.concepts.relations.actional.EventRelationType;
+import thinker.concepts.relations.descriptive.UniqueInterrelationType;
+import thinker.concepts.relations.technical.KnowledgeRelationType;
+import thinker.goals.IGoalConcept;
+import thinker.knowledge.base.IKnowledgeBase;
+import thinker.mind.util.IMindAccess;
+
+/** 
+ * Action structure:
+ * 
+ * 
+ * 
+ */
 
 /**
  * Concepts<br>:
@@ -22,9 +34,9 @@ import thinker.mind.will.IWill;
 	
 	Invert relation: Look for Satiation -increased_by-> (Actions)<br>
 	Actions: Eat (intention = THIS_ACTION -increases-> satiation), MagicEat (intention = THIS_ACTION -increases-> satiation)<br>
-	-> Eat, which has condition (TARGET -at_location-> Mouth, TARGET -categorized_as-> Food)
+	-> Eat, which has condition (TARGET -at_part-> PART_TARGET, PART_TARGET -is-> Mouth, TARGET -is-> Food)
 	
-	Invert relation: Since TARGET is Food, Look for action that uses Food -moved_by-> (Actions). Check these actions for the intention (TARGET -at-> mouth), then find the intersection, 
+	Invert relation: Since TARGET is Food, Look for action that uses Food -is-> TARGET -moved_by-> (Actions). Check these actions for the intention (TARGET -at-> mouth), then find the intersection, 
 		as well as including actions which have a relation to anything that has an -is- relation to Food or is_type_of or whatever. 
 	Actions: Put (intention = TARGET -at-> Part)
 	-> Put, which has condition (TARGET -at-> Hand, (generated condition) TARGET -characterized_as-> Food)
@@ -60,116 +72,92 @@ import thinker.mind.will.IWill;
  * @author borah
  *
  */
-public interface IActionConcept extends IConcept {
+public interface IActionConcept extends IConcept, IPrincipleConcept {
+
+	/**
+	 * Similar idea to
+	 * {@link IProfile#createAnonymousGenericProfile(String, UniqueType)}
+	 */
+	public static IActionConcept createGenericActionConcept(String name) {
+		return new IActionConcept() {
+
+			@Override
+			public String getUnderlyingName() {
+				return name;
+			}
+
+			@Override
+			public String toString() {
+				return "*>" + name;
+			}
+
+			@Override
+			public ConceptType getConceptType() {
+				return ConceptType.ACTION;
+			}
+
+			@Override
+			public IRelationGraph<IConcept, IConceptRelationType> generateIntendedResult(IKnowledgeBase knowledge) {
+				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
+			}
+
+			@Override
+			public IRelationGraph<IConcept, IConceptRelationType> generateCondition(IMindAccess info,
+					IRelationGraph<IConcept, IConceptRelationType> intention) {
+				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
+			}
+
+			@Override
+			public void executeTick(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention) {
+				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
+			}
+
+			@Override
+			public boolean canExecute(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention) {
+				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
+			}
+
+			@Override
+			public IFormCondition bodyConditions(IMindAccess info) {
+				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
+			}
+
+			@Override
+			public void abortAction(IMindAccess info) {
+				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
+			}
+
+		};
+	}
+
 	/**
 	 * An action in and of itself, represented for {@link #getIntention()}
 	 */
-	public static final IConcept THIS_ACTION = new IConcept() {
-		public ConceptType getConceptType() {
-			return ConceptType.THE_CONCEPT_ITSELF;
-		}
+	public static final IActionConcept THIS_ACTION = createGenericActionConcept("this_action");
 
-		@Override
-		public String getUnderlyingName() {
-			return "action_itself";
-		}
-
-		public String toString() {
-			return "concept_action_itself";
-		}
-	};
+	/** Incorporates an action's intention into a knowledge base */
+	public static void incorporateIntoKnowledgeBase(IActionConcept action, IKnowledgeBase base) {
+		IModifiableRelationGraph<IConcept, IConceptRelationType> intent = action.generateIntendedResult(base).editableOrCopy();
+		if (intent.contains(THIS_ACTION))
+			intent.set(THIS_ACTION, action);
+		base.learnConceptSubgraph(intent);
+		if (intent.contains(action))
+			intent.set(action, THIS_ACTION);
+	}
 
 	/**
-	 * A concept representing the target of an action
-	 */
-	public static final IConcept TARGET = new IConcept() {
-		public ConceptType getConceptType() {
-			return ConceptType.THE_CONCEPT_ITSELF;
-		}
-
-		@Override
-		public String getUnderlyingName() {
-			return "action_target";
-		}
-
-		public String toString() {
-			return "concept_action_target";
-		}
-	};
-
-	/**
-	 * A concept representing a "location" target of an action
-	 */
-	public static final IConcept LOCATION_TARGET = new IConcept() {
-		public ConceptType getConceptType() {
-			return ConceptType.THE_CONCEPT_ITSELF;
-		}
-
-		@Override
-		public String getUnderlyingName() {
-			return "action_location_target";
-		}
-
-		public String toString() {
-			return "concept_action_location_target";
-		}
-	};
-
-	/**
-	 * A concept representing the doer of an action.
-	 */
-	public static final IConcept ACTION_DOER = new IConcept() {
-		public ConceptType getConceptType() {
-			return ConceptType.THE_CONCEPT_ITSELF;
-		}
-
-		@Override
-		public String getUnderlyingName() {
-			return "action_doer";
-		}
-
-		public String toString() {
-			return "concept_action_doer";
-		}
-	};
-
-	/**
-	 * A concept representing the means of an action
-	 */
-	public static final IConcept MEANS = new IConcept() {
-		public ConceptType getConceptType() {
-			return ConceptType.THE_CONCEPT_ITSELF;
-		}
-
-		@Override
-		public String getUnderlyingName() {
-			return "action_means";
-		}
-
-		public String toString() {
-			return "concept_action_means";
-		}
-	};
-
-	/**
-	 * Return a graph of what conditions this action usually fulfills.
+	 * Return a graph of what conditions this action usually fulfills (and also what
+	 * questions it answers). Action roles must be satisfied by
 	 * 
 	 * @return
 	 */
-	public IRelationGraph<IConcept, IConceptRelationType> getIntention();
-
-	/**
-	 * Returns a graph of what knowledge this action imparts
-	 * 
-	 * @return
-	 */
-	public IRelationGraph<IConcept, IConceptRelationType> getKnowledgeIntention();
+	public IRelationGraph<IConcept, IConceptRelationType> generateIntendedResult(IKnowledgeBase knowledge);
 
 	/**
 	 * Return an {@link IFormCondition} of what is expected of the given body to
 	 * perform the action; the body will check if the condition is true when running
-	 * the action. Return null if it is impossible for this body to ever meet the
-	 * requisite conditions
+	 * the action. Return {@link IFormCondition#FALSE} if it is impossible for this
+	 * body to ever meet the requisite conditions
 	 * 
 	 * @param forSpirit
 	 * @param inWill
@@ -178,18 +166,17 @@ public interface IActionConcept extends IConcept {
 	 * @param ticks
 	 * @return
 	 */
-	public IFormCondition bodyConditions(IMindSpirit forSpirit, IWill inWill, IComponentPart inPart,
-			Collection<? extends IComponentPart> access, long ticks);
+	public IFormCondition bodyConditions(IMindAccess info);
 
 	/**
 	 * Called if a body condition suddenly returns false and the action is
 	 * physically prevented from continuing
 	 */
-	public void abortAction(IMindSpirit spirit, IWill will, IComponentPart inPart,
-			Collection<? extends IComponentPart> access, long ticks);
+	public void abortAction(IMindAccess info);
 
 	/**
-	 * If this action can currently execute. If not, call
+	 * If this action can currently execute. If not, first check
+	 * {@link #bodyConditions(IMindAccess)}, then call
 	 * {@link #generateCondition(IRelationGraph, IRelationGraph)} and/or
 	 * {@link #generateKnowledgeCondition(IRelationGraph, IRelationGraph)}. Returns
 	 * true as long as the action can execute;
@@ -203,9 +190,7 @@ public interface IActionConcept extends IConcept {
 	 * @param ticks
 	 * @return
 	 */
-	public boolean canExecute(IMindSpirit forSpirit, IWill inWill, IComponentPart inPart,
-			Collection<? extends IComponentPart> access, IRelationGraph<IConcept, IConceptRelationType> intention,
-			IRelationGraph<IConcept, IConceptRelationType> knowledgeIntention, long ticks);
+	public boolean canExecute(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention);
 
 	/**
 	 * Execute this action. Includes whatever intentions were used to create this
@@ -218,46 +203,36 @@ public interface IActionConcept extends IConcept {
 	 * @param ticks
 	 * @return
 	 */
-	public void executeTick(IMindSpirit forSpirit, IWill inWill, IComponentPart inPart,
-			Collection<? extends IComponentPart> access, IRelationGraph<IConcept, IConceptRelationType> intention,
-			IRelationGraph<IConcept, IConceptRelationType> knowledgeIntention, long ticks);
+	public void executeTick(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention);
 
 	/**
 	 * Creates a condition for this action based on the given intention. A condition
-	 * uses AND-matching by default; OR-matching must be specified
+	 * uses OR-matching. Conditions may only have some selection of these
+	 * components:
+	 * <ol>
+	 * <li>A {@link IGoalConcept#SATISFIER} role, which is linked by
+	 * {@link EventRelationType}s to some concept
+	 * <li>A profile extending from an {@link #TARGETS} role, which is linked by
+	 * {@link KnowledgeRelationType}s to {@link TypeProfile}s, which may themselves
+	 * be linked by {@link UniqueInterrelationType}s to still other
+	 * {@link TypeProfile}s
+	 * <li>A {@link #ACTION_DOER} role, which is linked by
+	 * {@link KnowledgeRelationType}s to {@link TypeProfile}s
+	 * <li>A {@link #MEANS} role, linked by {@link KnowledgeRelationType}s to
+	 * {@link TypeProfile}s
+	 * <li>A {@link #PARTS_USED} role, linked by {@link KnowledgeRelationType}s to
+	 * other {@link TypeProfile}s
+	 * </ol>
 	 * 
 	 * @return
 	 */
-	public IRelationGraph<IConcept, IConceptRelationType> generateCondition(IMindSpirit forSpirit, IWill inWill,
-			IComponentPart inPart, Collection<? extends IComponentPart> access,
-			IRelationGraph<IConcept, IConceptRelationType> intention,
-			IRelationGraph<IConcept, IConceptRelationType> knowledgeIntention);
+	public IRelationGraph<IConcept, IConceptRelationType> generateCondition(IMindAccess info,
+			IRelationGraph<IConcept, IConceptRelationType> intention);
 
-	/**
-	 * Creates a condition for what *knowledge* must be known based on the given
-	 * intention
-	 * 
-	 * @param intention
-	 * @return
-	 */
-	public IRelationGraph<IConcept, IConceptRelationType> generateKnowledgeCondition(IMindSpirit forSpirit,
-			IWill inWill, IComponentPart inPart, Collection<? extends IComponentPart> access,
-			IRelationGraph<IConcept, IConceptRelationType> intention,
-			IRelationGraph<IConcept, IConceptRelationType> knowledgeIntention);
-
-	/**
-	 * Integrates this action into a knowledge-base by embedding its relationships.
-	 * "Doer" indicates who is considered the doer of the action--may be
-	 * "selfConcept", might be a role, might be something else, etc Return null if
-	 * this cannot be accomplished for some reason
-	 */
-	public boolean integrateIntoKnowledgeBase(IKnowledgeBase base, IConcept doer);
-
-	/**
-	 * Whether this action directly satisfies some need, e.g. eating directly
-	 * satisfies a food need
-	 */
-	public boolean directlySatisfiesNeed();
+	@Override
+	default boolean isEventType() {
+		return true;
+	}
 
 	/** Used to change the {@linkplain Obligation}s of conditional relationships */
 	public static final IProperty<Obligation> OBLIGATION_PROP = IProperty.make("obligation", Obligation.class,

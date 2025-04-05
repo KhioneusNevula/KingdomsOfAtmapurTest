@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import _utilities.couplets.Pair;
 import _utilities.couplets.Triplet;
 import _utilities.property.IProperty;
 
@@ -40,6 +41,13 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 	 * @return
 	 */
 	boolean addEdge(E first, R type, E second);
+
+	/**
+	 * Checks if the classes of the two endpoints of the edge are permissible based
+	 * on {@link IInvertibleRelationType#checkEndType(Object)}, and return the
+	 * results of this
+	 */
+	Pair<Object, Object> checkEdgeEndsPermissible(Object first, IInvertibleRelationType type, Object second);
 
 	/**
 	 * Remove all edges coming from this node. Return false if no connections were
@@ -89,8 +97,9 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 
 	/**
 	 * Get the value of a specified property on a specified edge. Return null if no
-	 * such property was assigned for this edge. Return default value if no such
-	 * property was assigned but a default value is available.
+	 * such property was assigned for this edge, or if edge is not real. Return
+	 * default value if no such property was assigned but a default value is
+	 * available.
 	 * 
 	 * @param <E>
 	 * @param one

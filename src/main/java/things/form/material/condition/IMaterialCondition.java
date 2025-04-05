@@ -30,7 +30,8 @@ public interface IMaterialCondition {
 			.build();
 
 	/** Both plants and meat */
-	public static final IMaterialCondition PLANT_AND_MEAT = ONLY_PLANT.conditionCopyBuilder().combineWith(ONLY_MEAT).build();
+	public static final IMaterialCondition PLANT_AND_MEAT = ONLY_PLANT.conditionCopyBuilder().combineWith(ONLY_MEAT)
+			.build();
 
 	/**
 	 * Whether this eating condition allows the given material
@@ -48,7 +49,7 @@ public interface IMaterialCondition {
 	public Collection<IMaterialProperty<?>> getCheckedProperties();
 
 	/**
-	 * Returns the collection of allwoed values for each property
+	 * Returns the collection of allwoed values for each property.
 	 * 
 	 * @param <E>
 	 * @param forProp

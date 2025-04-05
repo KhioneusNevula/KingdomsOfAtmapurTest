@@ -45,16 +45,17 @@ public interface IPhysicsObject extends IMovableObject {
 	 * Apply a force of the given type on the given side without specifying an
 	 * origin (e.g. a magical force or something similar)
 	 * 
-	 * @param at         the component part the force is directed at
-	 * @param connection the connection between parts the force is directed at, if
-	 *                   any; may be null. Only used for Slice; should not be used
-	 *                   for others
+	 * @param at           the component part the force is directed at
+	 * @param connection   the connection between parts the force is directed at, if
+	 *                     any; may be null. Only used for Slice; should not be used
+	 *                     for others
 	 * @param force
 	 * @param types
+	 * @param acrossPlanes what planes the force is applied across
 	 * @return the result of the force's application
 	 */
 	public ForceResult applyForce(IComponentPart at, IComponentPart connection, IVector force, ForceType type,
-			RelativeSide onSide);
+			RelativeSide onSide, int acrossPlanes);
 
 	/**
 	 * Apply a force using the given component part, of the given type

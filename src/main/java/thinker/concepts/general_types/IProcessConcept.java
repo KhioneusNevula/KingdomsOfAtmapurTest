@@ -1,6 +1,7 @@
 package thinker.concepts.general_types;
 
-import things.interfaces.IUnique;
+import java.util.UUID;
+
 import thinker.concepts.IConcept;
 
 /**
@@ -9,6 +10,7 @@ import thinker.concepts.IConcept;
  * @author borah
  *
  */
-public interface IProcessConcept extends IConcept, IUnique {
+public interface IProcessConcept extends IConcept {
 
+	public UUID getUUID();
 }

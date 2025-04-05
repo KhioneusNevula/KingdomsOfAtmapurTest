@@ -18,6 +18,7 @@ import things.form.kinds.IKind;
 import things.form.material.IMaterial;
 import things.form.shape.IShape;
 import things.interfaces.IUnique;
+import things.interfaces.UniqueType;
 import things.stains.IStain;
 
 /**
@@ -28,6 +29,11 @@ import things.stains.IStain;
  * @param <P>
  */
 public interface IForm<P extends IPart> extends Cloneable, IUnique {
+
+	@Override
+	default UniqueType getUniqueType() {
+		return UniqueType.FORM;
+	}
 
 	/**
 	 * Return the kind used to generate this body
@@ -51,7 +57,7 @@ public interface IForm<P extends IPart> extends Cloneable, IUnique {
 	 * 
 	 * @return
 	 */
-	public IRelationGraph<P, IPartConnection> getRepresentationGraph();
+	public IRelationGraph<P, IPartConnection> getPartGraph();
 
 	/**
 	 * Returns all parts in this with a specific name
@@ -85,8 +91,10 @@ public interface IForm<P extends IPart> extends Cloneable, IUnique {
 	 * @param toPart
 	 * @param newPart
 	 * @param coveringsides the sides of the other part that this body part covers
+	 * @param changeOwner   whether to change this part's owner
 	 */
-	public boolean attach(P newPart, P toPart, IPartConnection connectionType, Collection<RelativeSide> coveringsides);
+	public boolean attach(P newPart, P toPart, IPartConnection connectionType, Collection<RelativeSide> coveringsides,
+			boolean changeOwner);
 
 	/**
 	 * Called when part of this Form experiences a change in material (e.g.

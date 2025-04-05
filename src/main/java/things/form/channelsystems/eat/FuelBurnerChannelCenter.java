@@ -117,6 +117,22 @@ public class FuelBurnerChannelCenter<B extends Comparable<?>> implements IChanne
 		IChannelCenter.super.automaticTick(body, part, ticks);
 		// TODO stomachs make resources
 		// TODO pump resources from mouth to stomach
+		for (IComponentPart conPart : body.getPartGraph().getNeighbors(part,
+				system.getChannelConnectionTypes().iterator().next())) {
+			float ores = conPart.getResourceAmount(inResource);
+			if (ores == 0)
+				continue;
+			float tres = part.getResourceAmount(inResource);
+			float overflow = ores + tres - inResource.getMaxValue();
+			if (overflow < 0) {
+				part.changeResourceAmount(inResource, ores + tres, true);
+				conPart.changeResourceAmount(inResource, 0, true);
+			} else {
+				conPart.changeResourceAmount(inResource, overflow, true);
+				part.changeResourceAmount(inResource, inResource.getMaxValue(), true);
+			}
+			break;
+		}
 
 		float food = part.getResourceAmount(this.inResource);
 		float rate = part.getStat(FUEL_CONVERSION_RATE);

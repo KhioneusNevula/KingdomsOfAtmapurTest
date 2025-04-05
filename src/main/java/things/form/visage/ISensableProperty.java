@@ -1,10 +1,7 @@
 package things.form.visage;
 
-import java.util.Collection;
-
 import _utilities.property.IProperty;
 import things.form.IPart;
-import things.form.sensing.ISensor;
 
 /**
  * Property of an object that can be sensed; only accepts discrete values
@@ -21,13 +18,6 @@ public interface ISensableProperty<E> extends IProperty<E> {
 	public E getPropertyFromPart(IPart fromPart);
 
 	/**
-	 * What sensors can sense this property
-	 * 
-	 * @return
-	 */
-	public Collection<ISensor> getSensors();
-
-	/**
 	 * Whether this is a complex sensable trait
 	 * 
 	 * @return
@@ -41,5 +31,8 @@ public interface ISensableProperty<E> extends IProperty<E> {
 	 * @return
 	 */
 	public int[] getComplexScore(IPart part, IVisage<?> visage);
+
+	/** If this property can only be sensed when focused */
+	public boolean requiresFocus();
 
 }

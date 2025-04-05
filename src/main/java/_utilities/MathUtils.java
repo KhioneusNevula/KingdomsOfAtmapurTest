@@ -91,6 +91,8 @@ public final class MathUtils {
 	 * @return
 	 */
 	public static int findFirstPrimeFactor(int n1, int n2) {
+		if (n1 == 1 || n2 == 1)
+			return 1;
 		for (int prime : primes) {
 			if (n1 % prime == 0 && n2 % prime == 0)
 				return prime;

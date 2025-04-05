@@ -5,7 +5,10 @@ import java.util.Collections;
 import java.util.Map;
 
 import things.form.channelsystems.IResource;
+import things.form.kinds.settings.IKindSettings;
 import things.form.material.condition.IMaterialCondition;
+import things.form.material.generator.IMaterialGeneratorResource;
+import things.form.material.generator.PropertyMapperMaterialGeneratorResource.MaterialGeneratorBuilder;
 import things.form.material.property.IMaterialProperty;
 import things.form.material.property.MaterialProperty;
 import things.form.material.property.Phase;
@@ -13,7 +16,7 @@ import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.stains.IStain;
 
-public interface IMaterial extends IResource<Float>, IMaterialCondition {
+public interface IMaterial extends IResource<Float>, IMaterialCondition, IMaterialGeneratorResource {
 
 	/**
 	 * Material representing the lack of a material, e.g. for a hole
@@ -22,7 +25,7 @@ public interface IMaterial extends IResource<Float>, IMaterialCondition {
 
 		@Override
 		public String name() {
-			return "_none";
+			return "no-material";
 		}
 
 		@Override
@@ -40,7 +43,22 @@ public interface IMaterial extends IResource<Float>, IMaterialCondition {
 
 		@Override
 		public void stainTick(IComponentPart onPart, IStain stainInstance, ISoma parentForm, long ticks) {
+			throw new UnsupportedOperationException();
+		}
 
+		@Override
+		public IMaterial generateMaterialFromSettings(IKindSettings genome) {
+			return this;
+		}
+
+		@Override
+		public boolean isGenerator() {
+			return false;
+		}
+
+		@Override
+		public boolean isBasisOf(IMaterial other) {
+			return other == this;
 		}
 	};
 
@@ -69,13 +87,19 @@ public interface IMaterial extends IResource<Float>, IMaterialCondition {
 	public String name();
 
 	/**
-	 * Called every tick this material exists as a stain
+	 * Called every tick this material exists as a stain. Queue a removal if the
+	 * stain should be removed.
 	 * 
 	 * @param onPart
 	 * @param form
 	 * @param ticks
 	 */
 	public void stainTick(IComponentPart onPart, IStain stainInstance, ISoma parentForm, long ticks);
+
+	@Override
+	default IMaterial getMaterialBase() {
+		return this;
+	}
 
 	/**
 	 * If this is the "None" material
@@ -151,9 +175,23 @@ public interface IMaterial extends IResource<Float>, IMaterialCondition {
 		return instance - instance2;
 	}
 
+	/**
+	 * Static version of {@link IResource#divide(Comparable, int)}
+	 * 
+	 * @return
+	 */
+	public static Float divideStatic(Float instance, int instance2) {
+		return instance / instance2;
+	}
+
 	@Override
 	default Float subtract(Float g, Float l) {
 		return subtractStatic(g, l);
+	}
+
+	@Override
+	default Float divide(Float g, int by) {
+		return divideStatic(g, by);
 	}
 
 	@Override
@@ -191,6 +229,12 @@ public interface IMaterial extends IResource<Float>, IMaterialCondition {
 			return this;
 		}
 
+		/** Deletes the property indicated */
+		public MaterialBuilder delProp(IMaterialProperty<?> prop) {
+			innerInstance.properties.remove(prop);
+			return this;
+		}
+
 		public MaterialBuilder prop(Map<? extends IMaterialProperty<?>, ?> props) {
 			innerInstance.properties.putAll(props);
 			return this;
@@ -205,6 +249,23 @@ public interface IMaterial extends IResource<Float>, IMaterialCondition {
 
 		public Material build() {
 			return innerInstance;
+		}
+
+		/**
+		 * Returns a builder to turn this material into a generator rather than a pure
+		 * material
+		 */
+		public MaterialGeneratorBuilder generator() {
+			return IMaterialGeneratorResource.builder(innerInstance, "generator_" + innerInstance.name);
+		}
+
+		/**
+		 * Returns a builder to turn this material into a (genetic-based,
+		 * i.e.{@link IMaterialGeneratorResource#geneticEncodedMaterial}) generator
+		 * rather than a pure material
+		 */
+		public MaterialGeneratorBuilder geneticGenerator() {
+			return IMaterialGeneratorResource.geneticEncodedMaterial(innerInstance, "generator_" + innerInstance.name);
 		}
 	}
 

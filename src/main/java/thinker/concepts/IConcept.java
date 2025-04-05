@@ -1,21 +1,24 @@
 package thinker.concepts;
 
+import things.form.soma.ISoma;
 import thinker.actions.IActionConcept;
-import thinker.concepts.general_types.IIdentityConcept;
-import thinker.concepts.general_types.ILabelConcept;
-import thinker.concepts.general_types.ILogicConcept;
+import thinker.concepts.general_types.IConnectorConcept;
 import thinker.concepts.general_types.IPrincipleConcept;
 import thinker.concepts.general_types.IProcessConcept;
-import thinker.concepts.general_types.IProfile;
+import thinker.concepts.general_types.IPropertyConcept;
 import thinker.concepts.general_types.IValueConcept;
 import thinker.concepts.general_types.IWhQuestionConcept;
+import thinker.concepts.profile.IProfile;
+import thinker.concepts.relations.technical.KnowledgeRelationType;
+import thinker.goals.IGoalConcept;
+import thinker.knowledge.timeline.ITimeline.ITimelineNode;
+import thinker.language.words.ILexicon.DeicticConcept;
 import thinker.mind.emotions.IFeeling;
-import thinker.mind.memory.timeline.ITimeline.ITimelineNode;
 import thinker.mind.needs.INeedConcept;
 
 /**
  * A Concept is an individual piece of info that can be stored in a relations
- * graph to draw connections between things
+ * graph to draw connections between things Some concept rules:
  * 
  * @author borah
  *
@@ -29,24 +32,27 @@ public interface IConcept {
 	 *
 	 */
 	public static enum ConceptType {
-		/** The concept of an action performed to complete a task */
-		ACTION,
+		/** a property of something, either binary-valued or having enumerated values */
+		PROPERTY,
+		/** the value of a property, or a numeric count */
+		VALUE,
+		/** a profile representing an individual */
+		PROFILE,
+		/**
+		 * Used to designate a pseudo-concept storing info about how to identify a
+		 * physical phenomenon using a concept.
+		 */
+		C_ASSOCIATION_INFO,
 		/** a concept of a general idea or event type defined only by its relations */
 		PRINCIPLE,
-		/** a label for something, marking it as being or not being that */
-		LABEL,
-		/** a quantity */
-		VALUE,
+		/** The concept of an action performed to complete a task */
+		ACTION,
+		/** a concept of a physical {@link ISoma} that can be constructed */
+		RECIPE,
 		/** a process with a unique ID */
 		PROCESS,
-		/** TODO an enumerated trait */
-		ENUM_TRAIT,
-		/** TODO a trait that can be sensed */
-		SENSABLE_TRAIT,
-		/** a concept to hold a group identity */
-		IDENTITY,
 		/** TODO a concept that describes a historical event */
-		EVENT,
+		MEMORY,
 		/** a concept to encapsulate TimelineNodes */
 		TIMELINE_POINT,
 		/** TODO A concept to encapsulate times on a Clock */
@@ -57,70 +63,46 @@ public interface IConcept {
 		NEED,
 		/** TODO a ritual */
 		RITUAL,
-		/** a profile representing an individual */
-		PROFILE,
 		/** TODO a linguistic lexical item */
 		WORD,
-		/** TODO a linguistic feature, used for stuff like featural marking of gender */
-		LFEATURE,
 		/**
 		 * an identity-less profile-like concept that acts as the answer to a question,
 		 * e.g. "(WH_Question) -place_of-> Food. These are often associated with Actions
 		 * and have independent ids
 		 */
 		WH_QUESTION,
+		/** A concept indicating a desired set of circumstances */
+		GOAL,
+		/** TODO a linguistic feature, used for stuff like featural marking of gender */
+		LFEATURE,
 		/** An AND or OR connector to connect multiple relations */
-		LOGIC_CONNECTOR,
-		/**
-		 * Used to designate a pseudo-concept storing info about associations between
-		 * concepts and physical phenomena
-		 */
-		ASSOCIATION_INFO,
-		/**
-		 * the concept type representing the Concept that represents something itself.
-		 * In the case of a GoalCondition, this indicates whatever satisfies the goal.
-		 * In the case of a Noosphere, the Existence concept is used
-		 */
-		THE_CONCEPT_ITSELF,
+		CONNECTOR,
+		/** Used by {@link DeicticConcept}s */
+		DEIXIS,
 		/** something else */
 		OTHER,
-		/** nothing, only applies to {@link #NONE} */
+		/** nothing */
 		NONE
 	}
 
-	public static final IConcept EXISTENCE = new IConcept() {
-		@Override
-		public ConceptType getConceptType() {
-			return ConceptType.THE_CONCEPT_ITSELF;
-		}
+	/**
+	 * The idea of need as a foundation to action. Linked to needs by the
+	 * {@link KnowledgeRelationType#IS_PRINCIPLE_OF} relation.
+	 */
+	public static final IPrincipleConcept NECESSITY = IPrincipleConcept.createGenericFundamentalPrinciple("NECESSITY");
 
-		@Override
-		public String getUnderlyingName() {
-			return "existence_itself";
-		}
+	/**
+	 * The idea of wanting as a foundation to action. Linked to
+	 * {@link IGoalConcept}s by the {@link KnowledgeRelationType#IS_PRINCIPLE_OF}
+	 * relation.
+	 */
+	public static final IPrincipleConcept DESIRE = IPrincipleConcept.createGenericFundamentalPrinciple("DESIRE");
 
-		public String toString() {
-			return "Existence";
-		}
-	};
+	/** The idea of existence itself */
+	public static final IPrincipleConcept EXISTENCE = IPrincipleConcept.createGenericFundamentalPrinciple("EXISTENCE");
 
-	public static final IConcept NOTHING = new IConcept() {
-
-		@Override
-		public String getUnderlyingName() {
-			return "nothing";
-		}
-
-		@Override
-		public ConceptType getConceptType() {
-			return ConceptType.NONE;
-		}
-
-		@Override
-		public String toString() {
-			return "Nothing";
-		}
-	};
+	/** The idea of nonexistence or anti-existence itself */
+	public static final IPrincipleConcept NOTHING = IPrincipleConcept.createGenericFundamentalPrinciple("NOTHING");
 
 	/**
 	 * Return the type of this concept
@@ -163,8 +145,8 @@ public interface IConcept {
 	 * 
 	 * @return
 	 */
-	public default ILabelConcept asLabel() {
-		return (ILabelConcept) this;
+	public default IPropertyConcept asLabel() {
+		return (IPropertyConcept) this;
 	}
 
 	/**
@@ -215,21 +197,12 @@ public interface IConcept {
 	 */
 
 	/**
-	 * Casts this to an identity concept
-	 * 
-	 * @return
-	 */
-	public default IIdentityConcept asIdentity() {
-		return (IIdentityConcept) this;
-	}
-
-	/**
 	 * Casts this to an event concept
 	 * 
 	 * @return
 	 */
 	/**
-	 * public default IEventConcept asEvent() { return (IEventConcept) this; }
+	 * public default IMemoryConcept asEvent() { return (IMemoryConcept) this; }
 	 */
 
 	/**
@@ -309,8 +282,8 @@ public interface IConcept {
 	 * 
 	 * @return
 	 */
-	public default ILogicConcept asLogic() {
-		return (ILogicConcept) this;
+	public default IConnectorConcept asLogic() {
+		return (IConnectorConcept) this;
 	}
 
 }

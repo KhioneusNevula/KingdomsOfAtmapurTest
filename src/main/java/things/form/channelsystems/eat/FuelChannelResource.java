@@ -57,6 +57,11 @@ public class FuelChannelResource implements IResource<Float> {
 	}
 
 	@Override
+	public Float divide(Float g, int by) {
+		return g / by;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof FuelChannelResource rs) {
 			return this.name.equals(rs.name()) && this.allowedFood.equals(rs.allowedFood);

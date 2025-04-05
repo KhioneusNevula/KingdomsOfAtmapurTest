@@ -3,7 +3,7 @@ package thinker.concepts.general_types;
 import thinker.concepts.IConcept;
 
 /**
- * A concept representing a single integer number
+ * A concept representing an enumerable value (a number or enum)
  * 
  * @author borah
  *
@@ -11,9 +11,9 @@ import thinker.concepts.IConcept;
 public interface IValueConcept extends IConcept {
 
 	/**
-	 * Return the quantity stored in this concept
+	 * Return the value stored in this concept
 	 * 
 	 * @return
 	 */
-	public int getQuantity();
+	public Comparable<?> getValue();
 }

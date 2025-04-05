@@ -12,9 +12,8 @@ import things.form.soma.stats.IPartStat;
 public class StandardHolePart extends StandardComponentPart {
 
 	public StandardHolePart(String name, UUID id, IShape shape, float size, int planes,
-			Collection<? extends IPartAbility> abilities, Map<? extends IPartStat<?>, ? extends Object> stats,
-			Collection<? extends IMaterial> embeddedMaterials) {
-		super(name, id, IMaterial.NONE, shape, size, planes, abilities, stats, embeddedMaterials);
+			Collection<? extends IPartAbility> abilities, Map<? extends IPartStat<?>, ? extends Object> stats) {
+		super(name, id, IMaterial.NONE, shape, size, planes, abilities, stats);
 	}
 
 	@Override

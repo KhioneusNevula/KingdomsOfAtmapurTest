@@ -2,7 +2,9 @@ package _utilities.graph;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -10,6 +12,7 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Iterators;
 
+import _utilities.collections.CollectionUtils;
 import _utilities.couplets.Triplet;
 import _utilities.property.IProperty;
 
@@ -184,8 +187,8 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
-	public Set<R> getConnectingEdgeTypes(E node) {
-		return inner.getConnectingEdgeTypes(node);
+	public Set<R> getOutgoingEdgeTypes(E node) {
+		return inner.getOutgoingEdgeTypes(node);
 	}
 
 	@Override
@@ -196,6 +199,11 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	@Override
 	public Iterator<Triplet<E, R, E>> edgeIterator() {
 		return Iterators.unmodifiableIterator(inner.edgeIterator());
+	}
+
+	@Override
+	public Collection<R> getEdgeTypes() {
+		return CollectionUtils.immutableCollection(inner.getEdgeTypes());
 	}
 
 	@Override
@@ -284,6 +292,11 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	}
 
 	@Override
+	public IRelationGraph<E, R> subgraph(Predicate<? super E> nodes, Predicate<Triplet<E, R, E>> edgePred) {
+		return ImmutableGraphView.of(inner.subgraph(nodes, edgePred));
+	}
+
+	@Override
 	public String representation() {
 		return this.representation(Object::toString);
 	}
@@ -296,6 +309,12 @@ public class ImmutableGraphView<E, R extends IInvertibleRelationType> implements
 	@Override
 	public String representation(Function<E, String> converter, Function<R, String> edgeConverter) {
 
+		return "ImmutableView{" + inner.representation(converter, edgeConverter) + "}";
+	}
+
+	@Override
+	public String representation(Function<E, String> converter,
+			BiFunction<Triplet<E, R, E>, Map<IProperty<?>, Object>, String> edgeConverter) {
 		return "ImmutableView{" + inner.representation(converter, edgeConverter) + "}";
 	}
 

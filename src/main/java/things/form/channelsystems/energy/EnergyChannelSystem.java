@@ -4,17 +4,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import _sim.world.GameMap;
 import _utilities.couplets.Triplet;
 import things.form.channelsystems.ChannelNeed;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
+import things.form.channelsystems.IChannelNeed;
 import things.form.channelsystems.IChannelSystem;
 import things.form.graph.connections.IPartConnection;
 import things.form.graph.connections.PartConnection;
+import things.form.kinds.settings.IKindSettings;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import thinker.individual.IMindSpirit;
+import thinker.mind.util.IMindAccess;
 
 public class EnergyChannelSystem implements IChannelSystem {
 
@@ -23,7 +26,7 @@ public class EnergyChannelSystem implements IChannelSystem {
 	private EnergyChannel channel;
 	private String controlCenterPart;
 	private EnergyGeneratorChannelCenter generatorType;
-	private ChannelNeed energyChannelNeed;
+	private IChannelNeed energyChannelNeed;
 
 	public EnergyChannelSystem(String name, String controlCenterPart, float maxStorable) {
 		this.name = name;
@@ -45,14 +48,14 @@ public class EnergyChannelSystem implements IChannelSystem {
 	}
 
 	@Override
-	public Collection<ChannelNeed> getChannelSystemNeeds() {
+	public Collection<IChannelNeed> getChannelSystemNeeds() {
 		return Collections.singleton(energyChannelNeed);
 	}
 
 	@Override
-	public float getNeedLevel(IMindSpirit spirit, IComponentPart body, ChannelNeed forNeed) {
-		// TODO energy channel need
-		return IChannelSystem.super.getNeedLevel(spirit, body, forNeed);
+	public float getNeedLevel(IChannelNeed forNeed, IMindAccess info) {
+		return (float) (info.partAccess().stream().mapToDouble((x) -> x.getResourceAmount(this.resource)).sum()
+				/ info.partAccess().size());
 	}
 
 	@Override
@@ -101,12 +104,12 @@ public class EnergyChannelSystem implements IChannelSystem {
 	}
 
 	@Override
-	public Collection<? extends IComponentPart> populateBody(ISoma body) {
+	public Collection<? extends IComponentPart> populateBody(ISoma body, IKindSettings set, GameMap world) {
 		Collection<IComponentPart> brains = body.getPartsByName(controlCenterPart);
 		for (IComponentPart brain : brains) {
 			brain.addAbility(generatorType, true);
 			for (Triplet<IComponentPart, IPartConnection, IComponentPart> edge : (Iterable<Triplet<IComponentPart, IPartConnection, IComponentPart>>) () -> body
-					.getRepresentationGraph()
+					.getPartGraph()
 					.edgeTraversalIteratorBFS(brain, Set.copyOf(PartConnection.attachments()), (a, b) -> true)) {
 				body.addChannel(edge.getFirst(), channel, edge.getThird(), true);
 			}
@@ -130,9 +133,8 @@ public class EnergyChannelSystem implements IChannelSystem {
 	@Override
 	public void onBodyNew(ISoma body, IComponentPart gained, IPartConnection connection, IComponentPart to,
 			boolean isNew) {
-		if (to.embeddedMaterials().containsAll(channel.getVectorMaterials())) {
-			body.addChannel(to, channel, gained, false);
-		}
+		body.addChannel(to, channel, gained, false);
+
 	}
 
 }

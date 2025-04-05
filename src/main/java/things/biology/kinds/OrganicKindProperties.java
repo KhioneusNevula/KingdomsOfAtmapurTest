@@ -3,7 +3,7 @@ package things.biology.kinds;
 import java.awt.Color;
 
 import _utilities.property.IProperty;
-import things.biology.genes.IGenome;
+import things.biology.genes.IGenomeEncoding;
 import things.form.material.condition.IMaterialCondition;
 
 public class OrganicKindProperties {
@@ -14,7 +14,7 @@ public class OrganicKindProperties {
 	/**
 	 * The genome of this body
 	 */
-	public static final IProperty<IGenome> GENOME = IProperty.make("genome", IGenome.class, IGenome.NONE);
+	public static final IProperty<IGenomeEncoding> GENOME = IProperty.make("genome", IGenomeEncoding.class, IGenomeEncoding.NONE);
 
 	/**
 	 * The color of this body's blood

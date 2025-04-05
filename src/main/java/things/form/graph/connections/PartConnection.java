@@ -3,6 +3,8 @@ package things.form.graph.connections;
 import java.util.Collection;
 import java.util.Set;
 
+import things.form.IPart;
+
 public enum PartConnection implements IPartConnection {
 	/**
 	 * indicates two things are joined by a severable connection
@@ -38,6 +40,13 @@ public enum PartConnection implements IPartConnection {
 	@Override
 	public PartConnection invert() {
 		return reverse;
+	}
+
+	@Override
+	public String checkEndType(Object node) {
+		if (node instanceof IPart)
+			return null;
+		return node + " is not an instance of " + IPart.class.getSimpleName();
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package things.status_effect;
 
+import things.form.soma.component.IComponentPart;
+
 public interface IPartStatusEffectInstance extends Cloneable {
 
 	/**
@@ -25,11 +27,11 @@ public interface IPartStatusEffectInstance extends Cloneable {
 
 	/**
 	 * Decrease the duration by 1 and return the new tick it's at; return -1 if the
-	 * duration is negative
+	 * duration is negative. Also do a tick for the status effect
 	 * 
 	 * @return
 	 */
-	public int tick();
+	public int tick(IComponentPart onPart, long tick);
 
 	/**
 	 * Set the duration of the effect. If negative, the effect is eternal

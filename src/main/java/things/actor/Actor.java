@@ -2,17 +2,22 @@ package things.actor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import _main.WorldGraphics;
+import _graphics.WorldGraphics;
 import _sim.MapLayer;
 import _sim.RelativeSide;
 import _sim.dimension.IDimensionTag;
 import _sim.plane.Plane;
+import _sim.plane.PlaneHelper;
 import _sim.vectors.IVector;
 import _sim.world.GameMap;
+import _utilities.graph.IRelationGraph;
 import things.blocks.IBlockState;
 import things.form.IForm;
+import things.form.graph.connections.IPartConnection;
 import things.form.graph.connections.PartConnection;
 import things.form.kinds.IKind;
 import things.form.kinds.settings.IKindSettings;
@@ -23,10 +28,10 @@ import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.form.visage.IVisage;
 import things.interfaces.IUnique;
+import things.interfaces.UniqueType;
 import things.physics_and_chemistry.ForceResult;
 import things.physics_and_chemistry.ForceType;
-import thinker.concepts.general_types.IProfile.ProfileType;
-import thinker.concepts.general_types.Profile;
+import thinker.concepts.profile.Profile;
 
 public class Actor implements IActor {
 
@@ -39,6 +44,8 @@ public class Actor implements IActor {
 	private IVisage<?> visage;
 	private IVector velocity;
 	private IKind kind;
+	/** whether this actor is ready to be deleted or not */
+	private boolean toDelete;
 
 	public Actor(UUID id) {
 		this(id, null);
@@ -46,7 +53,7 @@ public class Actor implements IActor {
 
 	public Actor(UUID id, String name) {
 		this.id = id;
-		this.profile = new Profile(id, ProfileType.FORM).setIdentifierName(name);
+		this.profile = new Profile(id, UniqueType.FORM).setIdentifierName(name);
 		this.name = name == null ? "Actor" + id.getMostSignificantBits() : name;
 		this.location = IVector.of(0, 0);
 		this.velocity = IVector.of(0, 0);
@@ -59,11 +66,14 @@ public class Actor implements IActor {
 	 * 
 	 * @param settings the settings used to make the body
 	 */
-	public ISoma makeBody(IKindSettings settings, boolean setVisage) {
+	public ISoma makeBody(IKindSettings settings, boolean setVisage, GameMap world) {
 		if (kind == null)
 			throw new IllegalStateException(this + "");
-		this.setBody(kind.generate(settings));
+		this.setBody(kind.generateSoma(settings, this));
 		this.body.setUUID(this.id);
+		this.body.populateChannelSystems(this, world, world.getTicks());
+		body.getPartsByName("brain")
+				.forEach((p) -> System.out.println("Part (" + this.id + ") -- " + p.componentReport()));
 		if (setVisage)
 			this.setVisage((IVisage<?>) this.body);
 		return this.body;
@@ -93,6 +103,8 @@ public class Actor implements IActor {
 	public Actor setBodyAndVisage(IForm<?> thing) {
 		this.body = (ISoma) thing;
 		this.visage = (IVisage<?>) thing;
+		if (thing != null)
+			thing.setOwner(this);
 		return this;
 	}
 
@@ -115,8 +127,26 @@ public class Actor implements IActor {
 	}
 
 	@Override
+	public boolean needsToBeRemoved() {
+		return toDelete;
+	}
+
+	@Override
 	public void onRemoveFromMap(GameMap gameMap) {
 		// TODO on remove?
+		System.out.println("Removed " + this + " from map.");
+	}
+
+	@Override
+	public void onUnload(GameMap map) {
+		System.out.println("Unloaded " + this + " from map.");
+
+	}
+
+	@Override
+	public void onLoad(GameMap map) {
+		System.out.println("Loaded " + this + " into map.");
+
 	}
 
 	protected float getDynamicFrictionCoeff() {
@@ -180,6 +210,8 @@ public class Actor implements IActor {
 					}
 				}
 
+			} else {
+				this.toDelete = true;
 			}
 			if (this.visage != null)
 				this.visage.runTick(ticks);
@@ -205,6 +237,7 @@ public class Actor implements IActor {
 	 */
 	public Actor setName(String name) {
 		this.name = name;
+		this.profile.setIdentifierName(name);
 		return this;
 	}
 
@@ -230,7 +263,7 @@ public class Actor implements IActor {
 
 	public void setUUID(UUID id) {
 		this.id = id;
-		this.profile = new Profile(id, ProfileType.FORM).setIdentifierName(this.profile.getIdentifierName());
+		this.profile = new Profile(id, UniqueType.FORM).setIdentifierName(this.profile.getIdentifierName());
 	}
 
 	@Override
@@ -252,13 +285,20 @@ public class Actor implements IActor {
 	public ForceResult applyForce(IComponentPart at, IComponentPart connection, IVector force, ForceType type,
 			IComponentPart generatedBy) {
 		// TODO do complex force interactions
-		return this.applyForce(at, connection, force, type, RelativeSide.fromVector(force));
+		return this.applyForce(at, connection, force, type, RelativeSide.fromVector(force),
+				generatedBy.interactionPlanes());
 	}
 
 	@Override
 	public ForceResult applyForce(IComponentPart at, IComponentPart connection, IVector force, ForceType type,
-			RelativeSide side) {
-
+			RelativeSide side, int acrossPlanes) {
+		if (!body.getPartGraph().contains(at)) {
+			throw new IllegalStateException(body.getPartGraph() + " does not contain " + at);
+		}
+		if (!PlaneHelper.canInteract(at.interactionPlanes(), acrossPlanes)) {
+			return ForceResult.NOTHING;
+		}
+		IRelationGraph<IComponentPart, IPartConnection> pgraph = body.getPartGraph();
 		// TODO do complex force interactions
 		switch (type) {
 		case PUSH:
@@ -268,10 +308,13 @@ public class Actor implements IActor {
 			// TODO scratching mechanic
 		case BLUNT:
 			float mag = (float) force.mag();
+			this.accelerate(force.scaleMagnitudeBy(0.5 / (0.000001f + mass())));
 
 			float resistance = at.getMaterial().getProperty(MaterialProperty.RESISTANCE)
 					* at.getShape().getProperty(ShapeProperty.INTEGRITY);
 			if (mag >= resistance) {
+				Set<IComponentPart> neibs = PartConnection.attachments().stream()
+						.flatMap((ata) -> pgraph.getNeighbors(at, ata).stream()).collect(Collectors.toSet());
 				if (at.getMaterial().getProperty(MaterialProperty.CRUMBLES)) { // TODO crystalline??
 					at.changeMaterial(at.getMaterial().getProperty(MaterialProperty.CRUMBLE_MATERIAL), true);
 
@@ -279,17 +322,28 @@ public class Actor implements IActor {
 					at.changeShape(at.getShape().copyBuilder().addProperty(ShapeProperty.INTEGRITY, 0f)
 							.addProperty(ShapeProperty.SHAPEDNESS, Shapedness.AMORPHIC).build(), true);
 				}
-				return ForceResult.DESTROYED;
+				if (body.isDestroyed(at)) {
+					neibs.forEach((neib) -> {
+						neib.changeShape(neib.getShape().copyBuilder().addProperty(ShapeProperty.INTEGRITY,
+								Math.max(1f / (neibs.size() + 1), (mag / (neibs.size() + 1))
+										/ (0.000000001f + neib.getMaterial().getProperty(MaterialProperty.RESISTANCE)))
+										* neib.getShape().getProperty(ShapeProperty.INTEGRITY))
+								.build(), true);
+					});
+
+					return ForceResult.DESTROYED;
+				}
+				return ForceResult.DAMAGED_STRUCTURE;
 			} else {
 				at.changeShape(at.getShape().copyBuilder()
 						.addProperty(ShapeProperty.INTEGRITY, (float) mag / resistance).build(), true);
-				return ForceResult.DAMAGED_PART;
+				return ForceResult.DAMAGED_INTEGRITY;
 			}
 		case SLICE:
 			resistance = at.getMaterial().getProperty(MaterialProperty.RESISTANCE)
 					* at.getShape().getProperty(ShapeProperty.INTEGRITY);
 			if (connection != null) {
-				if (!this.body.getRepresentationGraph().containsEdge(at, PartConnection.JOINED, connection)) {
+				if (!this.body.getPartGraph().containsEdge(at, PartConnection.JOINED, connection)) {
 					return ForceResult.SLIPPED_THROUGH;
 				}
 				float secresistance = connection.getMaterial().getProperty(MaterialProperty.RESISTANCE)
@@ -387,7 +441,7 @@ public class Actor implements IActor {
 
 	@Override
 	public String toString() {
-		return "[|" + this.name + "|]" + (this.location != IVector.ZERO ? this.location + "" : "");
+		return "[|" + this.name + "|]" + this.kind + (this.location != IVector.ZERO ? this.location + "" : "");
 	}
 
 	@Override

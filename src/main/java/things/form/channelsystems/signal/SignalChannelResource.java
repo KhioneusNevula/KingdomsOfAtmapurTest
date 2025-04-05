@@ -50,6 +50,11 @@ public class SignalChannelResource implements IResource<Boolean> {
 	}
 
 	@Override
+	public Boolean divide(Boolean g, int by) {
+		return g;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof IResource rs) {
 			return this.name.equals(rs.name()) && this.getMeasureClass().equals(rs.getMeasureClass());

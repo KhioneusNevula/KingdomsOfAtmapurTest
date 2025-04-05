@@ -11,7 +11,7 @@ import _utilities.property.PropertyImpl;
 import things.form.channelsystems.IChannelSystem;
 import things.form.material.IMaterial;
 import things.form.shape.IShape;
-import things.form.soma.IPartDestructionCondition;
+import things.form.soma.IPartDestroyedCondition;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.stats.IPartStat;
 
@@ -24,8 +24,9 @@ public class BasicKindProperties {
 	/**
 	 * Setting for what circumstances a part is destroyed under
 	 */
-	public static final PropertyImpl<IPartDestructionCondition> DESTRUCTION_CONDITION = IProperty.make(
-			"destruction_condition", IPartDestructionCondition.class, IPartDestructionCondition.Standard.GRANULATED);
+	public static final PropertyImpl<IPartDestroyedCondition> DESTRUCTION_CONDITION = IProperty.make(
+			"destruction_condition", IPartDestroyedCondition.class,
+			IPartDestroyedCondition.DisjointPartStateCondition.DISINTEGRATE_NONSOLID_MASHED);
 
 	public static final PropertyImpl<IShape> SHAPE = IProperty.make("shape", IShape.class, IShape.AMORPHOUS);
 
@@ -46,12 +47,6 @@ public class BasicKindProperties {
 	 */
 	public static final PropertyImpl<String> SINGLE_PART_NAME = IProperty.make("single_part_name", String.class,
 			"body");
-
-	/**
-	 * Part abilities for a single part
-	 */
-	public static final PropertyImpl<Set<? extends IMaterial>> SINGLE_PART_EMBEDDED_MATERIALS = IProperty
-			.make("single_part_embedded_materials", Set.class, Collections.emptySet());
 
 	/**
 	 * Part stats for a single part

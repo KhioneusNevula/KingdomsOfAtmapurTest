@@ -9,7 +9,9 @@ import things.form.soma.component.IComponentPart;
 import things.form.visage.ISensableProperty;
 import things.form.visage.IVisage;
 import things.interfaces.IUnique;
+import things.interfaces.UniqueType;
 import things.stains.IStain;
+import thinker.knowledge.IKnowledgeMedium;
 
 /**
  * A generic interface for component parts in a physical oroganism as well as
@@ -33,6 +35,11 @@ public interface IPart extends Cloneable, IUnique {
 		return new DummyPart(id);
 	}
 
+	/** Whether this part is a dummy */
+	public default boolean isDummy() {
+		return this instanceof DummyPart;
+	}
+
 	/**
 	 * Clone this part (does not need to change the UUID)
 	 * 
@@ -40,12 +47,35 @@ public interface IPart extends Cloneable, IUnique {
 	 */
 	public IPart clone();
 
+	@Override
+	default UniqueType getUniqueType() {
+		return UniqueType.PART;
+	}
+
 	/**
 	 * Set the id of this part (and return it)
 	 * 
 	 * @return
 	 */
 	public IPart setUUID(UUID id);
+
+	/**
+	 * Sets this part to have language emitted from it/written on it, conveyed using
+	 * the given property. I.e., the property's "data" as the way in which the
+	 * language is detected.
+	 */
+	public void writeKnowledge(IKnowledgeMedium utterance, ISensableProperty<?> property);
+
+	/**
+	 * Gets a text written on this part, if any, conveyed using the given property.
+	 * I.e., the property's "data" is he way in which the language is detected
+	 */
+	public IKnowledgeMedium readKnowledge(ISensableProperty<?> property);
+
+	/**
+	 * Return all properties which have some sensable language associated with them
+	 */
+	public Collection<ISensableProperty<?>> getAllPropertiesWithSensableLanguage();
 
 	/**
 	 * The ID of this part to distinguish it from others for internal purposes
@@ -70,7 +100,8 @@ public interface IPart extends Cloneable, IUnique {
 
 	/**
 	 * Modify the size of this part; use "callUpdate" to notify the parent part that
-	 * the size was changed. Will automatically call an update on contained spirits
+	 * the size was changed. Will NOT automatically call an update on contained
+	 * spirits
 	 * 
 	 * @param size
 	 */
@@ -78,8 +109,8 @@ public interface IPart extends Cloneable, IUnique {
 
 	/**
 	 * Change the material of this part. Set callUpdate to true if you want to call
-	 * an update on the parent soma. Will automatically call an update on contained
-	 * spirits
+	 * an update on the parent soma. Will NOT automatically call an update on
+	 * contained spirits
 	 * 
 	 * @param material
 	 * @param callUpdate
@@ -88,7 +119,7 @@ public interface IPart extends Cloneable, IUnique {
 
 	/**
 	 * Change the shape of this part. Set callUpdate to true if you want to call an
-	 * update on the parent soma. Will automatically call an update on contained
+	 * update on the parent soma. Will NOT automatically call an update on contained
 	 * spirits
 	 * 
 	 * @param material
@@ -141,11 +172,16 @@ public interface IPart extends Cloneable, IUnique {
 	public void setOwner(IForm<?> owner);
 
 	/**
+	 * Sets the form that this part Actually belongs to, i.e. when it is being held
+	 */
+	public void setTrueOwner(IForm<?> so);
+
+	/**
 	 * add a stain to this part
 	 * 
 	 * @param stain
 	 * @param callUpdate whether to notify the body that these stains have been
-	 *                   removed
+	 *                   added
 	 */
 	public void addStain(IStain stain, boolean callUpdate);
 
@@ -156,7 +192,7 @@ public interface IPart extends Cloneable, IUnique {
 	 * @param callUpdate whether to notify the body that these stains have been
 	 *                   removed
 	 */
-	public void removeStain(IStain stain, boolean callUpdate);
+	public void removeStain(IMaterial stain, boolean callUpdate);
 
 	/**
 	 * Remove all stains from this part
@@ -176,7 +212,7 @@ public interface IPart extends Cloneable, IUnique {
 	/**
 	 * Get a sensable property of this Part based on its internal state
 	 * 
-	 * @param <T>
+	 * @param <@Override T>
 	 * @param prop
 	 * @return
 	 */
@@ -229,6 +265,26 @@ public interface IPart extends Cloneable, IUnique {
 		@Override
 		public String getName() {
 			return toString();
+		}
+
+		@Override
+		public Collection<ISensableProperty<?>> getAllPropertiesWithSensableLanguage() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public IKnowledgeMedium readKnowledge(ISensableProperty<?> property) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void writeKnowledge(IKnowledgeMedium utterance, ISensableProperty<?> property) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setTrueOwner(IForm<?> so) {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -292,7 +348,7 @@ public interface IPart extends Cloneable, IUnique {
 		}
 
 		@Override
-		public void removeStain(IStain stain, boolean callUpdate) {
+		public void removeStain(IMaterial stain, boolean callUpdate) {
 			throw new UnsupportedOperationException();
 		}
 

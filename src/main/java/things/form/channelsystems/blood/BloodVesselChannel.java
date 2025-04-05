@@ -6,6 +6,7 @@ import java.util.Collections;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelSystem;
 import things.form.material.IMaterial;
+import things.form.material.generator.IMaterialGeneratorResource;
 
 /**
  * A bidirectional Channel representing a channel for signal to travel through
@@ -13,8 +14,8 @@ import things.form.material.IMaterial;
 public class BloodVesselChannel implements IChannel {
 
 	private String name;
-	private Collection<IMaterial> material;
-	private Collection<IMaterial> blood;
+	private Collection<IMaterialGeneratorResource> material;
+	private Collection<IMaterialGeneratorResource> blood;
 	private IChannelSystem system;
 
 	/**
@@ -24,7 +25,8 @@ public class BloodVesselChannel implements IChannel {
 	 * @param blood
 	 * @param system
 	 */
-	public BloodVesselChannel(String name, IMaterial vessMaterial, IMaterial blood, IChannelSystem system) {
+	public BloodVesselChannel(String name, IMaterialGeneratorResource vessMaterial, IMaterialGeneratorResource blood,
+			IChannelSystem system) {
 		this.name = name;
 		this.material = vessMaterial == null ? Collections.emptySet() : Collections.singleton(vessMaterial);
 		this.blood = Collections.singleton(blood);
@@ -47,12 +49,12 @@ public class BloodVesselChannel implements IChannel {
 	}
 
 	@Override
-	public Collection<IMaterial> getVectorMaterials() {
+	public Collection<IMaterialGeneratorResource> getVectorMaterials() {
 		return material;
 	}
 
 	@Override
-	public Collection<IMaterial> conveys() {
+	public Collection<IMaterialGeneratorResource> conveys() {
 		return blood;
 	}
 

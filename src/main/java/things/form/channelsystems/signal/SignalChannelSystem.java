@@ -3,15 +3,21 @@ package things.form.channelsystems.signal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
+import _sim.world.GameMap;
 import _utilities.couplets.Triplet;
+import metaphysics.spirit.ISpirit;
+import party.collective.ICollective;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
 import things.form.channelsystems.IChannelSystem;
 import things.form.graph.connections.IPartConnection;
 import things.form.graph.connections.PartConnection;
-import things.form.material.IMaterial;
+import things.form.kinds.settings.IKindSettings;
+import things.form.material.generator.IMaterialGeneratorResource;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 
@@ -22,13 +28,24 @@ public class SignalChannelSystem implements IChannelSystem {
 	private SignalChannel channel;
 	private String controlCenterPart;
 	private SignalControlCenter brainType;
+	private BiFunction<ISoma, IComponentPart, ISpirit> spiritGen;
 
-	public SignalChannelSystem(String name, IMaterial signalVectorMaterial, String controlCenterPart) {
+	/**
+	 * 
+	 * @param name                 the system name
+	 * @param signalVectorMaterial the (base) material the nerves are made fromm
+	 * @param controlCenterPart    the "brain" part
+	 * @param spiritGen            the function that generates a Spirit for the
+	 *                             "brain" part, or null if no such thing is needed
+	 */
+	public SignalChannelSystem(String name, IMaterialGeneratorResource signalVectorMaterial, String controlCenterPart,
+			BiFunction<ISoma, IComponentPart, ISpirit> spiritGen) {
 		this.name = name;
 		this.resource = new SignalChannelResource(name + "_signal");
 		this.channel = new SignalChannel(name + "_pathway", signalVectorMaterial, resource, this);
 		this.controlCenterPart = controlCenterPart;
 		this.brainType = new SignalControlCenter(name + "_controller", this);
+		this.spiritGen = spiritGen;
 	}
 
 	@Override
@@ -44,6 +61,10 @@ public class SignalChannelSystem implements IChannelSystem {
 	@Override
 	public Collection<SignalChannelResource> getChannelResources() {
 		return Collections.singleton(this.resource);
+	}
+
+	public SignalChannelResource getSignalResource() {
+		return resource;
 	}
 
 	@Override
@@ -86,15 +107,25 @@ public class SignalChannelSystem implements IChannelSystem {
 	}
 
 	@Override
-	public Collection<? extends IComponentPart> populateBody(ISoma body) {
+	public Collection<? extends IComponentPart> populateBody(ISoma body, IKindSettings set, GameMap world) {
 		Collection<IComponentPart> brains = body.getPartsByName(controlCenterPart);
 		for (IComponentPart brain : brains) {
 			brain.addAbility(brainType, true);
+
+			if (spiritGen != null) {
+				ISpirit s1 = spiritGen.apply(body, brain);
+				brain.attachSpirit(s1, true);
+				ICollective collective = world.getUniverse().getKindCollective(body.getKind());
+				if (collective != null) {
+					s1.addToGroup(collective);
+				}
+			}
 			for (Triplet<IComponentPart, IPartConnection, IComponentPart> edge : (Iterable<Triplet<IComponentPart, IPartConnection, IComponentPart>>) () -> body
-					.getRepresentationGraph()
+					.getPartGraph()
 					.edgeTraversalIteratorBFS(brain, Set.copyOf(PartConnection.attachments()), (a, b) -> true)) {
 				body.addChannel(edge.getFirst(), channel, edge.getThird(), true);
-				edge.getThird().addEmbeddedMaterials(channel.getVectorMaterials(), true);
+				edge.getThird().addChannelMaterial(channel, channel.getVectorMaterials().stream()
+						.map((mg) -> mg.generateMaterialFromSettings(set)).collect(Collectors.toSet()));
 			}
 
 		}
@@ -116,9 +147,7 @@ public class SignalChannelSystem implements IChannelSystem {
 	@Override
 	public void onBodyNew(ISoma body, IComponentPart gained, IPartConnection connection, IComponentPart to,
 			boolean isNew) {
-		if (to.embeddedMaterials().containsAll(channel.getVectorMaterials())) {
-			body.addChannel(to, channel, gained, false);
-		}
+		body.addChannel(to, channel, gained, false);
 	}
 
 }

@@ -3,7 +3,9 @@ package _utilities.graph;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -107,7 +109,7 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 		if (!this.single.equals(two)) {
 			throw new IllegalArgumentException(two + " vs " + single);
 		}
-		throw new IllegalArgumentException(one + " is identical to " + two);
+		return null;
 	}
 
 	@Override
@@ -212,7 +214,7 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	}
 
 	@Override
-	public Set<R> getConnectingEdgeTypes(E one) {
+	public Set<R> getOutgoingEdgeTypes(E one) {
 		if (!this.single.equals(one)) {
 			throw new IllegalArgumentException(one + " vs " + single);
 		}
@@ -237,6 +239,11 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	@Override
 	public Iterator<Triplet<E, R, E>> edgeIterator() {
 		return Collections.emptyIterator();
+	}
+
+	@Override
+	public Collection<R> getEdgeTypes() {
+		return Collections.emptySet();
 	}
 
 	@Override
@@ -314,12 +321,20 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 		} else if (!nodes.iterator().hasNext()) {
 			return EmptyGraph.instance();
 		}
-		throw new IllegalArgumentException("Provided nodes not in graph: " + this.singleton);
+		throw new IllegalArgumentException("Provided nodes not in graph: {" + this.singleton + "}");
 	}
 
 	@Override
 	public IRelationGraph<E, R> subgraph(Iterable<? extends E> nodes, Predicate<Triplet<E, R, E>> edgePred) {
 		return this.subgraph(nodes);
+	}
+
+	@Override
+	public IRelationGraph<E, R> subgraph(Predicate<? super E> nodes, Predicate<Triplet<E, R, E>> edgePred) {
+		if (nodes.test(this.single)) {
+			return this;
+		}
+		return EmptyGraph.instance();
 	}
 
 	@Override
@@ -359,6 +374,12 @@ public class SingletonGraph<E, R extends IInvertibleRelationType> implements IRe
 	@Override
 	public String representation(Function<E, String> converter, Function<R, String> edgeConverter) {
 		return this.representation(converter);
+	}
+
+	@Override
+	public String representation(Function<E, String> converter,
+			BiFunction<Triplet<E, R, E>, Map<IProperty<?>, Object>, String> edgeConverter) {
+		return representation(converter);
 	}
 
 	@Override

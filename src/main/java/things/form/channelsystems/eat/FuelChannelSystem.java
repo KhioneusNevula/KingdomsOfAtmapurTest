@@ -7,18 +7,21 @@ import java.util.function.Function;
 
 import com.google.common.collect.Sets;
 
+import _sim.world.GameMap;
 import things.form.channelsystems.ChannelNeed;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
+import things.form.channelsystems.IChannelNeed;
 import things.form.channelsystems.IChannelSystem;
 import things.form.channelsystems.IResource;
 import things.form.graph.connections.IPartConnection;
+import things.form.kinds.settings.IKindSettings;
 import things.form.material.IMaterial;
 import things.form.material.condition.IMaterialCondition;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import thinker.individual.IMindSpirit;
+import thinker.mind.util.IMindAccess;
 
 /**
  * Channel system to intake material and turn it into something else, e.g. food
@@ -36,7 +39,7 @@ public class FuelChannelSystem implements IChannelSystem {
 	private FuelBurnerChannelCenter<?> stomachType;
 	private String mouthPart;
 	private FuelIntakeChannelCenter fuelIntake;
-	private ChannelNeed need;
+	private IChannelNeed need;
 
 	/**
 	 * 
@@ -44,6 +47,7 @@ public class FuelChannelSystem implements IChannelSystem {
 	 * @param blood
 	 * @param bloodVesselMaterial if this is null, then simply have no blood vessels
 	 * @param stomachPart
+	 * @param allowedFood         what food can be eaten
 	 * @param resource            = resource to convert the food to
 	 * @param conv                = Function for converting food resources into
 	 *                            whatever quantity the other resource needs (as an
@@ -96,14 +100,14 @@ public class FuelChannelSystem implements IChannelSystem {
 	}
 
 	@Override
-	public Collection<ChannelNeed> getChannelSystemNeeds() {
+	public Collection<IChannelNeed> getChannelSystemNeeds() {
 		return Collections.singleton(this.need);
 	}
 
 	@Override
-	public float getNeedLevel(IMindSpirit spirit, IComponentPart part, ChannelNeed forNeed) {
+	public float getNeedLevel(IChannelNeed forNeed, IMindAccess info) {
 		if (forNeed.equals(this.need)) {
-			Iterable<IComponentPart> parts = () -> part.getSomaOwner().getChanneledParts(part, this).stream()
+			Iterable<IComponentPart> parts = () -> info.partAccess().stream().map((x) -> (IComponentPart) x)
 					.filter((a) -> a.getAbilities().contains(this.stomachType)).iterator();
 			float aggreg = 0;
 			int count = 0;
@@ -111,10 +115,12 @@ public class FuelChannelSystem implements IChannelSystem {
 				count++;
 				aggreg += viablepart.getResourceAmount(this.allowedFood) / this.allowedFood.getMaxValue();
 			}
+			if (count == 0)
+				return -1f;
 			aggreg /= count;
 			return aggreg;
 		}
-		return 0f;
+		return -1f;
 	}
 
 	/**
@@ -155,7 +161,7 @@ public class FuelChannelSystem implements IChannelSystem {
 	}
 
 	@Override
-	public Collection<? extends IComponentPart> populateBody(ISoma body) {
+	public Collection<? extends IComponentPart> populateBody(ISoma body, IKindSettings set, GameMap world) {
 		Collection<IComponentPart> stomachs = body.getPartsByName(stomachPart);
 		for (IComponentPart stomach : stomachs) {
 			stomach.addAbility(stomachType, true);

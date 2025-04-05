@@ -10,4 +10,9 @@ public interface ILocatable {
 	 * @return
 	 */
 	public IVector getPosition();
+
+	/** Distance to another entity */
+	default double distance(ILocatable a) {
+		return IVector.distance(getPosition(), a.getPosition());
+	}
 }

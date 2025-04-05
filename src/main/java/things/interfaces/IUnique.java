@@ -11,4 +11,7 @@ public interface IUnique {
 	 */
 	public UUID getUUID();
 
+	/** Return the "unique type" of this unique thing */
+	public UniqueType getUniqueType();
+
 }

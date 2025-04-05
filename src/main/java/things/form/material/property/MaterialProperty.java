@@ -4,21 +4,22 @@ import java.awt.Color;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import things.biology.genes.IGenome;
+import things.biology.genes.IGenomeEncoding;
+import things.form.channelsystems.IResource;
 import things.form.material.IMaterial;
 import things.form.material.Material;
 
 public class MaterialProperty<E> implements IMaterialProperty<E> {
 
-	public static <E> MaterialProperty<E> make(String name, Class<E> clazz, E defVal) {
+	public static <E> MaterialProperty<E> make(String name, Class<? super E> clazz, E defVal) {
 		return new MaterialProperty<E>(name, clazz, (a) -> defVal);
 	}
 
-	public static <E> MaterialProperty<E> make(String name, Class<E> clazz, Supplier<E> defVal) {
+	public static <E> MaterialProperty<E> make(String name, Class<? super E> clazz, Supplier<E> defVal) {
 		return new MaterialProperty<E>(name, clazz, (a) -> defVal.get());
 	}
 
-	public static <E> MaterialProperty<E> make(String name, Class<E> clazz, Function<IMaterial, E> defVal) {
+	public static <E> MaterialProperty<E> make(String name, Class<? super E> clazz, Function<IMaterial, E> defVal) {
 		return new MaterialProperty<E>(name, clazz, defVal);
 	}
 
@@ -87,7 +88,7 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	 * How likely this material is to leave a stain, and also how unlikely the stain
 	 * is to come off when washed
 	 */
-	public static final MaterialProperty<Float> STAINING = make("staining", float.class, 1f);
+	public static final MaterialProperty<Float> STAINING = make("staining", float.class, 0.99f);
 
 	/** How much this material as a fluid or stain corrodes a material in contact */
 	public static final MaterialProperty<Float> CORROSIVENESS = make("corrosiveness", float.class, 0f);
@@ -222,7 +223,15 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	/**
 	 * The genetics of a given material, if it is organic
 	 */
-	public static final MaterialProperty<IGenome> GENETICS = make("genetics", IGenome.class, IGenome.NONE);
+	public static final MaterialProperty<IGenomeEncoding> GENETICS = make("genetics", IGenomeEncoding.class,
+			IGenomeEncoding.NONE);
+
+	/**
+	 * For materials that have some generic resource embedded in them, this property
+	 * represents that
+	 */
+	public static final MaterialProperty<IResource<?>> EMBEDDED_RESOURCE = make("embedded_resource", IResource.class,
+			IResource.NULL_RESOURCE);
 	/**
 	 * 
 	 * 
@@ -231,10 +240,10 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	 */
 
 	private String name;
-	private Class<E> type;
+	private Class<? super E> type;
 	private Function<IMaterial, E> defaultSupplier;
 
-	private MaterialProperty(String name, Class<E> clazz, Function<IMaterial, E> defaultVal) {
+	private MaterialProperty(String name, Class<? super E> clazz, Function<IMaterial, E> defaultVal) {
 		this.name = name;
 		this.type = clazz;
 		this.defaultSupplier = defaultVal;
@@ -245,7 +254,7 @@ public class MaterialProperty<E> implements IMaterialProperty<E> {
 	}
 
 	@Override
-	public Class<E> getType() {
+	public Class<? super E> getType() {
 		return type;
 	}
 

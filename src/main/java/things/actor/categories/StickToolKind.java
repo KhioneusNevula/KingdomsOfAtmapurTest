@@ -3,11 +3,13 @@ package things.actor.categories;
 import java.util.Collections;
 import java.util.UUID;
 
+import _sim.GameUniverse;
 import _sim.RelativeSide;
 import _utilities.graph.IModifiableRelationGraph;
 import _utilities.graph.RelationGraph;
 import _utilities.property.IProperty;
 import _utilities.property.PropertyImpl;
+import party.kind.IKindCollective;
 import things.form.graph.connections.CoverageType;
 import things.form.graph.connections.IPartConnection;
 import things.form.graph.connections.PartConnection;
@@ -54,16 +56,14 @@ public class StickToolKind extends MultipartKind {
 		IComponentPart head = null;
 		graph.add(head = new StandardComponentPart("head", headID, settings.getSetting(HEAD_MATERIAL), headShape,
 				settings.getOrDefault(BasicKindProperties.SIZE, getAverageSize()) * relativeHeadSize,
-				settings.getSetting(BasicKindProperties.PLANES), Collections.emptySet(), Collections.emptyMap(),
-				Collections.emptySet()));
+				settings.getSetting(BasicKindProperties.PLANES), Collections.emptySet(), Collections.emptyMap()));
 		IComponentPart handle = null;
 		graph.add(handle = new StandardComponentPart("handle", handleID, settings.getSetting(HANDLE_MATERIAL),
 				IShape.builder().addProperty(ShapeProperty.LENGTH, Length.LONG)
 						.addProperty(ShapeProperty.ROLL_SHAPE, RollableShape.ROLLABLE_CYLINDER)
 						.addProperty(ShapeProperty.THICKNESS, Thickness.THIN).build(),
 				settings.getOrDefault(BasicKindProperties.SIZE, getAverageSize()) * (1 - relativeHeadSize),
-				settings.getSetting(BasicKindProperties.PLANES), Collections.emptySet(), Collections.emptyMap(),
-				Collections.emptySet()));
+				settings.getSetting(BasicKindProperties.PLANES), Collections.emptySet(), Collections.emptyMap()));
 		graph.addEdge(head, PartConnection.JOINED, handle);
 		return graph;
 	}
@@ -84,6 +84,11 @@ public class StickToolKind extends MultipartKind {
 			IKindSettings settings) {
 
 		return graph.stream().filter((a) -> a.getUUID().equals(handleID)).findAny().orElseThrow();
+	}
+
+	@Override
+	public IKindCollective generateCollective(GameUniverse forUniverse) {
+		return null;
 	}
 
 }

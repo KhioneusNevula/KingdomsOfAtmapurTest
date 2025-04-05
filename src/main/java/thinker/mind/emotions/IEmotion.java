@@ -2,21 +2,15 @@ package thinker.mind.emotions;
 
 import java.util.Collection;
 
-public interface IEmotion extends IFeeling {
+import thinker.mind.memory.IFeelingReason;
+import thinker.mind.perception.IPerceptor;
 
-	/**
-	 * Return which affects this emotion increases
-	 * 
-	 * @return
-	 */
-	public Collection<? extends IAffect> affectsIncreased();
+public interface IEmotion extends IFeeling, IPerceptor {
 
-	/**
-	 * Return which affects this emotion decreases
-	 * 
-	 * @return
-	 */
-	public Collection<? extends IAffect> affectsDecreased();
+	@Override
+	default PerceptorType getPerceptorType() {
+		return PerceptorType.EMOTION;
+	}
 
 	@Override
 	default boolean isAffect() {

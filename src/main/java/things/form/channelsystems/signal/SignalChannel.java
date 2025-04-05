@@ -5,7 +5,7 @@ import java.util.Collections;
 
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelSystem;
-import things.form.material.IMaterial;
+import things.form.material.generator.IMaterialGeneratorResource;
 
 /**
  * A bidirectional Channel representing a channel for signal to travel through
@@ -13,11 +13,12 @@ import things.form.material.IMaterial;
 public class SignalChannel implements IChannel {
 
 	private String name;
-	private Collection<IMaterial> material;
+	private Collection<IMaterialGeneratorResource> material;
 	private Collection<SignalChannelResource> conveys;
 	private IChannelSystem system;
 
-	public SignalChannel(String name, IMaterial nerveMaterial, SignalChannelResource signal, IChannelSystem system) {
+	public SignalChannel(String name, IMaterialGeneratorResource nerveMaterial, SignalChannelResource signal,
+			IChannelSystem system) {
 		this.name = name;
 		this.material = Collections.singleton(nerveMaterial);
 		this.conveys = Collections.singleton(signal);
@@ -40,7 +41,7 @@ public class SignalChannel implements IChannel {
 	}
 
 	@Override
-	public Collection<IMaterial> getVectorMaterials() {
+	public Collection<IMaterialGeneratorResource> getVectorMaterials() {
 		return material;
 	}
 

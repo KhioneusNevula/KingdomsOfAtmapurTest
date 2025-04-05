@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
@@ -14,14 +15,17 @@ import _utilities.collections.MappedSet;
 import _utilities.couplets.Triplet;
 import _utilities.graph.IRelationGraph;
 import _utilities.graph.RelationGraph;
+import things.form.IForm;
 import things.form.IPart;
+import things.form.channelsystems.IChannelSystem;
 import things.form.graph.connections.IPartConnection;
 import things.form.graph.connections.PartConnection;
+import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.form.soma.stats.IPartStat;
 import things.form.visage.ISensableProperty;
-import thinker.concepts.general_types.ILogicConcept;
-import thinker.concepts.general_types.ILogicConcept.LogicType;
+import thinker.concepts.general_types.IConnectorConcept;
+import thinker.concepts.general_types.IConnectorConcept.ConnectorType;
 
 /**
  * TODO Add sensable traits? make into just form condition?
@@ -33,11 +37,18 @@ public class FormCondition implements IFormCondition {
 
 	private IRelationGraph<Object, IFormRelationType> graph;
 	private Set<String> partMatches;
+	private Set<IChannelSystem> channels;
 
-	public FormCondition(IRelationGraph<? extends Object, ? extends IFormRelationType> gra) {
+	public FormCondition(IRelationGraph<? extends Object, ? extends IFormRelationType> gra, IChannelSystem... sys) {
 		this.graph = (IRelationGraph<Object, IFormRelationType>) gra;
 		this.partMatches = gra.stream().filter((a) -> a instanceof String).map((a) -> (String) a)
 				.collect(Collectors.toUnmodifiableSet());
+		this.channels = ImmutableSet.copyOf(sys);
+	}
+
+	public FormCondition addChannelSystems(Iterable<IChannelSystem> sys) {
+		this.channels = ImmutableSet.<IChannelSystem>builder().addAll(channels).addAll(sys).build();
+		return this;
 	}
 
 	/**
@@ -168,12 +179,12 @@ public class FormCondition implements IFormCondition {
 	/** gets parts that match the given relation */
 	private <T extends IPart> Set<IPart> getMatches(IRelationGraph<T, IPartConnection> t,
 			Triplet<Object, IFormRelationType, Object> triplet) {
-		if (triplet.getThird() instanceof ILogicConcept ilc) {
-			if (ilc.getLogicType() == LogicType.OR) {
+		if (triplet.getThird() instanceof IConnectorConcept ilc) {
+			if (ilc.getConnectorType() == ConnectorType.OR) {
 				return graph.getNeighbors(ilc, triplet.getSecond()).stream()
 						.map((a) -> Triplet.of(triplet.getFirst(), triplet.getSecond(), a))
 						.flatMap((a) -> getMatches(t, a).stream()).collect(Collectors.toSet());
-			} else if (ilc.getLogicType() == LogicType.AND) {
+			} else if (ilc.getConnectorType() == ConnectorType.AND) {
 				return graph.getNeighbors(ilc, triplet.getSecond()).stream()
 						.map((a) -> Triplet.of(triplet.getFirst(), triplet.getSecond(), a)).map((a) -> getMatches(t, a))
 						.reduce(new MappedSet<>(t, (a) -> (T) a, (b) -> b, IPart.class), (a, b) -> {
@@ -194,7 +205,7 @@ public class FormCondition implements IFormCondition {
 			}
 			case HAS_SENSABLE_TRAIT:
 			case HAS_STAT: {
-				if (triplet.getThird() instanceof ILogicConcept ilc && ilc.isPropertyAndValue()) {
+				if (triplet.getThird() instanceof IConnectorConcept ilc && ilc.isPropertyAndValue()) {
 					Object stat = null;
 					IFormRelationType relation = null;
 					Object value = null;
@@ -259,30 +270,30 @@ public class FormCondition implements IFormCondition {
 					}
 
 				} else { // if the relation doesn't connect to a logical bifurcator
-					throw new IllegalArgumentException("Illegal relation: "
-							+ graph.edgeToString(triplet.getFirst(), triplet.getSecond(), triplet.getThird(), true));
+					throw new IllegalArgumentException("Illegal relation: " + triplet.getFirst() + " , "
+							+ triplet.getSecond() + " , " + triplet.getThird());
 				}
 			}
 			case EQUALS: {
 				if (!(triplet.right() instanceof Integer)) {
-					throw new IllegalArgumentException("Illegal relation: "
-							+ graph.edgeToString(triplet.getFirst(), triplet.getSecond(), triplet.getThird(), true));
+					throw new IllegalArgumentException("Illegal relation: " + triplet.getFirst() + " , "
+							+ triplet.getSecond() + " , " + triplet.getThird());
 				}
 				return allparts.asMap().entrySet().stream().filter((a) -> triplet.right().equals(a.getValue().size()))
 						.flatMap((a) -> a.getValue().stream()).collect(Collectors.toSet());
 			}
 			case NOT_EQUALS: {
 				if (!(triplet.right() instanceof Integer)) {
-					throw new IllegalArgumentException("Illegal relation: "
-							+ graph.edgeToString(triplet.getFirst(), triplet.getSecond(), triplet.getThird(), true));
+					throw new IllegalArgumentException("Illegal relation: " + triplet.getFirst() + " , "
+							+ triplet.getSecond() + " , " + triplet.getThird());
 				}
 				return allparts.asMap().entrySet().stream().filter((a) -> !triplet.right().equals(a.getValue().size()))
 						.flatMap((a) -> a.getValue().stream()).collect(Collectors.toSet());
 			}
 			case FACTOR_OF: {
 				if (!(triplet.right() instanceof Integer)) {
-					throw new IllegalArgumentException("Illegal relation: "
-							+ graph.edgeToString(triplet.getFirst(), triplet.getSecond(), triplet.getThird(), true));
+					throw new IllegalArgumentException("Illegal relation: " + triplet.getFirst() + " , "
+							+ triplet.getSecond() + " , " + triplet.getThird());
 				}
 				return (allparts.asMap().entrySet().stream()
 						.filter((a) -> ((Integer) triplet.right()) % (a.getValue().size()) == 0)
@@ -290,8 +301,8 @@ public class FormCondition implements IFormCondition {
 			}
 			case GREATER_THAN: {
 				if (!(triplet.right() instanceof Integer)) {
-					throw new IllegalArgumentException("Illegal relation: "
-							+ graph.edgeToString(triplet.getFirst(), triplet.getSecond(), triplet.getThird(), true));
+					throw new IllegalArgumentException("Illegal relation: " + triplet.getFirst() + " , "
+							+ triplet.getSecond() + " , " + triplet.getThird());
 				}
 				return (allparts.asMap().entrySet().stream()
 						.filter((a) -> ((Integer) triplet.right()) < (a.getValue().size()))
@@ -299,8 +310,8 @@ public class FormCondition implements IFormCondition {
 			}
 			case GREATER_THAN_OR_EQUAL_TO: {
 				if (!(triplet.right() instanceof Integer)) {
-					throw new IllegalArgumentException("Illegal relation: "
-							+ graph.edgeToString(triplet.getFirst(), triplet.getSecond(), triplet.getThird(), true));
+					throw new IllegalArgumentException("Illegal relation: " + triplet.getFirst() + " , "
+							+ triplet.getSecond() + " , " + triplet.getThird());
 				}
 				return (allparts.asMap().entrySet().stream()
 						.filter((a) -> ((Integer) triplet.right()) <= (a.getValue().size()))
@@ -308,8 +319,8 @@ public class FormCondition implements IFormCondition {
 			}
 			case LESS_THAN: {
 				if (!(triplet.right() instanceof Integer)) {
-					throw new IllegalArgumentException("Illegal relation: "
-							+ graph.edgeToString(triplet.getFirst(), triplet.getSecond(), triplet.getThird(), true));
+					throw new IllegalArgumentException("Illegal relation: " + triplet.getFirst() + " , "
+							+ triplet.getSecond() + " , " + triplet.getThird());
 				}
 				return (allparts.asMap().entrySet().stream()
 						.filter((a) -> ((Integer) triplet.right()) > (a.getValue().size()))
@@ -317,8 +328,8 @@ public class FormCondition implements IFormCondition {
 			}
 			case LESS_THAN_OR_EQUAL_TO: {
 				if (!(triplet.right() instanceof Integer)) {
-					throw new IllegalArgumentException("Illegal relation: "
-							+ graph.edgeToString(triplet.getFirst(), triplet.getSecond(), triplet.getThird(), true));
+					throw new IllegalArgumentException("Illegal relation: " + triplet.getFirst() + " , "
+							+ triplet.getSecond() + " , " + triplet.getThird());
 				}
 				return (allparts.asMap().entrySet().stream()
 						.filter((a) -> ((Integer) triplet.right()) >= (a.getValue().size()))
@@ -326,8 +337,8 @@ public class FormCondition implements IFormCondition {
 			}
 			case MULTIPLE_OF: {
 				if (!(triplet.right() instanceof Integer)) {
-					throw new IllegalArgumentException("Illegal relation: "
-							+ graph.edgeToString(triplet.getFirst(), triplet.getSecond(), triplet.getThird(), true));
+					throw new IllegalArgumentException("Illegal relation: " + triplet.getFirst() + " , "
+							+ triplet.getSecond() + " , " + triplet.getThird());
 				}
 				return (allparts.asMap().entrySet().stream()
 						.filter((a) -> (a.getValue().size()) % ((Integer) triplet.right()) == 0)
@@ -344,10 +355,20 @@ public class FormCondition implements IFormCondition {
 	}
 
 	@Override
-	public boolean test(IRelationGraph<? extends IPart, IPartConnection> t) {
+	public boolean test(IForm<?> f) {
+		if (!this.getChannelSystemRequirements().isEmpty()) {
+			if (f instanceof ISoma soma) {
+				if (!soma.getChannelSystems().containsAll(this.getChannelSystemRequirements())) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
 		if (graph.isEmpty()) {
 			return true;
 		}
+		IRelationGraph<? extends IPart, IPartConnection> t = f.getPartGraph();
 		if (t.isEmpty()) {
 			return false;
 		}
@@ -399,19 +420,20 @@ public class FormCondition implements IFormCondition {
 	}
 
 	@Override
-	public Predicate<IRelationGraph<? extends IPart, IPartConnection>> and(
-			Predicate<? super IRelationGraph<? extends IPart, IPartConnection>> other) {
+	public Predicate<IForm<?>> and(Predicate<? super IForm<?>> other) {
 		if (other instanceof IFormCondition sc) {
 			RelationGraph grap = new RelationGraph(graph);
 			grap.addAll(sc.getConditionGraph());
-			return new FormCondition(grap);
+			Set<IChannelSystem> syses = new HashSet<>(channels);
+			syses.addAll(sc.getChannelSystemRequirements());
+			return new FormCondition(grap).addChannelSystems(syses);
 		}
 		return IFormCondition.super.and(other);
 	}
 
 	@Override
 	public int hashCode() {
-		return graph.hashCode();
+		return graph.hashCode() + channels.hashCode();
 	}
 
 	@Override
@@ -419,14 +441,19 @@ public class FormCondition implements IFormCondition {
 		if (obj == this)
 			return true;
 		if (obj instanceof IFormCondition sc) {
-			return this.graph.equals(sc.getConditionGraph());
+			return this.graph.equals(sc.getConditionGraph()) && this.channels.equals(sc.getChannelSystemRequirements());
 		}
 		return false;
 	}
 
 	@Override
 	public String toString() {
-		return "FormCondition{" + this.graph + "}";
+		return "FC{graph=" + this.graph + ",channelSystems=" + this.channels + "}";
+	}
+
+	@Override
+	public Collection<IChannelSystem> getChannelSystemRequirements() {
+		return this.channels;
 	}
 
 }

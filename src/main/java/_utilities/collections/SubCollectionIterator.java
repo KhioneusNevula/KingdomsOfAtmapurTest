@@ -38,10 +38,14 @@ public class SubCollectionIterator<E> implements Iterator<E> {
 		this.mapIter = map.iterator();
 		this.access = accessElements;
 		this.hasNext = false;
-		if (mapIter.hasNext()) {
-			valueIter = access.apply(mapIter.next());
-			if (valueIter.hasNext()) {
-				this.hasNext = true;
+		while (valueIter == null || !valueIter.hasNext()) {
+			if (mapIter.hasNext()) {
+				valueIter = access.apply(mapIter.next());
+				if (valueIter.hasNext()) {
+					this.hasNext = true;
+				}
+			} else {
+				break;
 			}
 		}
 	}
@@ -65,25 +69,19 @@ public class SubCollectionIterator<E> implements Iterator<E> {
 
 	@Override
 	public E next() {
-		if (valueIter == null) {
+		if (!hasNext) {
 			throw new NoSuchElementException();
 		}
-		if (!valueIter.hasNext()) {
-			prevIter = valueIter;
-			if (mapIter.hasNext()) {
-				valueIter = access.apply(mapIter.next());
-				if (valueIter.hasNext()) {
-					return valueIter.next();
-				} else {
-					throw new NoSuchElementException();
-				}
+		E val = valueIter.next();
+		while (!valueIter.hasNext()) {
+			if (!mapIter.hasNext()) {
+				hasNext = false;
+				break;
 			} else {
-				valueIter = null;
-				throw new NoSuchElementException();
+				valueIter = access.apply(mapIter.next());
 			}
-		} else {
-			return valueIter.next();
 		}
+		return val;
 	}
 
 }

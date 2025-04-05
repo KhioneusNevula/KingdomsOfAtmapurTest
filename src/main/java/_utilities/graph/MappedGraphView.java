@@ -3,7 +3,9 @@ package _utilities.graph;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -13,6 +15,7 @@ import java.util.stream.Collectors;
 import _utilities.collections.CollectionUtils;
 import _utilities.collections.MappedCollection;
 import _utilities.collections.MappedSet;
+import _utilities.couplets.Pair;
 import _utilities.couplets.Triplet;
 import _utilities.property.IProperty;
 
@@ -127,6 +130,15 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 		if (inner instanceof IModifiableRelationGraph) {
 			return ((IModifiableRelationGraph<EI, RI>) inner).addEdge(nodeExToIn.apply(first), edgeExToIn.apply(type),
 					nodeExToIn.apply(second));
+		}
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Pair<Object, Object> checkEdgeEndsPermissible(Object first, IInvertibleRelationType type, Object second) {
+		if (inner instanceof IModifiableRelationGraph inner2) {
+			return inner2.checkEdgeEndsPermissible(nodeExToIn.apply((E) first), edgeExToIn.apply((R) type),
+					nodeExToIn.apply((E) second));
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -391,8 +403,8 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 	}
 
 	@Override
-	public Set<R> getConnectingEdgeTypes(E node) {
-		return new MappedCollection<R, RI>(inner.getConnectingEdgeTypes(nodeExToIn.apply(node)), edgeExToIn, edgeInToEx,
+	public Set<R> getOutgoingEdgeTypes(E node) {
+		return new MappedCollection<R, RI>(inner.getOutgoingEdgeTypes(nodeExToIn.apply(node)), edgeExToIn, edgeInToEx,
 				edgeClass);
 	}
 
@@ -422,6 +434,11 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 	}
 
 	@Override
+	public Collection<R> getEdgeTypes() {
+		return new MappedCollection<>(inner.getEdgeTypes(), edgeExToIn, edgeInToEx, this.edgeClass);
+	}
+
+	@Override
 	public Iterator<Triplet<E, R, E>> edgeIterator(Collection<? extends R> forTypes) {
 		return edgeMappedIterator(inner.edgeIterator(forTypes.stream().map(edgeExToIn).collect(Collectors.toSet())));
 	}
@@ -440,16 +457,18 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorBFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 
-		return edgeMappedIterator(inner.edgeTraversalIteratorBFS(nodeExToIn.apply(startPoint),
-				CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx, edgeExToIn),
+		return edgeMappedIterator(inner.edgeTraversalIteratorBFS(nodeExToIn.apply(startPoint), allowedEdgeTypes == null
+				? null
+				: CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx, edgeExToIn),
 				applyAcrossObject));
 	}
 
 	@Override
 	public Iterator<Triplet<E, R, E>> edgeTraversalIteratorDFS(E startPoint, Collection<? extends R> allowedEdgeTypes,
 			BiPredicate<IProperty<?>, Object> applyAcrossObject) {
-		return edgeMappedIterator(inner.edgeTraversalIteratorDFS(nodeExToIn.apply(startPoint),
-				CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx, edgeExToIn),
+		return edgeMappedIterator(inner.edgeTraversalIteratorDFS(nodeExToIn.apply(startPoint), allowedEdgeTypes == null
+				? null
+				: CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx, edgeExToIn),
 				applyAcrossObject));
 	}
 
@@ -458,7 +477,9 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 			BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 
 		return CollectionUtils.mappedIterator(inner.nodeTraversalIteratorBFS(nodeExToIn.apply(startPoint),
-				CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx, edgeExToIn),
+				allowedEdgeTypes == null ? null
+						: CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx,
+								edgeExToIn),
 				applyAcrossObject), nodeInToEx);
 	}
 
@@ -467,7 +488,9 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 			BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 
 		return CollectionUtils.mappedIterator(inner.nodeTraversalIteratorDFS(nodeExToIn.apply(startPoint),
-				CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx, edgeExToIn),
+				allowedEdgeTypes == null ? null
+						: CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx,
+								edgeExToIn),
 				applyAcrossObject), nodeInToEx);
 	}
 
@@ -477,8 +500,9 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 
 		return new MappedGraphView<>(
 				inner.traverseBFS(nodeExToIn.apply(startPoint),
-						CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx,
-								edgeExToIn),
+						allowedEdgeTypes == null ? null
+								: CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass,
+										edgeInToEx, edgeExToIn),
 						(m) -> forEachNode.accept(nodeInToEx.apply(m)), applyAcrossObject),
 				nodeExToIn, nodeInToEx, nodeClass, innerNodeClass, edgeExToIn, edgeInToEx, edgeClass, innerEdgeClass);
 	}
@@ -488,8 +512,9 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 			Consumer<E> forEachNode, BiPredicate<IProperty<?>, Object> applyAcrossObject) {
 		return new MappedGraphView<>(
 				inner.traverseDFS(nodeExToIn.apply(startPoint),
-						CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass, edgeInToEx,
-								edgeExToIn),
+						allowedEdgeTypes == null ? null
+								: CollectionUtils.immutableMappedCollection(allowedEdgeTypes, innerEdgeClass,
+										edgeInToEx, edgeExToIn),
 						(m) -> forEachNode.accept(nodeInToEx.apply(m)), applyAcrossObject),
 				nodeExToIn, nodeInToEx, nodeClass, innerNodeClass, edgeExToIn, edgeInToEx, edgeClass, innerEdgeClass);
 	}
@@ -531,6 +556,14 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 	}
 
 	@Override
+	public IRelationGraph<E, R> subgraph(Predicate<? super E> nodes, Predicate<Triplet<E, R, E>> edgePred) {
+		return new MappedGraphView<E, R, EI, RI>(
+				inner.subgraph((nod) -> nodes.test(nodeInToEx.apply(nod)),
+						(edg) -> edgePred.test(tripletInToExFunction().apply(edg))),
+				nodeExToIn, nodeInToEx, nodeClass, innerNodeClass, edgeExToIn, edgeInToEx, edgeClass, innerEdgeClass);
+	}
+
+	@Override
 	public String representation() {
 		return this.representation(Object::toString);
 	}
@@ -539,6 +572,15 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 	public String representation(Function<E, String> converter, Function<R, String> edgeConverter) {
 		return "MappedView{" + inner.representation((e) -> converter.apply(nodeInToEx.apply(e)),
 				(e) -> edgeConverter.apply(edgeInToEx.apply(e))) + "}";
+	}
+
+	@Override
+	public String representation(Function<E, String> converter,
+			BiFunction<Triplet<E, R, E>, Map<IProperty<?>, Object>, String> edgeConverter) {
+		return "MappedView{" + inner.representation((e) -> converter.apply(nodeInToEx.apply(e)),
+				(e, p) -> edgeConverter.apply(Triplet.of(nodeInToEx.apply(e.getFirst()),
+						edgeInToEx.apply(e.getSecond()), nodeInToEx.apply(e.getThird())), p))
+				+ "}";
 	}
 
 	@Override
@@ -574,7 +616,7 @@ public class MappedGraphView<E, R extends IInvertibleRelationType, EI, RI extend
 
 	@Override
 	public String toString() {
-		return "MappedView" + inner.toString();
+		return this.getClass().getSimpleName() + inner.toString();
 	}
 
 }

@@ -1,9 +1,14 @@
 package things.form.soma;
 
 import java.util.Collection;
+import java.util.Set;
 
 import _sim.RelativeSide;
+import _sim.world.GameMap;
 import _utilities.graph.IRelationGraph;
+import metaphysics.magic.ITether;
+import metaphysics.spirit.ISpirit;
+import things.actor.IActor;
 import things.form.IForm;
 import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelCenter;
@@ -11,12 +16,13 @@ import things.form.channelsystems.IChannelSystem;
 import things.form.channelsystems.IResource;
 import things.form.graph.connections.IPartConnection;
 import things.form.graph.connections.PartConnection;
+import things.form.kinds.settings.IKindSettings;
 import things.form.material.IMaterial;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.component.IComponentPart;
+import things.form.soma.component.StandardComponentPart;
 import things.form.soma.stats.IPartStat;
 import things.status_effect.IPartStatusEffectInstance;
-import thinker.individual.IMindSpirit;
 
 /**
  * Representation of a "body" or the physical structure of an object
@@ -26,6 +32,9 @@ import thinker.individual.IMindSpirit;
  * @param <IComponentPart>
  */
 public interface ISoma extends IForm<IComponentPart> {
+
+	@Override
+	public ISoma clone();
 
 	/**
 	 * Whether this soma is now destroyed (i.e. it has lost all its non-hole parts)
@@ -236,18 +245,6 @@ public interface ISoma extends IForm<IComponentPart> {
 	public String somaReport();
 
 	/**
-	 * Called when embedded materials are added or removed from this part
-	 * 
-	 * @param part
-	 * @param changedEmbeddeds the embedded materials that have been added or
-	 *                         removed (of course you can check which it is by
-	 *                         checking whether they are contained in the part's
-	 *                         embeddedmaterials or not)
-	 * @param tick
-	 */
-	public void onPartEmbeddedMaterialsChanged(IComponentPart part, Collection<IMaterial> changedEmbeddeds);
-
-	/**
 	 * Called when abilities are added or removed from this part
 	 * 
 	 * @param part
@@ -277,13 +274,13 @@ public interface ISoma extends IForm<IComponentPart> {
 	public void onChannelResourceChanged(IComponentPart part, IResource<?> resource, Comparable<?> formerValue);
 
 	/** Returns all spirits tethered to this soma */
-	Collection<IMindSpirit> getAllTetheredSpirits();
+	Collection<ISpirit> getAllTetheredSpirits();
 
 	/**
 	 * Returns the component part this spirit is tied to (or null obviously if the
 	 * spirit isn't here)
 	 */
-	public IComponentPart getPartForSpirit(IMindSpirit spirit);
+	public IComponentPart getPartForSpirit(ISpirit spirit);
 
 	/**
 	 * Called when a spirit is added to a part
@@ -291,7 +288,7 @@ public interface ISoma extends IForm<IComponentPart> {
 	 * @param spirit
 	 * @param part
 	 */
-	void onAttachSpirit(IMindSpirit spirit, IComponentPart part);
+	void onAttachSpirit(ISpirit spirit, IComponentPart part);
 
 	/**
 	 * Called when a spirit is removed from a part
@@ -299,7 +296,7 @@ public interface ISoma extends IForm<IComponentPart> {
 	 * @param spirit
 	 * @param part
 	 */
-	void onRemoveSpirit(IMindSpirit spirit, IComponentPart part);
+	void onRemoveSpirit(ISpirit spirit, IComponentPart part);
 
 	/**
 	 * Called when an effect is applied newly (not attempted, but actually applied
@@ -317,4 +314,51 @@ public interface ISoma extends IForm<IComponentPart> {
 	 * @param part
 	 */
 	public void onRemoveEffect(IPartStatusEffectInstance effect, IComponentPart part);
+
+	/**
+	 * Add and a channel system without populating
+	 * 
+	 * @param sys
+	 * @param settings to apply with
+	 * @param apply    whether to apply it to the body. If this is false, settings
+	 *                 can be null
+	 * @return
+	 */
+	public ISoma addChannelSystem(IChannelSystem sys, IKindSettings settings);
+
+	/**
+	 * Populate body using all added channel systems
+	 * 
+	 * @param sys
+	 * @param settings to apply with
+	 * @param apply    whether to apply it to the body. If this is false, settings
+	 *                 can be null
+	 * @return
+	 */
+	public void populateChannelSystems(IActor act, GameMap currentMap, long ticks);
+
+	/** REturns the {@link IKindSettings} used to create this soma */
+	public IKindSettings getCreationSettings();
+
+	/** Sets the {@link IKindSettings} used to create this soma */
+	public void setCreationSettings(IKindSettings settings);
+
+	/** Whether a given part is destroyed or not */
+	boolean isDestroyed(IComponentPart part);
+
+	/** Called when a tether is added to this soma */
+	public void onAddTether(ITether tether, StandardComponentPart standardComponentPart);
+
+	/** Called when a tether is removed from this soma */
+	public void onRemoveTether(ITether tether, StandardComponentPart standardComponentPart);
+
+	/** Called when multiple tethers are removed from this soma */
+	public void onRemoveTethers(Set<ITether> removed, StandardComponentPart standardComponentPart);
+
+	/**
+	 * Kills a spirit on this soma and ejects it into the world, or whatever the
+	 * soma is designed to do
+	 */
+	void killSpirit(ISpirit spirit);
+
 }

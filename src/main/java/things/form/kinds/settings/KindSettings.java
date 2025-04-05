@@ -14,6 +14,12 @@ public class KindSettings implements IKindSettings {
 		private boolean closed;
 		private KindSettings settings;
 
+		private SettingsBuilder(IKindSettings dup) {
+			settings = new KindSettings();
+			settings.properties = new HashMap<>();
+			dup.getProperties().forEach((pr) -> settings.properties.put(pr, dup.getSetting(pr)));
+		}
+
 		private SettingsBuilder() {
 			settings = new KindSettings();
 			settings.properties = new HashMap<>();
@@ -39,6 +45,10 @@ public class KindSettings implements IKindSettings {
 			return this.settings;
 		}
 
+	}
+
+	public static SettingsBuilder copyBuilder(IKindSettings from) {
+		return new SettingsBuilder(from);
 	}
 
 	public static SettingsBuilder builder() {

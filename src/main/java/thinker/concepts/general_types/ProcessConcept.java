@@ -2,6 +2,8 @@ package thinker.concepts.general_types;
 
 import java.util.UUID;
 
+import thinker.goals.IGoalConcept;
+
 public class ProcessConcept implements IProcessConcept {
 
 	private UUID id;
@@ -28,6 +30,19 @@ public class ProcessConcept implements IProcessConcept {
 	@Override
 	public UUID getUUID() {
 		return this.id;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof IProcessConcept pc) {
+			return this == obj || this.getUUID().equals(pc.getUUID());
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return this.getUUID().hashCode() + IProcessConcept.class.hashCode();
 	}
 
 }

@@ -3,13 +3,13 @@ package things.form.channelsystems;
 import java.util.Collection;
 import java.util.Collections;
 
+import _sim.world.GameMap;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
-import things.form.channelsystems.signal.SignalChannelSystem;
 import things.form.graph.connections.IPartConnection;
-import things.form.material.Material;
+import things.form.kinds.settings.IKindSettings;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import thinker.individual.IMindSpirit;
+import thinker.mind.util.IMindAccess;
 
 /**
  * A singleton representation of a specific kind of channelSystem
@@ -31,12 +31,6 @@ public interface IChannelSystem {
 	}
 
 	/**
-	 * A general nervous system, using the nerve-tissue material
-	 */
-	public static final SignalChannelSystem NERVOUS_SYSTEM = new SignalChannelSystem("nerve", Material.GENERIC_TISSUE,
-			"brain");
-
-	/**
 	 * The name of this channel system
 	 * 
 	 * @return
@@ -49,20 +43,21 @@ public interface IChannelSystem {
 	 * 
 	 * @return
 	 */
-	public default Collection<ChannelNeed> getChannelSystemNeeds() {
+	public default Collection<IChannelNeed> getChannelSystemNeeds() {
 		return Collections.emptySet();
 	}
 
 	/**
 	 * Return the amount of the given Need this body has from the perspective of
-	 * this body part (the brain body part, so to speak) and the given spirit, where
-	 * 1f means the need is in fine condition and 0f means the body is in critical
-	 * condition
+	 * this body part (the brain body part, so to speak) and the given spirit (as
+	 * well as what the spirit can access), where 1f means the need is in fine
+	 * condition and 0f means the body is in critical condition. Return -1 if the
+	 * need cannot be detected
 	 * 
 	 * @param part
 	 * @return
 	 */
-	public default float getNeedLevel(IMindSpirit spirit, IComponentPart part, ChannelNeed forNeed) {
+	public default float getNeedLevel(IChannelNeed forNeed, IMindAccess info) {
 		return 1f;
 	}
 
@@ -110,7 +105,7 @@ public interface IChannelSystem {
 	 * 
 	 * @param body
 	 */
-	public Collection<? extends IComponentPart> populateBody(ISoma body);
+	public Collection<? extends IComponentPart> populateBody(ISoma body, IKindSettings set, GameMap world);
 
 	/**
 	 * Called when a body experiences a significant change in one of its parts (i.e.

@@ -9,7 +9,10 @@ import _utilities.function.TriFunction;
 import things.form.soma.component.IComponentPart;
 
 public enum FloatPartStats implements IPartStat<Float> {
-	WALK_SPEED(0f, false), GRASP_STRENGTH(0f, true), REACH(0f, true);
+	/** Temperature of a part in KELVIN */
+	TEMPERATURE(300f, true), WALK_SPEED(0f, false), GRASP_STRENGTH(0f, true), REACH(0f, true), SIGHT_DISTANCE(0f, true),
+	/** Blood regeneration stat, usually found on just the life core */
+	BLOOD_REGENERATION(0.1f, false);
 
 	private Function<IComponentPart, Float> defaVal;
 	private Function<Iterable<Float>, Float> aggregator;

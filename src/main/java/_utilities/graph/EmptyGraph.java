@@ -3,7 +3,9 @@ package _utilities.graph;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -108,7 +110,7 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 
 	@Override
 	public <X> X getProperty(E one, R type, E two, IProperty<X> prop) {
-		throw new IllegalArgumentException(one + " " + two);
+		return null;
 	}
 
 	@Override
@@ -169,7 +171,7 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 	}
 
 	@Override
-	public Set<R> getConnectingEdgeTypes(E node) {
+	public Set<R> getOutgoingEdgeTypes(E node) {
 		throw new IllegalArgumentException(node + "");
 	}
 
@@ -181,6 +183,11 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 	@Override
 	public Iterator<Triplet<E, R, E>> edgeIterator() {
 		return Collections.emptyIterator();
+	}
+
+	@Override
+	public Collection<R> getEdgeTypes() {
+		return Collections.emptySet();
 	}
 
 	@Override
@@ -235,6 +242,11 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 	}
 
 	@Override
+	public IRelationGraph<E, R> subgraph(Predicate<? super E> nodes, Predicate<Triplet<E, R, E>> edgePred) {
+		return this;
+	}
+
+	@Override
 	public IRelationGraph<E, R> subgraph(Iterable<? extends E> nodes) {
 		if (!nodes.iterator().hasNext()) {
 			return this;
@@ -259,6 +271,12 @@ public class EmptyGraph<E, R extends IInvertibleRelationType> implements IRelati
 
 	@Override
 	public String representation(Function<E, String> converter, Function<R, String> edgeConverter) {
+		return this.representation();
+	}
+
+	@Override
+	public String representation(Function<E, String> converter,
+			BiFunction<Triplet<E, R, E>, Map<IProperty<?>, Object>, String> edgeConverter) {
 		return this.representation();
 	}
 

@@ -1,17 +1,24 @@
 package things.form.kinds.multipart;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableMap;
 
 import _utilities.graph.IModifiableRelationGraph;
+import things.actor.IActor;
 import things.form.channelsystems.IChannelSystem;
 import things.form.graph.connections.CoverageType;
 import things.form.graph.connections.IPartConnection;
 import things.form.kinds.BasicKindProperties;
 import things.form.kinds.IKind;
 import things.form.kinds.settings.IKindSettings;
+import things.form.soma.IPartDestroyedCondition;
 import things.form.soma.ISoma;
+import things.form.soma.MultipartSoma;
 import things.form.soma.component.IComponentPart;
 
 public abstract class MultipartKind implements IKind {
@@ -19,7 +26,7 @@ public abstract class MultipartKind implements IKind {
 	private String name;
 	private float averageMass;
 	private float averageSize;
-	protected List<IChannelSystem> systems;
+	protected Map<String, IChannelSystem> systems;
 
 	/**
 	 * The name, average mass, and average size of this entity. Also channel
@@ -35,7 +42,18 @@ public abstract class MultipartKind implements IKind {
 		this.name = name;
 		this.averageMass = averageMass;
 		this.averageSize = averageSize;
-		this.systems = ImmutableList.copyOf(channelSystems);
+		this.systems = ImmutableMap.copyOf(
+				Arrays.stream(channelSystems).collect(Collectors.toMap(IChannelSystem::name, Functions.identity())));
+	}
+
+	@Override
+	public Collection<IChannelSystem> getGeneratableChannelSystems() {
+		return systems.values();
+	}
+
+	@Override
+	public <T extends IChannelSystem> T getChannelSystemByName(String name) {
+		return (T) systems.get(name);
 	}
 
 	/**
@@ -45,7 +63,10 @@ public abstract class MultipartKind implements IKind {
 	 * @return
 	 */
 	protected MultipartKind sys(IChannelSystem... channelSystems) {
-		systems = ImmutableList.<IChannelSystem>builder().addAll(systems).add(channelSystems).build();
+		systems = ImmutableMap.<String, IChannelSystem>builder().putAll(systems)
+				.putAll((Iterable<Map.Entry<String, IChannelSystem>>) () -> Arrays.stream(channelSystems)
+						.map((cs) -> Map.entry(cs.name(), cs)).iterator())
+				.build();
 		return this;
 	}
 
@@ -60,6 +81,11 @@ public abstract class MultipartKind implements IKind {
 
 	public float getAverageSize() {
 		return averageSize;
+	}
+
+	@Override
+	public final boolean isDisembodied() {
+		return false;
 	}
 
 	/**
@@ -95,24 +121,24 @@ public abstract class MultipartKind implements IKind {
 	 * alsoo add special channel systems like blood systems with specific genetic
 	 * material or whatever
 	 */
-	protected void addSystemsWithoutPopulating(MultipartSoma createdSoma, IKindSettings settings) {
-		for (IChannelSystem system : this.systems) {
-			createdSoma.addChannelSystem(system, false); // so that all channel systems know that the other systems
-															// exist
+	protected void addSystemsWithoutPopulating(MultipartSoma createdSoma, IKindSettings settings, IActor aFor) {
+		for (IChannelSystem system : this.systems.values()) {
+			createdSoma.addChannelSystem(system, settings); // so that all channel systems know that the
+															// other systems
+			// exist
 		}
 	}
 
 	@Override
-	public ISoma generate(IKindSettings settings) {
+	public ISoma generateSoma(IKindSettings settings, IActor actorFor) {
 		IModifiableRelationGraph<IComponentPart, IPartConnection> parts = this.makePartGraph(settings);
 		MultipartSoma soma = new MultipartSoma(parts, this.makeCoverageGraph(parts, settings),
 				settings.getOrDefault(BasicKindProperties.SIZE, averageSize),
-				settings.getOrDefault(BasicKindProperties.MASS, averageMass), this.identifyCenter(parts, settings));
+				settings.getOrDefault(BasicKindProperties.MASS, averageMass), this.identifyCenter(parts, settings))
+						.setDestructionCondition(settings.getSetting(BasicKindProperties.DESTRUCTION_CONDITION));
 		soma.setKind(this);
-		addSystemsWithoutPopulating(soma, settings);
-		for (IChannelSystem system : soma.getChannelSystems()) {
-			soma.addChannelSystem(system, true);
-		}
+		soma.setCreationSettings(settings);
+		addSystemsWithoutPopulating(soma, settings, actorFor);
 		return soma;
 	}
 

@@ -54,7 +54,7 @@ public class BloodGeneratorChannelCenter implements IChannelCenter {
 	@Override
 	public Pair<IResource<?>, ?> generate(ISoma body, IComponentPart part, long ticks) {
 		// TODO generate blood
-		return null;
+		return Pair.of(system.getBloodMaterial(), system.getBloodMaterial().getMaxValue());
 	}
 
 	@Override

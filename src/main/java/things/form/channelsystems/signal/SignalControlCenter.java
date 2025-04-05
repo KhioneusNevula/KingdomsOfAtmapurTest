@@ -3,14 +3,16 @@ package things.form.channelsystems.signal;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.google.common.base.Predicates;
+
 import _utilities.graph.IRelationGraph;
+import metaphysics.spirit.ISpirit;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelSystem;
 import things.form.graph.connections.IPartConnection;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.form.soma.stats.IPartStat;
-import thinker.individual.IMindSpirit;
 
 /**
  * A ChannelCenter representing the brain, or other signal- controller
@@ -21,9 +23,9 @@ import thinker.individual.IMindSpirit;
 public class SignalControlCenter implements IChannelCenter {
 
 	private String name;
-	private IChannelSystem system;
+	private SignalChannelSystem system;
 
-	public SignalControlCenter(String name, IChannelSystem system) {
+	public SignalControlCenter(String name, SignalChannelSystem system) {
 		this.name = name;
 		this.system = system;
 	}
@@ -58,7 +60,10 @@ public class SignalControlCenter implements IChannelCenter {
 
 	@Override
 	public void controlTick(ISoma body, IComponentPart brain, long tick) {
-		IRelationGraph<IComponentPart, IPartConnection> connections = body.getChanneledParts(brain, system);
+		IRelationGraph<IComponentPart, IPartConnection> connections = body.getPartGraph()
+				.subgraph((node) -> node.getResourceAmount(system.getSignalResource()), Predicates.alwaysTrue())
+				.traverseBFS(brain, system.getChannelConnectionTypes(), (a) -> {
+				}, (a, b) -> true);
 
 		for (IComponentPart part : (Iterable<IComponentPart>) (Iterable) (() -> connections.stream()
 				.filter((p) -> p.hasAutomaticChannelCenter()).iterator())) {
@@ -69,8 +74,8 @@ public class SignalControlCenter implements IChannelCenter {
 				}
 			}
 		}
-		for (IMindSpirit spirit : brain.getTetheredSpirits()) {
-			spirit.runTick(brain, connections, body, tick);
+		for (ISpirit spirit : brain.getTetheredSpirits()) {
+			spirit.runTick(brain, connections, tick);
 		}
 	}
 

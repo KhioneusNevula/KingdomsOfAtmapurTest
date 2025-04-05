@@ -1,9 +1,12 @@
 package things.form.visage;
 
-import _main.WorldGraphics;
-import _sim.IRenderable;
+import java.util.Collection;
+
+import _graphics.IRenderable;
+import _graphics.WorldGraphics;
 import things.form.IForm;
 import things.form.IPart;
+import things.form.graph.connections.IPartConnection;
 
 /**
  * Representation of an appearance as a graph.

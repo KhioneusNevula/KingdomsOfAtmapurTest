@@ -1,10 +1,8 @@
 package thinker.actions.types;
 
 import java.util.Collection;
-import java.util.UUID;
 
 import _utilities.graph.EmptyGraph;
-import _utilities.graph.IModifiableRelationGraph;
 import _utilities.graph.IRelationGraph;
 import _utilities.graph.RelationGraph;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
@@ -17,26 +15,24 @@ import things.form.condition.IFormCondition.IFormRelationType;
 import things.form.graph.connections.PartConnection;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import thinker.IKnowledgeBase;
+import thinker.actions.ActionsHelper;
 import thinker.actions.IActionConcept;
 import thinker.concepts.IConcept;
-import thinker.concepts.general_types.IWhQuestionConcept;
-import thinker.concepts.relations.ActionRelationType;
-import thinker.concepts.relations.ConceptRelationType;
+import thinker.concepts.profile.IProfile;
 import thinker.concepts.relations.IConceptRelationType;
-import thinker.concepts.relations.RelationsHelper;
-import thinker.individual.IMindSpirit;
-import thinker.mind.needs.INeedConcept;
-import thinker.mind.will.IWill;
+import thinker.concepts.relations.actional.EventRelationType;
+import thinker.concepts.relations.descriptive.UniqueInterrelationType;
+import thinker.concepts.relations.util.RelationsHelper;
+import thinker.knowledge.base.IKnowledgeBase;
+import thinker.mind.util.IMindAccess;
 
 /** Action for intaking something to fulfill a need */
 public class ConsumeActionConcept implements IActionConcept {
 
-	private RelationGraph<IConcept, IConceptRelationType> intention;
-	private String systemName;
-	private INeedConcept consumptionNeed;
-	private IConcept mouthConcept;
-	private IConcept consumableConcept;
+	private FuelChannelSystem systemName;
+	// private INeedConcept consumptionNeed;
+	// private IConcept mouthConcept;
+	// private IConcept consumableConcept;
 
 	/**
 	 * 
@@ -44,17 +40,8 @@ public class ConsumeActionConcept implements IActionConcept {
 	 * @param consumableConcept -- a concept to CHARACTERIZE what is considered food
 	 * @param mouthConcept      -- a concept to CHARACTERIZE the mouth part
 	 */
-	public ConsumeActionConcept(INeedConcept foodNeed, IConcept consumableConcept, IConcept fuelIntake) {
-		this.consumptionNeed = foodNeed;
-		this.consumableConcept = consumableConcept;
-		intention = new RelationGraph<>();
-		intention.add(foodNeed);
-		intention.add(consumableConcept);
-		intention.add(IActionConcept.THIS_ACTION);
-		intention.addEdge(IActionConcept.THIS_ACTION, ActionRelationType.SATISFIES, foodNeed);
-		intention.addEdge(IActionConcept.THIS_ACTION, ActionRelationType.DESTROYS, consumableConcept);
-		this.mouthConcept = fuelIntake;
-		this.systemName = foodNeed.getSystemName();
+	public ConsumeActionConcept(FuelChannelSystem system) {
+		this.systemName = system;
 	}
 
 	@Override
@@ -62,54 +49,23 @@ public class ConsumeActionConcept implements IActionConcept {
 		return ConceptType.ACTION;
 	}
 
-	public IConcept getConsumableConcept() {
-		return consumableConcept;
-	}
-
 	@Override
 	public String getUnderlyingName() {
-		return "eat_action_concept_(" + this.consumableConcept + ",into," + mouthConcept.getUnderlyingName() + ")";
-	}
-
-	public IConcept getFuelIntake() {
-		return mouthConcept;
+		return "eat_action_concept_(" + systemName + ")";
 	}
 
 	@Override
-	public IRelationGraph<IConcept, IConceptRelationType> getIntention() {
-		return intention;
-	}
+	public IRelationGraph<IConcept, IConceptRelationType> generateIntendedResult(IKnowledgeBase knowledge) {
 
-	@Override
-	public boolean integrateIntoKnowledgeBase(IKnowledgeBase base, IConcept doer) {
-		if (!base.knowsConcept(consumptionNeed))
-			return false;
-		base.learnConcept(this);
-		base.addConfidentRelation(this, ActionRelationType.SATISFIES, consumptionNeed);
-		base.addConfidentRelation(this, ActionRelationType.DESTROYS, consumableConcept);
-		// base.learnConcept(Feeling.SATISFACTION);
-		// base.addConfidentRelation(this, ActionRelationType.INCREASES,
-		// Feeling.SATISFACTION);
-		return true;
-	}
-
-	@Override
-	public boolean directlySatisfiesNeed() {
-		return true;
-	}
-
-	@Override
-	public IRelationGraph<IConcept, IConceptRelationType> getKnowledgeIntention() {
-		return EmptyGraph.instance();
-	}
-
-	/** Gets a fuel-channel-system from the body using the name and whatnot */
-	private FuelChannelSystem getFoodSystem(IComponentPart inPart) {
-		if (inPart.getOwner() instanceof ISoma so
-				&& so.getSystemByName(systemName) instanceof FuelChannelSystem system) {
-			return system;
+		Collection<IConcept> needConcepts = ActionsHelper.getSatisfiedNeedsOfEvent(this,
+				knowledge.getMappedConceptGraphView());
+		RelationGraph<IConcept, IConceptRelationType> intention = new RelationGraph<>();
+		intention.add(THIS_ACTION);
+		intention.addAll(needConcepts);
+		for (IConcept need : needConcepts) {
+			intention.addEdge(THIS_ACTION, EventRelationType.SATISFIES, need);
 		}
-		return null;
+		return intention;
 	}
 
 	private FuelIntakeChannelCenter getMouthType(FuelChannelSystem system) {
@@ -118,9 +74,13 @@ public class ConsumeActionConcept implements IActionConcept {
 	}
 
 	@Override
-	public IFormCondition bodyConditions(IMindSpirit forSpirit, IWill inWill, IComponentPart inPart,
-			Collection<? extends IComponentPart> access, long ticks) {
-		FuelChannelSystem system = getFoodSystem(inPart);
+	public IFormCondition bodyConditions(IMindAccess info) {
+		if (!info.isCorporeal()) {
+			return IFormCondition.MUST_BE_CORPOREAL;
+		}
+		FuelChannelSystem system = info.maybeSoma().stream()
+				.filter((soma) -> soma.getChannelSystems().contains(this.systemName)).map((x) -> systemName).findFirst()
+				.orElse(null);
 		if (system != null) {
 			FuelIntakeChannelCenter mouth = getMouthType(system);
 			RelationGraph<Object, IFormRelationType> somagraph = new RelationGraph<>();
@@ -132,24 +92,24 @@ public class ConsumeActionConcept implements IActionConcept {
 			return condition;
 
 		} else {
-			return null;
+			return new FormCondition(EmptyGraph.instance(), system);
 		}
 	}
 
 	@Override
-	public boolean canExecute(IMindSpirit forSpirit, IWill inWill, IComponentPart inPart,
-			Collection<? extends IComponentPart> access, IRelationGraph<IConcept, IConceptRelationType> intention,
-			IRelationGraph<IConcept, IConceptRelationType> knowledgeIntention, long ticks) {
-
-		ISoma so = (ISoma) inPart.getOwner();
-		for (IComponentPart part : access) {
-			if (RelationsHelper.matchesConcept(part, mouthConcept, false, forSpirit.getKnowledgeGraph())) {
-				Collection<IComponentPart> neis = so.getRepresentationGraph().getNeighbors(part,
-						PartConnection.HOLDING);
-				if (neis.stream().map(IComponentPart::getTrueOwner)
-						.anyMatch((b) -> RelationsHelper.matchesAllConditions(b, TARGET, intention, false,
-								forSpirit.getKnowledgeGraph(),
-								RelationsHelper.eqTypes(RelationsHelper.CHARACTERIZERS_EQ)))) {
+	public boolean canExecute(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention) {
+		if (info.maybeSoma().isEmpty()) {
+			return false;
+		}
+		ISoma so = info.maybeSoma().get();
+		for (IComponentPart part : info.partAccess()) {
+			if (RelationsHelper.matchesAnyConcepts(part, ActionsHelper.getThematicRoleOfEvent(this,
+					info.being().getKnowledgeGraph(), EventRelationType.USES_PART), false,
+					info.being().getKnowledgeGraph())) {
+				Collection<IComponentPart> neis = so.getPartGraph().getNeighbors(part, PartConnection.HOLDING);
+				if (neis.stream().map(IComponentPart::getTrueOwner).anyMatch(
+						(b) -> intention.getNeighbors(THIS_ACTION, EventRelationType.ACTS_ON).stream().anyMatch(
+								(target) -> RelationsHelper.matchesTypeProfile(so, target, intention, false)))) {
 					return true;
 				}
 			}
@@ -159,98 +119,70 @@ public class ConsumeActionConcept implements IActionConcept {
 	}
 
 	@Override
-	public void abortAction(IMindSpirit spirit, IWill will, IComponentPart inPart,
-			Collection<? extends IComponentPart> access, long ticks) {
+	public void abortAction(IMindAccess info) {
 
 	}
 
 	@Override
-	public void executeTick(IMindSpirit forSpirit, IWill inWill, IComponentPart inPart,
-			Collection<? extends IComponentPart> access, IRelationGraph<IConcept, IConceptRelationType> intention,
-			IRelationGraph<IConcept, IConceptRelationType> knowledgeIntention, long ticks) {
+	public void executeTick(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention) {
 		// TODO Food eating stuffs
-		FuelChannelSystem system = getFoodSystem(inPart);
-		if (system != null) {
-			ISoma so = (ISoma) inPart.getOwner();
-			FuelIntakeChannelCenter mouth = getMouthType(system);
-			for (IComponentPart part : access) {
-				if (part.getAbilities().contains(mouth)) {
-					so.getRepresentationGraph().getNeighbors(part, PartConnection.HOLDING).stream()
-							.filter((p) -> mouth.canIntake(so, part, p))
-							.forEach((p) -> mouth.intake(so, part, p, ticks));
+		if (info.maybeSoma().isEmpty()) {
+			return;
+		}
+		ISoma so = info.maybeSoma().get();
+		FuelIntakeChannelCenter mouth = getMouthType(systemName);
+		for (IComponentPart part : info.partAccess()) {
+			if (part.getAbilities().contains(mouth)) {
+				so.getPartGraph().getNeighbors(part, PartConnection.HOLDING).stream()
+						.filter((p) -> mouth.canIntake(so, part, p))
+						.forEach((p) -> mouth.intake(so, part, p, info.ticks()));
 
-				}
 			}
-		} else {
-			throw new IllegalStateException();
 		}
 
 	}
 
 	@Override
-	public IRelationGraph<IConcept, IConceptRelationType> generateCondition(IMindSpirit forSpirit, IWill inWill,
-			IComponentPart inPart, Collection<? extends IComponentPart> access,
-			IRelationGraph<IConcept, IConceptRelationType> intention,
-			IRelationGraph<IConcept, IConceptRelationType> knowledgeIntention) {
+	public IRelationGraph<IConcept, IConceptRelationType> generateCondition(IMindAccess info,
+			IRelationGraph<IConcept, IConceptRelationType> intention) {
+
 		RelationGraph<IConcept, IConceptRelationType> cond = new RelationGraph<>();
-		cond.add(TARGET);
-		cond.add(mouthConcept);
-		cond.addEdge(TARGET, ConceptRelationType.AT_LOCATION, mouthConcept);
-		cond.addEdge(mouthConcept, ConceptRelationType.PART_OF, IActionConcept.ACTION_DOER);
-		cond.addEdge(TARGET, ConceptRelationType.CHARACTERIZED_BY, consumableConcept);
-		cond.setProperty(TARGET, ConceptRelationType.CHARACTERIZED_BY, consumableConcept, OBLIGATION_PROP,
-				Obligation.OBLIGATORY);
-		if (intention.degree(TARGET) != 0) {
-			cond.addAll(intention.traverseBFS(TARGET, null, (x) -> {
-			}, (a, b) -> true));
+		Collection<IProfile> mouthTypeProfiles = ActionsHelper.getPartsUsedInEvent(this,
+				info.being().getKnowledgeGraph());
+		Collection<IProfile> foodTypeProfiles = ActionsHelper.getObjectsOfEvent(this, info.being().getKnowledgeGraph());
 
-		} else {
-			cond.addAll(knowledgeIntention.traverseBFS(TARGET, null, (x) -> {
-			}, (a, b) -> true));
+		cond.add(THIS_ACTION);
+		for (IProfile foodType : foodTypeProfiles) {
+			cond.add(foodType);
+			cond.addEdge(THIS_ACTION, EventRelationType.ACTS_ON, foodType);
 		}
-		return cond;
-	}
-
-	@Override
-	public IRelationGraph<IConcept, IConceptRelationType> generateKnowledgeCondition(IMindSpirit forSpirit,
-			IWill inWill, IComponentPart inPart, Collection<? extends IComponentPart> access,
-			IRelationGraph<IConcept, IConceptRelationType> intention,
-			IRelationGraph<IConcept, IConceptRelationType> knowledgeIntention) {
-
-		if (intention.degree(TARGET, ConceptRelationType.IS) == 0) {
-			RelationGraph<IConcept, IConceptRelationType> cond = new RelationGraph<>();
-			cond.add(TARGET);
-			IWhQuestionConcept q = IWhQuestionConcept.what(UUID.randomUUID());
-			cond.addEdge(TARGET, ConceptRelationType.IS, q);
-			IModifiableRelationGraph<IConcept, IConceptRelationType> targ = intention.traverseBFS(TARGET, null, (x) -> {
-			}, (a, b) -> true).editableOrCopy();
-			targ.set(TARGET, q);
-			cond.addAll(targ);
-
-			if (cond.addEdge(q, ConceptRelationType.CHARACTERIZED_BY, consumableConcept)) {
-				cond.setProperty(q, ConceptRelationType.CHARACTERIZED_BY, consumableConcept, OBLIGATION_PROP,
-						Obligation.OBLIGATORY);
+		for (IProfile mouthType : mouthTypeProfiles) {
+			cond.add(mouthType);
+			cond.addEdge(THIS_ACTION, EventRelationType.PUTS_AT, mouthType);
+			for (IProfile foodType : foodTypeProfiles) {
+				cond.addEdge(foodType, UniqueInterrelationType.HELD_BY, mouthType);
 			}
-
-			return cond;
 		}
 
-		return EmptyGraph.instance();
+		return cond;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof ConsumeActionConcept eac) {
-			return this.consumableConcept.equals(eac.consumableConcept) && this.mouthConcept.equals(eac.mouthConcept)
-					&& this.systemName.equals(eac.systemName) && this.intention.equals(eac.intention);
+			return this.systemName.equals(eac.systemName);
 		}
 		return super.equals(obj);
 	}
 
 	@Override
 	public int hashCode() {
-		return this.consumableConcept.hashCode() + this.mouthConcept.hashCode() + this.systemName.hashCode()
-				+ this.intention.hashCode();
+		return this.systemName.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + "(" + this.systemName + ")";
 	}
 
 }

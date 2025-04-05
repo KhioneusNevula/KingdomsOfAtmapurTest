@@ -159,6 +159,11 @@ public interface IVector {
 		return new VectorLoc(x, y, layer);
 	}
 
+	public static double distance(IVector one, IVector two) {
+		return Math.sqrt(Math.pow(one.getUnadjustedX() - two.getUnadjustedX(), 2)
+				+ Math.pow(one.getUnadjustedY() - two.getUnadjustedY(), 2));
+	}
+
 	/**
 	 * Get the map tile this vector is at
 	 * 
@@ -344,7 +349,7 @@ public interface IVector {
 	 * @param factor
 	 * @return
 	 */
-	public default IVector scaleMagnitudeBy(float factor) {
+	public default IVector scaleMagnitudeBy(double factor) {
 		if (factor == 1)
 			return this;
 		return this.withXY(this.getUnadjustedX() * factor, this.getUnadjustedY() * factor);
@@ -357,5 +362,13 @@ public interface IVector {
 	 */
 	public default IVector normalize() {
 		return this.withMagnitude(1);
+	}
+
+	/** Returns this vector rotated by a certain (degree) angle */
+	public default IVector turn(double d) {
+		double theta = Math.toRadians(d);
+		double x = this.getUnadjustedX();
+		double y = this.getUnadjustedY();
+		return of(x * Math.cos(theta) - y * Math.sin(theta), x * Math.sin(theta) + y * Math.cos(theta));
 	}
 }

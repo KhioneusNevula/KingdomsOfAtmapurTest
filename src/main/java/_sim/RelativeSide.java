@@ -66,6 +66,11 @@ public enum RelativeSide implements IInvertibleRelationType {
 	}
 
 	@Override
+	public String checkEndType(Object node) {
+		return null;
+	}
+
+	@Override
 	public boolean bidirectional() {
 		return reverse == this;
 	}

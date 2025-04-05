@@ -32,4 +32,10 @@ public interface IExistsInWorld {
 	 * @return
 	 */
 	public MapLayer getLayer();
+
+	/**
+	 * Whether this item is in a state wherein it must be removed, i.e. totally
+	 * destroyed
+	 */
+	boolean needsToBeRemoved();
 }

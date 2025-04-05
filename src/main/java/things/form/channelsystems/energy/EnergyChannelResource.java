@@ -50,6 +50,11 @@ public class EnergyChannelResource implements IResource<Float> {
 	}
 
 	@Override
+	public Float divide(Float g, int by) {
+		return g / by;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof EnergyChannelResource rs) {
 			return this.name.equals(rs.name());

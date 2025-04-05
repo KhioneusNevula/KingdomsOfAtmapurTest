@@ -3,18 +3,25 @@ package things.form.soma.component;
 import java.util.Collection;
 import java.util.UUID;
 
+import metaphysics.magic.ITether;
+import metaphysics.magic.ITether.TetherType;
+import metaphysics.spirit.ISpirit;
+import things.form.IForm;
 import things.form.IPart;
+import things.form.channelsystems.IChannel;
 import things.form.channelsystems.IChannelCenter;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
 import things.form.channelsystems.IChannelSystem;
 import things.form.channelsystems.IResource;
 import things.form.material.IMaterial;
+import things.form.sensing.sensors.ISensor;
 import things.form.soma.ISoma;
 import things.form.soma.abilities.IPartAbility;
 import things.form.soma.stats.IPartStat;
+import things.stains.IStain;
 import things.status_effect.IPartStatusEffect;
 import things.status_effect.IPartStatusEffectInstance;
-import thinker.individual.IMindSpirit;
+import thinker.concepts.profile.IProfile;
 
 /**
  * Note: a component part can be linked to one in another entity, representing
@@ -32,11 +39,6 @@ public interface IComponentPart extends IPart {
 	public ISoma getTrueOwner();
 
 	/**
-	 * Sets the form that this part Actually belongs to, i.e. when it is being held
-	 */
-	public void setTrueOwner(ISoma so);
-
-	/**
 	 * Creates a "dummy part" (cast as an {@link IComponentPart}, as opposed to the
 	 * version of the method {@link IPart#dummy(UUID)} which just returns an IPart),
 	 * i.e. a single-use part whose sole purpose is to be used to find a component
@@ -50,14 +52,6 @@ public interface IComponentPart extends IPart {
 	public static IComponentPart dummy(UUID id) {
 		return new DummyComponentPart(id);
 	}
-
-	/**
-	 * Materials that spill out of this part when it is damaged. Depends on factors
-	 * such as present channelsystems
-	 * 
-	 * @return
-	 */
-	public Collection<IMaterial> embeddedMaterials();
 
 	/**
 	 * Get the amount of a specific resource.
@@ -89,15 +83,6 @@ public interface IComponentPart extends IPart {
 	 * @param ability
 	 */
 	public void addAbility(IPartAbility ability, boolean callUpdate);
-
-	/**
-	 * Add embedded material to part. Set callUpdate to true if you want to call an
-	 * update on the parent soma. Will automatically call an update on contained
-	 * spirits
-	 * 
-	 * @param mat
-	 */
-	public void addEmbeddedMaterials(Collection<? extends IMaterial> mat, boolean callUpdate);
 
 	/**
 	 * Get channelcenters in this part with the given role
@@ -142,7 +127,7 @@ public interface IComponentPart extends IPart {
 	 * 
 	 * @return
 	 */
-	public Collection<IMindSpirit> getTetheredSpirits();
+	public Collection<ISpirit> getTetheredSpirits();
 
 	/**
 	 * Wehther this component part would allow the given spirit to attach to it.
@@ -151,21 +136,21 @@ public interface IComponentPart extends IPart {
 	 * @param spirit
 	 * @return
 	 */
-	public boolean canAttachSpirit(IMindSpirit spirit);
+	public boolean canAttachSpirit(ISpirit spirit);
 
 	/**
 	 * Attach the given spirit to this component. Only call this from the Soma!
 	 * 
 	 * @param spirit
 	 */
-	public void attachSpirit(IMindSpirit spirit, boolean callUpdate);
+	public void attachSpirit(ISpirit spirit, boolean callUpdate);
 
 	/**
 	 * Remove this spirit. Only call this from a Soma!
 	 * 
 	 * @param toRemove
 	 */
-	public void removeSpirit(IMindSpirit toRemove, boolean callUpdate);
+	public void removeSpirit(ISpirit toRemove, boolean callUpdate);
 
 	/**
 	 * Return all effect instances on this part
@@ -196,6 +181,19 @@ public interface IComponentPart extends IPart {
 	 * @return
 	 */
 	public IPartStatusEffectInstance getEffectInstance(IPartStatusEffect effect);
+
+	/**
+	 * Materials that are considered "embedded" in this one. Such materials are
+	 * typically derived by checking channel systems and resource amounts
+	 */
+	public Collection<IMaterial> embeddedMaterials();
+
+	/**
+	 * Check if this material is damaged and generate the appropriate stains with
+	 * the appropriate amounts from its embedded substances; return empty if there
+	 * is no spillage
+	 */
+	public Collection<IStain> generateStains();
 
 	/**
 	 * Apply the given status effect to this component; override any previous status
@@ -249,22 +247,32 @@ public interface IComponentPart extends IPart {
 	public Collection<? extends IPartStat<?>> getStats();
 
 	/**
-	 * Report details about this part;s systems and abilities and whatever
+	 * Report de@Override tails about this part;s systems and abilities and whatever
 	 * 
 	 * @return
 	 */
 	public String componentReport();
 
 	/**
-	 * Get the owner of this part, cast as a soma
+	 * Get the owner of this part, cast as a soma, or null if it doesn't exist or is
+	 * not a soma
 	 * 
 	 * @return
 	 */
 	default ISoma getSomaOwner() {
-		return (ISoma) getOwner();
+		if (getOwner() instanceof ISoma) {
+			return (ISoma) getOwner();
+		}
+		return null;
 	}
 
 	public void setOwner(ISoma soma);
+
+	/** If this part has a sensing ability */
+	public boolean hasSensor();
+
+	/** If this part has a sensing ability */
+	public Collection<ISensor> getSensors();
 
 	@Override
 	public IComponentPart clone();
@@ -278,6 +286,83 @@ public interface IComponentPart extends IPart {
 	 * @param callUpdate whether to call update on parent soma and contained spirits
 	 */
 	void changeResourceAmount(IResource<?> resource, Comparable<?> value, boolean callUpdate);
+
+	/**
+	 * Alike to {@link #changeResourceAmount(IResource, Comparable, boolean)}, but
+	 * for resources that require an argument specifying the material
+	 * 
+	 * @param resource
+	 * @param geneticMaterial
+	 * @param value
+	 * @param callUpdate
+	 */
+	void changeMaterialResourceAmount(IResource<?> resource, IMaterial geneticMaterial, Comparable<?> value,
+			boolean callUpdate);
+
+	/**
+	 * Adds a channel's embedded material to this Part. Pass in the
+	 * genetic-generated versions of the materials.
+	 */
+	public void addChannelMaterial(IChannel vectorMaterials, Collection<IMaterial> materialsGen);
+
+	/** Getst the embedded material in this part based on the given resource */
+	IMaterial getEmbeddedMaterialFor(IResource<?> resource);
+
+	/** Return all tethers to this componentPart */
+	public Collection<ITether> getTethers();
+
+	/** Add a tethers to this componentPart of the given type */
+	public void addTether(ITether tether, boolean callUpdate);
+
+	/**
+	 * Remove a tether from this componentPart of the given type and return true if
+	 * successful
+	 */
+	public boolean removeTether(ITether tether, boolean callUpdate);
+
+	/**
+	 * Remove a tether from this componentPart of the given type and return true if
+	 * successful
+	 */
+	public boolean removeTether(TetherType type, IProfile tether, boolean callUpdate);
+
+	/**
+	 * Remove all tethers from this componentPart for something with the given
+	 * profile
+	 */
+	public boolean removeTethers(IProfile tether, boolean callUpdate);
+
+	/**
+	 * Return all spiritual tethers this componentPart has for something with the
+	 * given profile
+	 */
+	public Collection<ITether> getTethers(IProfile tether);
+
+	/**
+	 * Return if this componentPart has a tether for something with the given
+	 * profile
+	 */
+	public boolean hasTether(IProfile tether);
+
+	/**
+	 * Return if this componentPart has a tether for something with the given
+	 * profile and type
+	 */
+	public boolean hasTether(TetherType type, IProfile tether);
+
+	/**
+	 * return if this particular tether exists
+	 */
+	public boolean hasTether(ITether tether);
+
+	/** Return all tethers to this componentPart of the given type */
+	public Collection<ITether> getTethers(TetherType type);
+
+	/**
+	 * Return the tethers to this componentPart of the given profile and type or
+	 * null if not present
+	 */
+	public ITether getTether(TetherType type, IProfile prof);
 
 	/** TODO Shatters a part into shards */
 	/** public void shatterPart(float force, ForceType type, boolean update); */
@@ -309,17 +394,77 @@ public interface IComponentPart extends IPart {
 		}
 
 		@Override
-		public Collection<IMaterial> embeddedMaterials() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
 		public <E extends Comparable<?>> E getResourceAmount(IResource<E> resource) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		public boolean hasSensor() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<ISensor> getSensors() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
 		public int interactionPlanes() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean hasTether(TetherType type, IProfile tether) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void addTether(ITether tether, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public ITether getTether(TetherType type, IProfile prof) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<ITether> getTethers() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<ITether> getTethers(TetherType type) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean hasTether(ITether tether) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean removeTether(ITether tether, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean removeTether(TetherType type, IProfile tether, boolean callUpdate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<ITether> getTethers(IProfile tether) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean hasTether(IProfile tether) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean removeTethers(IProfile tether, boolean callUpdate) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -334,7 +479,12 @@ public interface IComponentPart extends IPart {
 		}
 
 		@Override
-		public void addEmbeddedMaterials(Collection<? extends IMaterial> mat, boolean callUpdate) {
+		public IMaterial getEmbeddedMaterialFor(IResource<?> resource) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<IStain> generateStains() {
 			throw new UnsupportedOperationException();
 		}
 
@@ -350,6 +500,11 @@ public interface IComponentPart extends IPart {
 
 		@Override
 		public Collection<IPartStatusEffectInstance> getEffectInstances() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<IMaterial> embeddedMaterials() {
 			throw new UnsupportedOperationException();
 		}
 
@@ -394,22 +549,22 @@ public interface IComponentPart extends IPart {
 		}
 
 		@Override
-		public Collection<IMindSpirit> getTetheredSpirits() {
+		public Collection<ISpirit> getTetheredSpirits() {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public boolean canAttachSpirit(IMindSpirit spirit) {
+		public boolean canAttachSpirit(ISpirit spirit) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void attachSpirit(IMindSpirit spirit, boolean callUpdate) {
+		public void attachSpirit(ISpirit spirit, boolean callUpdate) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void removeSpirit(IMindSpirit toRemove, boolean callUpdate) {
+		public void removeSpirit(ISpirit toRemove, boolean callUpdate) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -449,7 +604,7 @@ public interface IComponentPart extends IPart {
 		}
 
 		@Override
-		public void setTrueOwner(ISoma so) {
+		public void setTrueOwner(IForm<?> so) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -457,6 +612,18 @@ public interface IComponentPart extends IPart {
 		public void changeResourceAmount(IResource<?> resource, Comparable<?> value, boolean callUpdate) {
 			throw new UnsupportedOperationException();
 		}
+
+		@Override
+		public void changeMaterialResourceAmount(IResource<?> resource, IMaterial geneticMaterial, Comparable<?> value,
+				boolean callUpdate) {
+			this.changeResourceAmount(resource, value, callUpdate);
+		}
+
+		@Override
+		public void addChannelMaterial(IChannel vectorMaterials, Collection<IMaterial> geneticM) {
+			throw new UnsupportedOperationException();
+		}
+
 	}
 
 }

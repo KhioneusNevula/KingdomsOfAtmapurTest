@@ -3,9 +3,15 @@ package things.form.channelsystems.blood;
 import java.util.Collection;
 import java.util.Collections;
 
+import _utilities.couplets.Pair;
+import things.biology.genes.IGenomeEncoding;
 import things.form.channelsystems.IChannelCenter;
+import things.form.channelsystems.IResource;
+import things.form.material.IMaterial;
+import things.form.material.property.MaterialProperty;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
+import things.form.soma.stats.FloatPartStats;
 import things.form.soma.stats.IPartStat;
 
 public class HeartChannelCenter implements IChannelCenter {
@@ -50,16 +56,41 @@ public class HeartChannelCenter implements IChannelCenter {
 	}
 
 	@Override
-	public void automaticTick(ISoma body, IComponentPart part, long ticks) {
-		IChannelCenter.super.automaticTick(body, part, ticks);
+	public void automaticTick(ISoma body, IComponentPart heartpart, long ticks) {
 		// TODO hearts beat, also do not generate blood
-		body.getConnectedParts(part).forEach((a) -> {
+		IMaterial bloodmat = heartpart.getEmbeddedMaterialFor(this.system.getBloodMaterial());
+		float[] heartblood = { heartpart.getResourceAmount(this.system.getBloodMaterial()) };
+		body.getConnectedParts(heartpart).forEach((a) -> {
 			float blood = a.getResourceAmount(this.system.getBloodMaterial());
 			float newblood = blood + 0.05f;
-			if (newblood <= system.getBloodMaterial().getMaxValue()) {
-				a.changeResourceAmount(this.system.getBloodMaterial(), newblood, true);
+			float newheartblood = heartblood[0] - 0.05f;
+			if (newblood < heartblood[0]) {
+				a.changeMaterialResourceAmount(this.system.getBloodMaterial(),
+						heartpart.getEmbeddedMaterialFor(this.system.getBloodMaterial()), newblood, true);
+				heartpart.changeResourceAmount(this.system.getBloodMaterial(), newheartblood, true);
+				heartblood[0] = heartpart.getResourceAmount(this.system.getBloodMaterial());
 			}
 		});
+		if (Math.random() < body.getAggregateStat(FloatPartStats.BLOOD_REGENERATION)
+				&& heartblood[0] < 0.1f * system.getBloodMaterial().getMaxValue()) {
+			body.getPartsByName(system.getBloodGenPart()).forEach((x) -> {
+				if (heartblood[0] < system.getBloodMaterial().getMaxValue()) {
+					heartblood[0] += 0.1f;
+
+				}
+			});
+			if (bloodmat == null) {
+				bloodmat = this.system.getBloodMaterial().generateMaterialFromSettings(body.getCreationSettings());
+			}
+			heartpart.changeMaterialResourceAmount(this.system.getBloodMaterial(), bloodmat,
+					Float.valueOf(heartblood[0]), true);
+		}
+
+	}
+
+	@Override
+	public boolean isAutomatic() {
+		return true;
 	}
 
 	@Override

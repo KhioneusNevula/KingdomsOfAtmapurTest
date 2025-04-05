@@ -2,22 +2,35 @@ package _sim.world;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
-import _main.WorldGraphics;
-import _sim.IRenderable;
+import _graphics.IRenderable;
+import _graphics.WorldGraphics;
+import _sim.GameUniverse;
 import _sim.dimension.DimensionBuilder;
 import _sim.vectors.IVector;
 import _utilities.collections.ImmutableCollection;
 import _utilities.property.IProperty;
+import metaphysics.being.IBeing;
+import metaphysics.being.IFigure;
+import metaphysics.spirit.ISpirit;
+import party.kind.IKindCollective;
+import party.kind.spawning.IKindSpawningContext;
 import processing.core.PConstants;
+import things.actor.Actor;
 import things.actor.IActor;
 import things.blocks.BlockMap;
-import thinker.individual.IBeing;
+import things.form.kinds.IKind;
+import things.form.kinds.settings.IKindSettings;
+import things.interfaces.UniqueType;
+import things.phenomena.IPhenomenon;
 
 /**
  * A world map for a game
@@ -41,13 +54,14 @@ public class GameMap implements IRenderable {
 	private int displayHeight = mapHeight * blockRenderSize;
 	private Map<IProperty<?>, Object> worldProperties = new HashMap<>();
 	private BlockMap blockMap;
-	private Map<UUID, IActor> actorsById = new HashMap<>();
+	private Map<UUID, IActor> actorsById = Collections.synchronizedMap(new HashMap<>());
+	private Map<UUID, IPhenomenon> phenomenaById = Collections.synchronizedMap(new HashMap<>());
 	/** Return a map of all beings untethered to the world */
-	private Map<UUID, IBeing> untetheredBeings = new HashMap<>();
+	private Map<UUID, IBeing> untetheredBeings = Collections.synchronizedMap(new HashMap<>());
 	private long ticks = 0;
-	private List<Runnable> nextTicksQueue = new ArrayList<>();
+	private List<Runnable> nextTicksQueue = Collections.synchronizedList(new ArrayList<>());
 
-	GameMap(MapTile tile, GameUniverse universe, DimensionBuilder builder) {
+	public GameMap(MapTile tile, GameUniverse universe, DimensionBuilder builder) {
 		this.mapTile = tile;
 		this.universe = universe;
 		this.blockMap = new BlockMap(mapWidth, mapHeight, builder.getProperty(WorldProperty.LAYER_BLOCKS));
@@ -67,21 +81,17 @@ public class GameMap implements IRenderable {
 	 * Returns all actors in this map.
 	 */
 	public Collection<IActor> getActors() {
-		return ImmutableCollection.from(actorsById.values());
+		return actorsById.values();
 	}
 
 	/** Returns an actor by id */
-	public IActor getActorByUUID(IActor act) {
-		synchronized (actorsById) {
-			return actorsById.get(act);
-		}
+	public IActor getActorByUUID(UUID act) {
+		return actorsById.get(act);
 	}
 
 	/** Returns an untethered being by its id */
-	public IBeing getUntetheredByUUID(IBeing being) {
-		synchronized (untetheredBeings) {
-			return untetheredBeings.get(being);
-		}
+	public IBeing getUntetheredByUUID(UUID being) {
+		return untetheredBeings.get(being);
 	}
 
 	/** Return all untethered beings on this map */
@@ -96,36 +106,47 @@ public class GameMap implements IRenderable {
 	 * @param action
 	 */
 	public void queueAction(Runnable action) {
-		synchronized (nextTicksQueue) {
-			this.nextTicksQueue.add(action);
-		}
+		this.nextTicksQueue.add(action);
 	}
 
 	/**
 	 * TODO Run a tick on this game map
 	 */
 	public void tick(float ticksPerSecond) {
+		List<Runnable> nextTicksRunnables = null;
 		synchronized (nextTicksQueue) {
-			for (Runnable run : nextTicksQueue) {
-				run.run();
-			}
+			nextTicksRunnables = new ArrayList<>(nextTicksQueue);
 			nextTicksQueue.clear();
 		}
+		for (Runnable run : nextTicksRunnables) {
+			run.run();
+		}
 		synchronized (untetheredBeings) {
-			Iterator<IBeing> unteth = untetheredBeings.values().iterator();
-			if (unteth.hasNext()) {
-				for (IBeing being = unteth.next(); unteth.hasNext(); being = unteth.next()) {
-					being.runUntetheredTick(this, ticks);
-					if (being.readyForDeletion(this, ticks)) {
-						unteth.remove();
-					}
+			Set<IBeing> mustRemove = new HashSet<>();
+			for (IBeing being : untetheredBeings.values()) {
+				being.runUntetheredTick(this, ticks);
+				if (being.readyForDeletion(this, ticks)) {
+					mustRemove.add(being);
 				}
 			}
+			for (IBeing being : mustRemove) {
+				being.onRemoveFromMap(this, ticks);
+				being.setRemoved(true);
+				untetheredBeings.remove(being.getUUID(), being);
+			}
+
 		}
 		this.actorsTicking = true;
 		synchronized (actorsById) {
+			Set<IActor> mustRemove = new HashSet<>();
 			for (IActor actor : actorsById.values()) {
 				actor.tick(ticks, ticksPerSecond);
+				if (actor.needsToBeRemoved())
+					mustRemove.add(actor);
+			}
+			for (IActor remover : mustRemove) {
+				remover.onRemoveFromMap(this);
+				actorsById.remove(remover.getUUID(), remover);
 			}
 		}
 		this.actorsTicking = false;
@@ -138,16 +159,26 @@ public class GameMap implements IRenderable {
 	}
 
 	/**
-	 * Spawn actor into world. Please queue this into the next tick to avoid race
-	 * conditions!
+	 * Spawn actor into world (FOR THE FIRST TIME). Please queue this into the next
+	 * tick to avoid race conditions!
 	 * 
 	 * @param actor
 	 */
 	public void spawnIntoWorld(IActor actor) {
-		synchronized (actorsById) {
-			this.actorsById.put(actor.getUUID(), actor);
-			actor.onSpawnIntoMap(this);
-		}
+		this.actorsById.put(actor.getUUID(), actor);
+		actor.onSpawnIntoMap(this);
+
+	}
+
+	/**
+	 * load actor into world (NOT FOR THE FIRST TIME). Please queue this into the
+	 * next tick to avoid race conditions!
+	 * 
+	 * @param actor
+	 */
+	public void load(IActor actor) {
+		this.actorsById.put(actor.getUUID(), actor);
+		actor.onLoad(this);
 
 	}
 
@@ -156,20 +187,25 @@ public class GameMap implements IRenderable {
 	 * conditions!
 	 */
 	public void addUntetheredBeingToWorld(IBeing being) {
-		synchronized (untetheredBeings) {
-			this.untetheredBeings.put(being.getUUID(), being);
-			being.onUntethering(this, this.ticks);
-		}
+		this.untetheredBeings.put(being.getUUID(), being);
+		being.onUntethering(this, this.ticks);
+
 	}
 
 	/**
-	 * Remove an untethered being from the world. Please queue this into the next
+	 * Remove a being (untethered) from the world. Please queue this into the next
 	 * tick to avoid race conditions!
 	 */
 	public void removeFromWorld(IBeing being) {
-		synchronized (untetheredBeings) {
-			being.onRemoveFromMap(this, ticks);
-			this.untetheredBeings.remove(being.getUUID());
+		being.onRemoveFromMap(this, ticks);
+		being.setRemoved(true);
+		this.untetheredBeings.remove(being.getUUID());
+		if (this.universe.getPersistentUniqueFromProfile(being.getProfile()) != null) {
+			this.universe.<IFigure>getPersistentUniqueFromProfile(being.getProfile()).setActive(false);
+		} else if (being.isPersistent()) {
+			IFigure fig = being.createPersistentFigure(Optional.empty());
+			fig.setActive(false);
+			this.universe.addPersistentUnique(fig, UniqueType.FIGURE);
 		}
 
 	}
@@ -179,10 +215,28 @@ public class GameMap implements IRenderable {
 	 * conditions!
 	 */
 	public void removeFromWorld(IActor actor) {
-		synchronized (actorsById) {
-			actor.onRemoveFromMap(this);
-			this.actorsById.remove(actor.getUUID());
+		actor.onRemoveFromMap(this);
+		this.actorsById.remove(actor.getUUID());
+
+	}
+
+	/**
+	 * Unload actor from world. Different than 'remove', since any associated
+	 * {@link IBeing}s will be saved if persistent. Please queue this into the next
+	 * tick to avoid race conditions!
+	 */
+	public void unload(IActor actor) {
+		if (actor.getBody() != null) {
+			actor.getBody().getAllTetheredSpirits().stream()
+					.forEach((spir) -> this.universe.removePersistentUnique(spir));
+			actor.getBody().getAllTetheredSpirits().stream().filter(ISpirit::isPersistent)
+					.forEach((spir) -> this.universe.addPersistentUnique(
+							spir.createPersistentFigure(Optional.of(actor.getBody().getPartForSpirit(spir))),
+							UniqueType.FIGURE));
 		}
+		// TODO check persistency of actor
+		actor.onUnload(this);
+		this.actorsById.remove(actor.getUUID());
 
 	}
 
@@ -204,6 +258,10 @@ public class GameMap implements IRenderable {
 			}
 			actorsDrawing = false;
 		}
+		g.textAlign(PConstants.LEFT, PConstants.TOP);
+		g.textSize(TILE_SIZE);
+		g.fill(0);
+		g.text("Number of ghosts: " + this.untetheredBeings.size(), 0, 0);
 
 	}
 
@@ -212,7 +270,7 @@ public class GameMap implements IRenderable {
 		g.colorMode(PConstants.HSB);
 		for (int y = 0; y < getDisplayHeight(); y += TILE_SIZE) {
 			for (int x = 0; x < getDisplayWidth(); x += TILE_SIZE) {
-				float ticker = universe.getWorldTicks() / 10.0f;
+				float ticker = universe.getUniverseTicks() / 10.0f;
 				float cos = (float) Math.cos(Math.toRadians(ticker % 360));
 				float sin = (float) Math.sin(Math.toRadians(ticker % 360));
 				float diagon = (float) Math.sqrt((x + 1) * (x + 1) + (y + 1) * (y + 1));
@@ -257,11 +315,48 @@ public class GameMap implements IRenderable {
 		return getProperty(WorldProperty.GRAVITY);
 	}
 
+	/** Called when the map is loded for the first tim */
+	public void onFirstLoad(IMapData dat) {
+		for (IKind kind : this.universe.getEntityKinds()) {
+			IKindCollective col = this.universe.getKindCollective(kind);
+			if (col != null) {
+				IKindSpawningContext con = col.getSpawnContext();
+				if (con != null) {
+					float nums = con.getSpawnNumberOnMapGeneration(mapTile, universe, col);
+					if (nums > 0) {
+						int count = (int) nums;
+						float prob = nums - count;
+						int extra = (int) (Math.random() * prob * count);
+						for (int i = 0; i < count + extra; i++) {
+							IKindSettings sets = con.createKindSettings(this, 0, col);
+							if (kind.isDisembodied()) {
+								IBeing bing = kind.generateBeing(sets);
+								this.untetheredBeings.put(bing.getUUID(), bing);
+							} else {
+								UUID id1 = UUID.randomUUID();
+								Actor actor = new Actor(id1, kind.name() + i);
+								actor.setKind(kind);
+								actor.makeBody(sets, true, this);
+								IVector pos = con.findSpawnPosition(actor, this, 0, col);
+								this.queueAction(() -> {
+									this.spawnIntoWorld(actor);
+									actor.setPosition(pos);
+									con.doPostSpawnAdjustments(actor, pos, this, 0, col);
+								});
+							}
+
+						}
+					}
+				}
+			}
+		}
+	}
+
 	/**
-	 * What to do when loaded <br>
+	 * What to do when loaded. <br>
 	 * TODO load from save(?)
 	 */
-	public void onLoad() {
+	public void loadFrom(IMapData data) {
 
 	}
 
@@ -269,8 +364,10 @@ public class GameMap implements IRenderable {
 	 * What to do when unloaded <br>
 	 * TODO save when unloaded(?)
 	 */
-	public void onUnload() {
-
+	public void unloadTo(IMapData data) {
+		for (IActor aca : this.actorsById.values()) {
+			data.setNumberOfObjects(aca.getKind(), data.getNumberOfObjects(aca.getKind()) + 1);
+		}
 	}
 
 	/**
