@@ -71,10 +71,10 @@ public class ConceptNodeGraph<E extends IConceptNode> extends RelationGraph<E, I
 	 */
 	@Override
 	public boolean addEdge(E first, IConceptRelationType type, E second) {
-		if (first.getConceptType() == ConceptType.CONNECTOR) {
+		if (first.getConceptType() == ConceptType.C_CONNECTOR) {
 			this.add(first);
 		}
-		if (second.getConceptType() == ConceptType.CONNECTOR) {
+		if (second.getConceptType() == ConceptType.C_CONNECTOR) {
 			this.add(second);
 		}
 		return super.addEdge(first, type, second);
@@ -83,10 +83,10 @@ public class ConceptNodeGraph<E extends IConceptNode> extends RelationGraph<E, I
 	protected IInvertibleEdge<E, IConceptRelationType> pruneLogicNode(IInvertibleEdge<E, IConceptRelationType> x) {
 		INode<E, IConceptRelationType> node = x.getStart();
 		INode<E, IConceptRelationType> other = x.getEnd();
-		if (node.getValue().getConceptType() == ConceptType.CONNECTOR) {
+		if (node.getValue().getConceptType() == ConceptType.C_CONNECTOR) {
 			this.remove(node.getValue());
 		}
-		if (other.getValue().getConceptType() == ConceptType.CONNECTOR) {
+		if (other.getValue().getConceptType() == ConceptType.C_CONNECTOR) {
 			this.remove(other.getValue());
 		}
 		return x;

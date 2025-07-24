@@ -28,7 +28,7 @@ public interface ICollective extends IParty {
 	 */
 	public Integer getCount();
 
-	/** Return what kinds of individuals this party can generate */
+	/** Return what kinds of individuals this collective can generate */
 	public Collection<IKind> memberKinds();
 
 	/**

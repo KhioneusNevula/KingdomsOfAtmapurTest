@@ -1,11 +1,12 @@
 package metaphysics.soul;
 
 import metaphysics.spirit.ISpirit;
+import party.agent.IAgent;
 import thinker.mind.clock.IClock;
-import thinker.mind.memory.IMemoryBase;
+import thinker.mind.memory.IMindKnowledgeBase;
 import thinker.mind.perception.IPerception;
 import thinker.mind.personality.IPersonality;
-import thinker.mind.will.IWill;
+import thinker.mind.will.IThinkerWill;
 
 /**
  * An intangible element of a sentient being which governs their body and how
@@ -17,9 +18,11 @@ import thinker.mind.will.IWill;
 public interface ISoul extends ISpirit {
 
 	/**
-	 * The will is the location of the thoughts this being thinks
+	 * The will is the location of the thoughts this being thinks, as well as having
+	 * the properties of what is relevant to {@link IAgent#getWill()}
 	 * 
 	 * @return
 	 */
-	public IWill getWill();
+	@Override
+	public IThinkerWill getWill();
 }

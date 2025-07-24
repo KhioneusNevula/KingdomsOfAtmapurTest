@@ -125,11 +125,6 @@ public class SectionKnowledgeBase implements ISectionKnowledgeBase {
 	}
 
 	@Override
-	public boolean addUnknownRelation(IConcept from, IConcept to) {
-		return noosphere.groupAddUnknownRelation(from, to, self);
-	}
-
-	@Override
 	public boolean removeRelation(IConcept from, IConceptRelationType type, IConcept to) {
 		return noosphere.groupRemoveRelation(from, type, to, self);
 	}

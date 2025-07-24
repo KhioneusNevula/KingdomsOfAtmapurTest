@@ -27,15 +27,6 @@ public interface IConnectorConcept extends IConcept {
 	public ConnectorType getConnectorType();
 
 	/**
-	 * If this connector is an AND connector
-	 * 
-	 * @return
-	 */
-	public default boolean isAnd() {
-		return this.getConnectorType() == ConnectorType.AND;
-	}
-
-	/**
 	 * If this connector is as described by {@link ConnectorType#PROPERTY_AND_VALUE}
 	 * 
 	 * @return
@@ -51,15 +42,6 @@ public interface IConnectorConcept extends IConcept {
 	 */
 	public default boolean isPartAndProperty() {
 		return this.getConnectorType() == ConnectorType.PART_AND_PROPERTY;
-	}
-
-	/**
-	 * If this connector is an OR connector
-	 * 
-	 * @return
-	 */
-	public default boolean isOr() {
-		return this.getConnectorType() == ConnectorType.OR;
 	}
 
 	public static IConnectorConcept or(UUID id) {

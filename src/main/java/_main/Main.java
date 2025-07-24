@@ -1,11 +1,5 @@
 package _main;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import com.google.common.collect.ImmutableMap;
@@ -17,38 +11,18 @@ import _sim.dimension.Dim;
 import _sim.dimension.DimensionBuilder;
 import _sim.vectors.IVector;
 import _sim.world.WorldProperty;
-import _utilities.couplets.Triplet;
-import _utilities.graph.IRelationGraph;
-import _utilities.graph.RelationGraph;
-import party.kind.spawning.GenericSpawningContext;
+import party.kind.spawning.GenericKindSpawningContext;
 import processing.core.PApplet;
 import things.actor.Actor;
 import things.actor.categories.HumanoidKind;
 import things.actor.categories.StickToolKind;
 import things.blocks.basic.BasicBlock;
 import things.blocks.fluid.BasicFluidBlock;
-import things.form.graph.connections.PartConnection;
-import things.form.kinds.BasicKindProperties;
 import things.form.kinds.settings.KindSettings;
 import things.form.material.Material;
 import things.form.shape.IShape;
 import things.form.shape.property.ShapeProperty;
 import things.form.shape.property.ShapeProperty.RollableShape;
-import things.interfaces.UniqueType;
-import thinker.actions.types.ConsumeActionConcept;
-import thinker.actions.types.PutActionConcept;
-import thinker.actions.types.WalkActionConcept;
-import thinker.concepts.IConcept;
-import thinker.concepts.general_types.IConnectorConcept;
-import thinker.concepts.general_types.IntegerValueConcept;
-import thinker.concepts.general_types.PrincipleConcept;
-import thinker.concepts.general_types.PropertyConcept;
-import thinker.concepts.profile.Profile;
-import thinker.knowledge.base.noosphere.INoosphereKnowledgeBase;
-import thinker.concepts.relations.actional.EventRelationType;
-import thinker.concepts.relations.descriptive.PropertyRelationType;
-import thinker.concepts.relations.descriptive.UniqueInterrelationType;
-import thinker.concepts.relations.technical.KnowledgeRelationType;
 
 public class Main {
 
@@ -70,10 +44,12 @@ public class Main {
 						BasicFluidBlock.AIR.getDefaultState(), MapLayer.ROOF, BasicFluidBlock.AIR.getDefaultState())));
 
 		long time1 = System.currentTimeMillis();
-		HumanoidKind kind = new HumanoidKind("human", 70f, 3f).setSpawnContext(new GenericSpawningContext(20.3f));
-		kind.addDoableActions(
-				Set.of(new ConsumeActionConcept(kind.getChannelSystemByName(HumanoidKind.FOOD_SYSTEM_NAME)),
-						PutActionConcept.INSTANCE, WalkActionConcept.INSTANCE));
+		HumanoidKind kind = new HumanoidKind("human", 70f, 3f).setSpawnContext(new GenericKindSpawningContext(20.3f));
+		/**
+		 * kind.addDoableActions( Set.of(new
+		 * ConsumeActionConcept(kind.getChannelSystemByName(HumanoidKind.FOOD_SYSTEM_NAME)),
+		 * PutActionConcept.INSTANCE, WalkActionConcept.INSTANCE));
+		 */
 		universe.registerKind(kind);
 		StickToolKind kind2 = new StickToolKind("hammer_idk", 1f, 1f,
 				IShape.builder().addProperty(ShapeProperty.ROLL_SHAPE, RollableShape.ROLLABLE_OVOID).build(), 0.5f);
@@ -168,7 +144,7 @@ public class Main {
 	 * PropertyRelationType.QUANTIFIED_AS, twelve);
 	 * noo.addConfidentRelation(IConcept.EXISTENCE, PropertyRelationType.IS,
 	 * important); noo.addDubiousRelation(IConcept.EXISTENCE,
-	 * EventRelationType.FIXED_BY, food, 0.5f);
+	 * EventRelationType.ATTACHED_BY, food, 0.5f);
 	 * noo.addConfidentRelation(IConcept.EXISTENCE, EventRelationType.DESTROYED_BY,
 	 * death); noo.addConfidentRelation(IConcept.EXISTENCE,
 	 * EventRelationType.CREATED_BY, zazagod); noo.addConfidentRelation(death,
@@ -176,7 +152,7 @@ public class Main {
 	 * noo.addConfidentRelation(IConcept.NOTHING, EventRelationType.DESTROYED_BY,
 	 * zazagod); noo.addConfidentRelation(IConcept.EXISTENCE,
 	 * EventRelationType.ACTS_ON, loves); for (IConcept lov : loveMems) {
-	 * noo.addConfidentRelation(lov, UniqueInterrelationType.MEMBER_OF, loves);
+	 * noo.addConfidentRelation(lov, ProfileInterrelationType.MEMBER_OF, loves);
 	 * IConnectorConcept or = IConnectorConcept.or(); noo.addConfidentRelation(lov,
 	 * PropertyRelationType.IS, or); noo.addConfidentRelation(or,
 	 * PropertyRelationType.IS, food); noo.addConfidentRelation(or,

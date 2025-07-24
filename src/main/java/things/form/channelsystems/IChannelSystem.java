@@ -9,7 +9,7 @@ import things.form.graph.connections.IPartConnection;
 import things.form.kinds.settings.IKindSettings;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import thinker.mind.util.IMindAccess;
+import thinker.mind.util.IBeingAccess;
 
 /**
  * A singleton representation of a specific kind of channelSystem
@@ -57,7 +57,7 @@ public interface IChannelSystem {
 	 * @param part
 	 * @return
 	 */
-	public default float getNeedLevel(IChannelNeed forNeed, IMindAccess info) {
+	public default float getNeedLevel(IChannelNeed forNeed, IBeingAccess info) {
 		return 1f;
 	}
 

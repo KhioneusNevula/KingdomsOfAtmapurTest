@@ -23,10 +23,50 @@ import thinker.mind.memory.TruthType;
  * parent. All methods also have a "checkParent" version, which will return more
  * info about what parent it pulled info from
  * 
+ * Additionally, all operations for adding knowledge are permitted to simply
+ * change the storage type of concepts marked Forgotten; similarly, all
+ * operations for querying knowledge need to keep track of concepts marked
+ * Forgotten and skip them
+ * 
  * @author borah
  *
  */
 public interface IIndividualKnowledgeBase extends IKnowledgeBase {
+
+	/**
+	 * Purpose is equivalent to {@link IKnowledgeBase#forgetConcept(IConcept)}, but
+	 * this method can also mark the concept as being 'forgotten' in local memory to
+	 * 'hide' it in higher memory
+	 */
+	@Override
+	public boolean forgetConcept(IConcept concept);
+
+	/**
+	 * This method's purpose is equivalent to
+	 * {@link IKnowledgeBase#removeAllRelations(IConcept, IConcept)}, but it can
+	 * also mark them as being 'forgotten' in local memory to 'hide' them in higher
+	 * memory
+	 */
+	@Override
+	public boolean removeAllRelations(IConcept from, IConcept to);
+
+	/**
+	 * Like
+	 * {@link IKnowledgeBase#removeAllRelations(IConcept, IConceptRelationType)},
+	 * but also can makr relations as being 'forgotten' by local memory without
+	 * removing them from higher memory
+	 */
+	@Override
+	public boolean removeAllRelations(IConcept from, IConceptRelationType type);
+
+	/**
+	 * Like
+	 * {@link IKnowledgeBase#removeRelation(IConcept, IConceptRelationType, IConcept)},
+	 * but also can makr relations as being 'forgotten' by local memory without
+	 * removing them from higher memory
+	 */
+	@Override
+	public boolean removeRelation(IConcept from, IConceptRelationType type, IConcept to);
 
 	/**
 	 * Return the storage item which knows this concept, either this item or the

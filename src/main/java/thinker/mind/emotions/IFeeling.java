@@ -5,7 +5,7 @@ import thinker.concepts.IConcept;
 import thinker.mind.memory.IFeelingReason;
 import thinker.mind.perception.IPerceptor;
 
-/** Something which can be felt in the mind as a goal or desire */
+/** Some psychological property which influences how an agent acts. */
 public interface IFeeling extends IProperty<Float>, IConcept, IFeelingReason {
 
 	@Override
@@ -14,8 +14,8 @@ public interface IFeeling extends IProperty<Float>, IConcept, IFeelingReason {
 	}
 
 	/**
-	 * If this is one of the fundamental motivations of the body, i.e. Satisfaction,
-	 * Vigor, and so on
+	 * If this is one of the fundamental motivations of something, i.e.
+	 * Satisfaction, Vigor, and so on
 	 * 
 	 * @return
 	 */

@@ -2,24 +2,26 @@ package thinker.concepts.general_types;
 
 import java.util.UUID;
 
-public class WhQuestionConcept implements IWhQuestionConcept {
+import thinker.concepts.profile.IProfile;
+
+public class NonProfileWhQuestionConcept implements IWhQuestionConcept {
 
 	private UUID id;
 	private QuestionType type;
 
-	WhQuestionConcept(UUID qID, QuestionType type) {
+	NonProfileWhQuestionConcept(UUID qID, QuestionType type) {
 		this.id = qID;
 		this.type = type;
 	}
 
 	@Override
 	public ConceptType getConceptType() {
-		return ConceptType.WH_QUESTION;
+		return ConceptType.C_WH_QUESTION;
 	}
 
 	@Override
 	public String getUnderlyingName() {
-		return "question_" + this.getQuestionType().name + "(" + this.id + ")";
+		return "question_" + this.getQuestionType() + "(" + this.id + ")";
 	}
 
 	@Override
@@ -39,7 +41,7 @@ public class WhQuestionConcept implements IWhQuestionConcept {
 
 	@Override
 	public String toString() {
-		return "q_" + this.getQuestionType().name;
+		return "q_" + this.getQuestionType().getQuestionWord() + "(" + this.getQuestionType() + ")";
 	}
 
 	@Override
@@ -47,7 +49,7 @@ public class WhQuestionConcept implements IWhQuestionConcept {
 		if (super.equals(obj))
 			return true;
 		if (obj instanceof IWhQuestionConcept wqc) {
-			return this.type == wqc.getQuestionType() && this.id.equals(wqc.getQuestionID());
+			return this.type.equals(wqc.getQuestionType()) && this.id.equals(wqc.getQuestionID());
 		}
 		return false;
 	}

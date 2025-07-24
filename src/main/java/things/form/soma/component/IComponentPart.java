@@ -78,7 +78,7 @@ public interface IComponentPart extends IPart {
 
 	/**
 	 * Add ability to part. Set callUpdate to true if you want to call an update on
-	 * the parent soma. Will automatically call an update on contained spirits
+	 * the parent soma. ThinkerWill automatically call an update on contained spirits
 	 * 
 	 * @param ability
 	 */
@@ -228,7 +228,7 @@ public interface IComponentPart extends IPart {
 	<E> E getStat(IPartStat<E> forStat);
 
 	/**
-	 * Set a stat for abilities. Will automatically call an update on contained
+	 * Set a stat for abilities. ThinkerWill automatically call an update on contained
 	 * spirits
 	 * 
 	 * @param <E>
@@ -278,7 +278,7 @@ public interface IComponentPart extends IPart {
 	public IComponentPart clone();
 
 	/**
-	 * Change the amount of a channel resource. Will automatically call an update on
+	 * Change the amount of a channel resource. ThinkerWill automatically call an update on
 	 * contained spirits
 	 * 
 	 * @param resource

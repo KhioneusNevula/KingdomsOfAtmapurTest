@@ -47,6 +47,11 @@ final class AnyMatcherProfile implements IProfile {
 	}
 
 	@Override
+	public boolean isUniqueProfile() {
+		return false;
+	}
+
+	@Override
 	public IProfile withType(UniqueType newType) {
 		return IProfile.anyOf(newType);
 	}

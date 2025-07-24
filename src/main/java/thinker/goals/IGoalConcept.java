@@ -1,14 +1,13 @@
 package thinker.goals;
 
-import _utilities.graph.EmptyGraph;
-import _utilities.graph.IRelationGraph;
 import _utilities.property.IProperty;
 import party.IParty;
 import party.PartyRelationGraph;
 import party.systems.IRole;
 import thinker.actions.IActionConcept;
 import thinker.concepts.IConcept;
-import thinker.concepts.relations.IConceptRelationType;
+import thinker.concepts.relations.actional.IEventRelationType;
+import thinker.knowledge.IKnowledgeRepresentation;
 import thinker.knowledge.base.IKnowledgeBase;
 
 /**
@@ -30,33 +29,6 @@ public interface IGoalConcept extends IConcept {
 	 */
 	public static final IConcept SATISFIER = IActionConcept.createGenericActionConcept("satisfier_action");
 
-	public static final IGoalConcept NONE = new IGoalConcept() {
-		@Override
-		public IRelationGraph<IConcept, IConceptRelationType> getConditionsGraph(IKnowledgeBase knowledge) {
-			return EmptyGraph.instance();
-		}
-
-		@Override
-		public boolean modifyRole(IRole role, IParty requester, PartyRelationGraph partyRelations) {
-			return false;
-		}
-
-		@Override
-		public ConceptType getConceptType() {
-			return ConceptType.GOAL;
-		}
-
-		@Override
-		public String getUnderlyingName() {
-			return "goal_condition_none";
-		}
-
-		@Override
-		public String toString() {
-			return "{(goal_condition_none)}";
-		}
-	};
-
 	@Override
 	public default ConceptType getConceptType() {
 		return ConceptType.GOAL;
@@ -71,11 +43,20 @@ public interface IGoalConcept extends IConcept {
 	}
 
 	/**
+	 * Whether this concept is an Expectation, i.e. an {@link IGoalConcept} which
+	 * indicates an expected kind of action (as opposed to a goal which expects some
+	 * circumstance) using {@link IEventRelationType}s
+	 * 
+	 * @return
+	 */
+	public boolean isExpectation();
+
+	/**
 	 * Return graph of all conditions in this goal
 	 * 
 	 * @return
 	 */
-	public IRelationGraph<IConcept, IConceptRelationType> getConditionsGraph(IKnowledgeBase knowledge);
+	public IKnowledgeRepresentation getConditionsGraph();
 
 	/**
 	 * Add relations to a role that was created to fulfill this goal; return false

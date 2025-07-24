@@ -17,7 +17,7 @@ import things.form.graph.connections.PartConnection;
 import things.form.kinds.settings.IKindSettings;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import thinker.mind.util.IMindAccess;
+import thinker.mind.util.IBeingAccess;
 
 public class EnergyChannelSystem implements IChannelSystem {
 
@@ -53,7 +53,7 @@ public class EnergyChannelSystem implements IChannelSystem {
 	}
 
 	@Override
-	public float getNeedLevel(IChannelNeed forNeed, IMindAccess info) {
+	public float getNeedLevel(IChannelNeed forNeed, IBeingAccess info) {
 		return (float) (info.partAccess().stream().mapToDouble((x) -> x.getResourceAmount(this.resource)).sum()
 				/ info.partAccess().size());
 	}

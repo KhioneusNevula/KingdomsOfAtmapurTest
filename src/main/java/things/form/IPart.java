@@ -100,7 +100,7 @@ public interface IPart extends Cloneable, IUnique {
 
 	/**
 	 * Modify the size of this part; use "callUpdate" to notify the parent part that
-	 * the size was changed. Will NOT automatically call an update on contained
+	 * the size was changed. ThinkerWill NOT automatically call an update on contained
 	 * spirits
 	 * 
 	 * @param size
@@ -109,7 +109,7 @@ public interface IPart extends Cloneable, IUnique {
 
 	/**
 	 * Change the material of this part. Set callUpdate to true if you want to call
-	 * an update on the parent soma. Will NOT automatically call an update on
+	 * an update on the parent soma. ThinkerWill NOT automatically call an update on
 	 * contained spirits
 	 * 
 	 * @param material
@@ -119,7 +119,7 @@ public interface IPart extends Cloneable, IUnique {
 
 	/**
 	 * Change the shape of this part. Set callUpdate to true if you want to call an
-	 * update on the parent soma. Will NOT automatically call an update on contained
+	 * update on the parent soma. ThinkerWill NOT automatically call an update on contained
 	 * spirits
 	 * 
 	 * @param material

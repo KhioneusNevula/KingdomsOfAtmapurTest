@@ -18,7 +18,7 @@ public enum StorageType {
 	 * this memory connection is of unknown truth value and will be replaced wtih a
 	 * more confident connection eventually
 	 */
-	UNKNOWN,
+	FORGOTTEN,
 	/**
 	 * this memory connection or node is of partial confidence and will be deleted
 	 * if not verified

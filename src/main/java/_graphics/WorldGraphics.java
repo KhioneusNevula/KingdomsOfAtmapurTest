@@ -26,6 +26,7 @@ import things.form.soma.component.IComponentPart;
 import things.physics_and_chemistry.ForceResult;
 import things.physics_and_chemistry.ForceType;
 import thinker.concepts.IConcept;
+import thinker.concepts.relations.descriptive.ProfileInterrelationType;
 import thinker.concepts.relations.descriptive.PropertyRelationType;
 import thinker.mind.perception.sensation.Sensation;
 
@@ -176,7 +177,8 @@ public class WorldGraphics extends PApplet {
 			System.out.println("Pressed alt+" + event.getKey());
 			if (this.currentScreen instanceof GraphRenderer gr) {
 				if (gr.getRenderableEdges().isEmpty()) {
-					gr.setRenderableEdges(Set.of(PropertyRelationType.IS, PropertyRelationType.VALUE_OF));
+					gr.setRenderableEdges(Set.of(ProfileInterrelationType.IS, PropertyRelationType.HAS_TRAIT,
+							PropertyRelationType.VALUE_OF));
 				} else {
 					gr.setRenderableEdges(
 							gr.getGraph().getEdgeTypes().stream().filter((e) -> !gr.getRenderableEdges().contains(e))

@@ -14,7 +14,7 @@ public class ConnectorConcept implements IConnectorConcept {
 
 	@Override
 	public ConceptType getConceptType() {
-		return ConceptType.CONNECTOR;
+		return ConceptType.C_CONNECTOR;
 	}
 
 	@Override

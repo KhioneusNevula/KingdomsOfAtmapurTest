@@ -31,7 +31,7 @@ import thinker.actions.IActionConcept;
 import thinker.concepts.profile.IProfile;
 import thinker.concepts.profile.Profile;
 import thinker.concepts.relations.descriptive.PropertyRelationType;
-import thinker.concepts.relations.descriptive.UniqueInterrelationType;
+import thinker.concepts.relations.descriptive.ProfileInterrelationType;
 import thinker.knowledge.base.IKnowledgeBase;
 import thinker.knowledge.base.section.SectionKnowledgeBase;
 
@@ -117,11 +117,11 @@ public abstract class FleshCreatureKind extends MultipartKind {
 		knowledge.learnConcept(collective.getFormTypeProfile());
 		collective.maybeGetFigureTypeProfile().ifPresentOrElse((figure) -> {
 			knowledge.learnConcept(figure);
-			knowledge.addConfidentRelation(collective.getProfile(), UniqueInterrelationType.HAS_MEMBER, figure);
-			knowledge.addConfidentRelation(figure, UniqueInterrelationType.EMBODIED_AS,
+			knowledge.addConfidentRelation(collective.getProfile(), ProfileInterrelationType.HAS_MEMBER, figure);
+			knowledge.addConfidentRelation(figure, ProfileInterrelationType.HAS_BODY,
 					collective.getFormTypeProfile());
 		}, () -> {
-			knowledge.addConfidentRelation(collective.getProfile(), UniqueInterrelationType.EMBODIED_AS,
+			knowledge.addConfidentRelation(collective.getProfile(), ProfileInterrelationType.HAS_BODY,
 					collective.getFormTypeProfile());
 		});
 		this.doableActions.forEach((action) -> {

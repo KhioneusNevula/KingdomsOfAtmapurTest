@@ -1,15 +1,21 @@
 package thinker.mind.will.thoughts;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
-import _utilities.couplets.Pair;
 import metaphysics.soul.ISoul;
 import things.form.soma.component.IComponentPart;
-import thinker.mind.emotions.IFeeling;
-import thinker.mind.memory.IFeelingReason;
-import thinker.mind.util.IMindAccess;
-import thinker.mind.will.IWill;
+import thinker.concepts.IConcept;
+import thinker.concepts.general_types.IMemoryConcept;
+import thinker.concepts.general_types.IProcessConcept;
+import thinker.concepts.general_types.ProcessConcept;
+import thinker.concepts.relations.descriptive.PropertyRelationType;
+import thinker.concepts.relations.technical.KnowledgeRelationType;
+import thinker.knowledge.base.IKnowledgeBase;
+import thinker.mind.memory.StorageType;
+import thinker.mind.util.IBeingAccess;
+import thinker.mind.will.IThinkerWill;
 
 /**
  * An individual entity in the mind
@@ -18,13 +24,6 @@ import thinker.mind.will.IWill;
  *
  */
 public interface IThought {
-
-	/** A collection of what feelings this thought is likely to increase */
-	public Collection<? extends IFeeling> getPossibleIncreasedFeelings();
-
-	/** A collection of what feelings this thought is likely to decrease */
-	public Collection<? extends IFeeling> getPossibleDecreasedFeelings();
-
 	/**
 	 * Return the UUID of the process this thought represents. Every thought can
 	 * start an independent process; however, parents can also make child thoughts
@@ -33,6 +32,53 @@ public interface IThought {
 	 * @return
 	 */
 	public UUID getProcessID();
+
+	/**
+	 * Creates a process concept in memory to store info pertaining to this action,
+	 * and links it to Focus
+	 * 
+	 * @param mem
+	 * @return
+	 */
+	public default IProcessConcept createProcessInMemory(IKnowledgeBase mem) {
+		ProcessConcept process = new ProcessConcept(getProcessID());
+
+		mem.learnConcept(process, StorageType.TEMPORARY);
+		mem.addTemporaryRelation(process, KnowledgeRelationType.QUICKLY_ACCESSIBLE_TO, IConcept.FOCUS);
+
+		return process;
+	}
+
+	/**
+	 * Puts this memory in the knowledge base and also links it to the appropriate
+	 * memory concept; sets storage type to Temporary.
+	 * 
+	 * @param memory
+	 * @param inBase
+	 */
+	public default void createMemory(IMemoryConcept memory, IKnowledgeBase inBase) {
+		inBase.learnConcept(memory, StorageType.TEMPORARY);
+		inBase.addTemporaryRelation(memory, PropertyRelationType.OF_PRINCIPLE, IConcept.RECOLLECTION);
+	}
+
+	/**
+	 * Removes a process from memory
+	 * 
+	 * @param mem
+	 */
+	public default void forgetProcessFromMemory(IKnowledgeBase mem) {
+		ProcessConcept process = new ProcessConcept(getProcessID());
+		mem.forgetConcept(process);
+	}
+
+	/**
+	 * Creates a dummy process concept ot access the process n memory
+	 * 
+	 * @return
+	 */
+	public default IProcessConcept dummyProcessInMemory() {
+		return new ProcessConcept(getProcessID());
+	}
 
 	/**
 	 * Runs one tick on a given thought if it is focused and active (as opposed to
@@ -44,7 +90,7 @@ public interface IThought {
 	 * @param onPart
 	 * @param gameTicks
 	 */
-	public void tickThoughtActively(IWill owner, int ticksSinceCreation, IMindAccess info);
+	public void tickThoughtActively(IThinkerWill owner, int ticksSinceCreation, IBeingAccess info);
 
 	/**
 	 * Runs one tick on a given thought if it is in the background, rather than
@@ -56,7 +102,7 @@ public interface IThought {
 	 * @param onPart
 	 * @param gameTicks
 	 */
-	public void tickThoughtPassively(IWill owner, int ticksSinceCreation, IMindAccess info);
+	public void tickThoughtPassively(IThinkerWill owner, int ticksSinceCreation, IBeingAccess info);
 
 	/**
 	 * Return true if this thought is completed and ought to be deleted
@@ -68,10 +114,10 @@ public interface IThought {
 	 * @param gameTicks
 	 * @return
 	 */
-	public boolean shouldDelete(IWill owner, int ticksSinceCreation, IMindAccess info);
+	public boolean shouldDelete(IThinkerWill owner, int ticksSinceCreation, IBeingAccess info);
 
 	/**
-	 * Run if either {@link #shouldDelete(IWill, int, ISoul, IComponentPart, long)}
+	 * Run if either {@link #shouldDelete(IThinkerWill, int, ISoul, IComponentPart, long)}
 	 * returns true, or if the thought is interrupted (e.g. by losing focus) and
 	 * must be deleted. This can be where memories, feelings, etc are created, for
 	 * example.
@@ -82,7 +128,7 @@ public interface IThought {
 	 * @param onPart
 	 * @param gameTicks
 	 */
-	public void aboutToDelete(IWill owner, int ticksSinceCreation, boolean interrupted, IMindAccess info);
+	public void aboutToDelete(IThinkerWill owner, int ticksSinceCreation, boolean interrupted, IBeingAccess info);
 
 	/**
 	 * Called after every tick and before deleting the thought to check if the
@@ -94,7 +140,7 @@ public interface IThought {
 	 * Whether this thought should force itself to be focused in the current
 	 * tick.Checked before the first tick.
 	 */
-	public default boolean forceFocus(IWill owner, int ticksSinceCreation, IMindAccess info) {
+	public default boolean forceFocus(IThinkerWill owner, int ticksSinceCreation, IBeingAccess info) {
 		return false;
 	}
 
@@ -102,7 +148,7 @@ public interface IThought {
 	 * Whether this thought should force itself to be removed from focus in the
 	 * current tick. Checked before the first tick.
 	 */
-	public default boolean forceSubconscious(IWill owner, int ticksSinceCreation, IMindAccess info) {
+	public default boolean forceSubconscious(IThinkerWill owner, int ticksSinceCreation, IBeingAccess info) {
 		return false;
 	}
 
@@ -111,7 +157,7 @@ public interface IThought {
 	 * thoughts. Each should be paired with a boolean indicating whether or not it
 	 * is focused.
 	 */
-	public Collection<Pair<? extends IThought, Boolean>> popChildThoughts();
+	public Collection<Map.Entry<IThought, Boolean>> popChildThoughts();
 
 	/**
 	 * Returns what kind of thought this is
@@ -125,6 +171,8 @@ public interface IThought {
 		ACTION,
 		/** A thought that is deciding actions to be taken */
 		PONDER,
+		/** A thought that is evaluating conditions and goals */
+		CHECK,
 		/** A thought that brings perceived information into the mind */
 		PERCEPTION,
 		/** A thought bringing up a past occurrence */

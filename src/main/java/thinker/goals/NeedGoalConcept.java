@@ -1,5 +1,6 @@
 package thinker.goals;
 
+import _utilities.graph.EmptyGraph;
 import _utilities.graph.IRelationGraph;
 import _utilities.graph.RelationGraph;
 import party.IParty;
@@ -9,6 +10,8 @@ import party.systems.IRole;
 import thinker.concepts.IConcept;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.concepts.relations.actional.EventRelationType;
+import thinker.knowledge.IKnowledgeRepresentation;
+import thinker.knowledge.KnowledgeRepresentation;
 import thinker.knowledge.base.IKnowledgeBase;
 import thinker.mind.needs.INeedConcept;
 
@@ -16,14 +19,14 @@ import thinker.mind.needs.INeedConcept;
 public class NeedGoalConcept implements IGoalConcept {
 
 	private INeedConcept need;
-	private RelationGraph<IConcept, IConceptRelationType> graph;
+	private KnowledgeRepresentation graph;
 
 	public NeedGoalConcept(INeedConcept forNeed) {
 		this.need = forNeed;
-		this.graph = new RelationGraph<>();
-		graph.add(forNeed);
-		graph.add(SATISFIER);
-		graph.addEdge(SATISFIER, EventRelationType.SATIATES_NEED, forNeed);
+		this.graph = new KnowledgeRepresentation(EmptyGraph.instance());
+		graph.learnConcept(forNeed);
+		graph.learnConcept(SATISFIER);
+		graph.addConfidentRelation(SATISFIER, EventRelationType.SATIATES_NEED, forNeed);
 	}
 
 	@Override
@@ -37,12 +40,17 @@ public class NeedGoalConcept implements IGoalConcept {
 	}
 
 	@Override
+	public boolean isExpectation() {
+		return true;
+	}
+
+	@Override
 	public int hashCode() {
 		return this.getClass().hashCode() + this.need.hashCode();
 	}
 
 	@Override
-	public IRelationGraph<IConcept, IConceptRelationType> getConditionsGraph(IKnowledgeBase knowledge) {
+	public KnowledgeRepresentation getConditionsGraph() {
 		return graph;
 	}
 

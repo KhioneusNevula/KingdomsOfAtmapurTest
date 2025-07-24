@@ -315,6 +315,15 @@ public class GameMap implements IRenderable {
 		return getProperty(WorldProperty.GRAVITY);
 	}
 
+	/**
+	 * Return a random float
+	 * 
+	 * @return
+	 */
+	public float random() {
+		return universe.random();
+	}
+
 	/** Called when the map is loded for the first tim */
 	public void onFirstLoad(IMapData dat) {
 		for (IKind kind : this.universe.getEntityKinds()) {
@@ -326,7 +335,7 @@ public class GameMap implements IRenderable {
 					if (nums > 0) {
 						int count = (int) nums;
 						float prob = nums - count;
-						int extra = (int) (Math.random() * prob * count);
+						int extra = (int) (universe.random() * prob * count);
 						for (int i = 0; i < count + extra; i++) {
 							IKindSettings sets = con.createKindSettings(this, 0, col);
 							if (kind.isDisembodied()) {

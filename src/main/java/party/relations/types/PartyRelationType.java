@@ -64,8 +64,8 @@ public enum PartyRelationType implements IPartyRelationType, IConceptRelationTyp
 	}
 
 	@Override
-	public ConceptType getEndType() {
-		return ConceptType.NONE;
+	public Collection<ConceptType> getEndTypes() {
+		return Set.of();
 	}
 
 	@Override

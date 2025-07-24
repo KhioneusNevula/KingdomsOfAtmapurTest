@@ -669,6 +669,15 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	}
 
 	/**
+	 * A "one-line" way to build a graph; this method adds a node to the graph
+	 */
+	public final RelationGraph<E, R> plusNode(E node) {
+		this.add(node);
+		return this;
+
+	}
+
+	/**
 	 * A "one-line" way to build a graph; this method adds an edge to the graph and
 	 * allows the addition of properties, making sure to add the given nodes
 	 * beforehand, and returns the graph object
@@ -692,7 +701,10 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		return this;
 	}
 
-	/** Adds multiple edges from the first node to a series of other nodes */
+	/**
+	 * Adds multiple edges from the first node to a series of other nodes, using
+	 * {@link #plusEdge(Object, IInvertibleRelationType, Object, Pair...)}d
+	 */
 	public RelationGraph<E, R> plusEdges(E node, R edge, Iterable<? extends E> nodes) {
 		for (E n : nodes) {
 			this.plusEdge(node, edge, n);
@@ -701,7 +713,8 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	}
 
 	/**
-	 * Adds multiple edges from each of the first nodes to each of the other nodes
+	 * Adds multiple edges from each of the first nodes to each of the other nodes,
+	 * using {@link #plusEdge(Object, IInvertibleRelationType, Object, Pair...)}
 	 */
 	public RelationGraph<E, R> plusEdges(Iterable<E> nodez, R edge, Iterable<? extends E> nodes) {
 		for (E n1 : nodez) {
@@ -844,12 +857,32 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		return node.getValue();
 	}
 
+	private void combineNodes(INode<E, R> oldnode, INode<E, R> newnode) {
+		for (IInvertibleEdge<E, R> edge : new HashSet<>(oldnode.getAllEdges())) {
+			this.addEdge(newnode.getValue(), edge.getType(), edge.getEnd().getValue());
+			for (IProperty prop : edge.getProperties()) {
+				this.setProperty(newnode.getValue(), edge.getType(), edge.getEnd().getValue(), prop,
+						edge.getPropertyValue(prop));
+			}
+		}
+		this.remove(oldnode.getValue());
+	}
+
 	@Override
 	public void set(Object node, E newNode) {
-		INode<E, R> nod = node(node);
-		nod.setValue(newNode);
-		this.V.remove(node);
-		this.V.put(newNode, nod);
+		if (node.equals(newNode)) {
+			return;
+		}
+		if (this.contains(newNode)) {
+			INode<E, R> oldnode = node(node);
+			INode<E, R> newnode = node(newNode);
+			combineNodes(oldnode, newnode);
+		} else {
+			INode<E, R> nod = node(node);
+			nod.setValue(newNode);
+			this.V.remove(node);
+			this.V.put(newNode, nod);
+		}
 	}
 
 	/**
@@ -2369,11 +2402,21 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 					throw new IllegalArgumentException("Disallowed node " + oldNode);
 				}
 			}
-			nod.setValue(newNode);
-			V.remove(oldNode);
-			V.put(newNode, nod);
-			nodes.remove(oldNode);
-			nodes.put(newNode, nod);
+
+			if (oldNode.equals(newNode)) {
+				return;
+			}
+			if (RelationGraph.this.contains(newNode)) {
+				INode<E, R> newnode = node(newNode);
+				combineNodes(nod, newnode);
+			} else {
+				nod.setValue(newNode);
+				V.remove(oldNode);
+				V.put(newNode, nod);
+				nodes.remove(oldNode);
+				nodes.put(newNode, nod);
+			}
+
 		}
 
 		@Override

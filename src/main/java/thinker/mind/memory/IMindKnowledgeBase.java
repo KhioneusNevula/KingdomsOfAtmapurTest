@@ -6,7 +6,8 @@ import java.util.Map.Entry;
 import _graphics.IMindListRenderableInterface;
 import thinker.knowledge.base.individual.IIndividualKnowledgeBase;
 import thinker.mind.emotions.IFeeling;
-import thinker.mind.util.IMindAccess;
+import thinker.mind.emotions.IHasFeelings;
+import thinker.mind.util.IBeingAccess;
 
 /**
  * The storage of an individual's mind as opposed to something like a group
@@ -14,7 +15,7 @@ import thinker.mind.util.IMindAccess;
  * @author borah
  *
  */
-public interface IMemoryBase extends IIndividualKnowledgeBase, IMindListRenderableInterface {
+public interface IMindKnowledgeBase extends IIndividualKnowledgeBase, IMindListRenderableInterface {
 
 	/**
 	 * For this class, {@link IMindListRenderableInterface#getRenderables()} returns
@@ -26,7 +27,7 @@ public interface IMemoryBase extends IIndividualKnowledgeBase, IMindListRenderab
 	/**
 	 * runs ticks
 	 */
-	public void tickMemoriesAndFeelings(IMindAccess info);
+	public void tickMemoriesAndFeelings(IBeingAccess info);
 
 	/**
 	 * How much time is left for this reason's effect (or 0 if the reason was never

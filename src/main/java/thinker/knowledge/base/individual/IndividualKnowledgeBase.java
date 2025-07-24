@@ -22,9 +22,7 @@ import _utilities.graph.ImmutableGraphView;
 import party.relations.social_bonds.ISocialBondTrait;
 import thinker.concepts.IConcept;
 import thinker.concepts.relations.IConceptRelationType;
-import thinker.concepts.relations.descriptive.PropertyRelationType;
-import thinker.concepts.relations.descriptive.UniqueInterrelationType;
-import thinker.concepts.relations.technical.KnowledgeRelationType;
+import thinker.concepts.relations.descriptive.ProfileInterrelationType;
 import thinker.concepts.relations.util.RelationProperties;
 import thinker.knowledge.ConceptNodeGraph;
 import thinker.knowledge.base.IKnowledgeBase;
@@ -64,13 +62,20 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 
 	@Override
 	public boolean knowsConcept(IConcept concept) {
+		IConceptNode cnode = this.conceptGraph.get(new ConceptNode(concept));
+		if (cnode != null && cnode.getStorageType() == StorageType.FORGOTTEN) {
+			return false;
+		}
 		return this.knowsConceptCheckParent(concept) != null;
 	}
 
 	@Override
 	public IKnowledgeBase knowsConceptCheckParent(IConcept concept) {
-		if (this.conceptGraph.contains(new ConceptNode(concept)))
-			return this;
+		if (this.conceptGraph.contains(new ConceptNode(concept))) {
+			if (this.conceptGraph.get(new ConceptNode(concept)).getStorageType() != StorageType.FORGOTTEN) {
+				return this;
+			}
+		}
 		for (IKnowledgeBase parent : this.parents) {
 			if (parent instanceof IIndividualKnowledgeBase ikb) {
 				IKnowledgeBase par = ikb.knowsConceptCheckParent(concept);
@@ -95,22 +100,21 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 
 	@Override
 	public boolean learnConcept(IConcept concept) {
-
-		return conceptGraph.add(new ConceptNode(concept));
+		return learnConcept(concept, StorageType.CONFIDENT);
 	}
 
 	@Override
 	public boolean learnConcept(IConcept concept, StorageType type) {
-		return this.conceptGraph.add(new ConceptNode(concept, type));
-	}
-
-	@Override
-	public boolean forgetConcept(IConcept concept) {
-		if (concept.equals(self)) {
-			throw new IllegalArgumentException("Cannot forget self");
-			// TODO maybe you can forget yourself? what does that entail?
+		IConceptNode connode = conceptGraph.get(new ConceptNode(concept));
+		if (connode != null) {
+			if (connode.getStorageType() != type) {
+				conceptGraph.set(connode, new ConceptNode(concept));
+				return true;
+			} else {
+				return false;
+			}
 		}
-		return this.conceptGraph.remove(new ConceptNode(concept));
+		return conceptGraph.add(new ConceptNode(concept));
 	}
 
 	@Override
@@ -152,9 +156,9 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 	public boolean addConfidentRelation(IConcept from, IConceptRelationType relation, IConcept to) {
 		ConceptNode fromN = new ConceptNode(from);
 		ConceptNode toN = new ConceptNode(to);
-		boolean added = this.conceptGraph.addEdge(fromN, relation, toN);
-		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE, StorageType.CONFIDENT);
-		return added;
+		this.conceptGraph.addEdge(fromN, relation, toN);
+		return conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE,
+				StorageType.CONFIDENT) == StorageType.CONFIDENT;
 	}
 
 	@Override
@@ -168,48 +172,78 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 		}
 		ConceptNode fromN = new ConceptNode(from);
 		ConceptNode toN = new ConceptNode(to);
-		boolean added = this.conceptGraph.addEdge(fromN, relation, toN);
-		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE, StorageType.DUBIOUS);
+		this.conceptGraph.addEdge(fromN, relation, toN);
+		StorageType stype = conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE,
+				StorageType.DUBIOUS);
 		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.CONFIDENCE, confidence);
-		return added;
+		return stype == StorageType.DUBIOUS;
 	}
 
 	@Override
 	public boolean addTemporaryRelation(IConcept from, IConceptRelationType relation, IConcept to) {
 		ConceptNode fromN = new ConceptNode(from);
 		ConceptNode toN = new ConceptNode(to);
-		boolean added = this.conceptGraph.addEdge(fromN, relation, toN);
-		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE, StorageType.TEMPORARY);
-		return added;
+		this.conceptGraph.addEdge(fromN, relation, toN);
+		StorageType stype = conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE,
+				StorageType.TEMPORARY);
+		return stype == StorageType.TEMPORARY;
 	}
 
 	@Override
-	public boolean addUnknownRelation(IConcept from, IConcept to) {
-		ConceptNode fromN = new ConceptNode(from);
-		ConceptNode toN = new ConceptNode(to);
-		boolean added = this.conceptGraph.addEdge(fromN, KnowledgeRelationType.UNKNOWN, toN);
-		conceptGraph.setProperty(fromN, KnowledgeRelationType.UNKNOWN, toN, RelationProperties.STORAGE_TYPE,
-				StorageType.UNKNOWN);
-		return added;
+	public boolean forgetConcept(IConcept concept) {
+		if (concept.equals(self)) {
+			throw new IllegalArgumentException("Cannot forget self");
+			// TODO maybe you can forget yourself? what does that entail?
+		}
+		if (!this.conceptGraph.remove(new ConceptNode(concept))) { // if it's not in local memory
+			return this.conceptGraph.add(new ConceptNode(concept, StorageType.FORGOTTEN));
+		}
+		return true;
 	}
 
 	@Override
 	public boolean removeRelation(IConcept from, IConceptRelationType type, IConcept to) {
-		return conceptGraph.removeEdge(new ConceptNode(from), type, new ConceptNode(to));
+		if (this.hasRelationCheckParent(from, type, to) != this) {
+			this.conceptGraph.addEdge(new ConceptNode(from), type, new ConceptNode(to));
+			if (this.getStorageTypeOfRelation(from, type, to) == StorageType.FORGOTTEN) {
+				return false;
+			}
+			this.setStorageTypeOfRelation(from, type, to, StorageType.FORGOTTEN);
+			return true;
+		} else {
+			if (this.hasRelation(from, type, to)
+					&& this.getStorageTypeOfRelation(from, type, to) == StorageType.FORGOTTEN) {
+				return false;
+			}
+			return conceptGraph.removeEdge(new ConceptNode(from), type, new ConceptNode(to));
+		}
 	}
 
 	@Override
 	public boolean removeAllRelations(IConcept from, IConcept to) {
-		return conceptGraph.removeAllConnections(new ConceptNode(from), new ConceptNode(to));
+		boolean answer = false;
+		for (IConceptRelationType edge : conceptGraph.getEdgeTypesBetween(new ConceptNode(from), new ConceptNode(to))) {
+			answer = answer || this.removeRelation(from, edge, to);
+		}
+		return answer;
 	}
 
 	@Override
 	public boolean removeAllRelations(IConcept from, IConceptRelationType type) {
-		return conceptGraph.removeAllConnections(new ConceptNode(from), type);
+		boolean answer = false;
+		for (IConceptNode to : conceptGraph.getNeighbors(new ConceptNode(from), type)) {
+			answer = answer || this.removeRelation(from, type, to.getConcept());
+		}
+		return answer;
 	}
 
 	@Override
 	public boolean hasRelation(IConcept from, IConceptRelationType type, IConcept to) {
+		if (conceptGraph.containsEdge(new ConceptNode(from), type, new ConceptNode(to))
+				&& conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to),
+						RelationProperties.STORAGE_TYPE) == StorageType.FORGOTTEN) {
+			return false;
+		}
 		return hasRelationCheckParent(from, type, to) != null;
 	}
 
@@ -233,6 +267,20 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 
 	@Override
 	public boolean hasRelation(IConcept from, IConcept to) {
+		if (conceptGraph.containsEdge(new ConceptNode(from), new ConceptNode(to))) {
+			boolean foundx = false;
+			for (IConceptRelationType type : conceptGraph.getEdgeTypesBetween(new ConceptNode(from),
+					new ConceptNode(to))) {
+				if (conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to),
+						RelationProperties.STORAGE_TYPE) != StorageType.FORGOTTEN) {
+					foundx = true;
+					break;
+				}
+			}
+			if (!foundx) {
+				return false;
+			}
+		}
 		return hasRelationCheckParent(from, to) != null;
 	}
 
@@ -267,7 +315,10 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 						return ikb.getRelationTypesFromCheckParent(from);
 					else
 						return new SingleParentConceptStorageParentIterator<>(parent,
-								parent.getRelationTypesFrom(from).iterator());
+								Streams.stream(parent.getOutgoingEdges(from))
+										.filter((trip) -> this.getStorageTypeOfRelation(trip.getFirst(),
+												trip.getSecond(), trip.getThird()) != StorageType.FORGOTTEN)
+										.map((a) -> a.center()).distinct().iterator());
 				});
 	}
 
@@ -284,7 +335,8 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 						return ikb.getConnectedConceptsCheckParent(from);
 					else
 						return new SingleParentConceptStorageParentIterator<>(parent,
-								parent.getConnectedConcepts(from).iterator());
+								Streams.stream(parent.getConnectedConcepts(from))
+										.filter((a) -> this.getStorageType(a) != StorageType.FORGOTTEN).iterator());
 				});
 	}
 
@@ -325,7 +377,10 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 						return ikb.getOutgoingEdgesCheckParent(from);
 					else
 						return new SingleParentConceptStorageParentIterator<>(parent,
-								parent.getMappedConceptGraphView().outgoingEdges(from));
+								Streams.stream(parent.getMappedConceptGraphView().outgoingEdges(from))
+										.filter((trip) -> this.getStorageTypeOfRelation(trip.getFirst(),
+												trip.getSecond(), trip.getThird()) != StorageType.FORGOTTEN)
+										.iterator());
 				});
 	}
 
@@ -343,7 +398,8 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 						return ikb.getConnectedConceptsCheckParent(from, type);
 					else
 						return new SingleParentConceptStorageParentIterator<>(parent,
-								parent.getConnectedConcepts(from, type).iterator());
+								Streams.stream(parent.getConnectedConcepts(from, type))
+										.filter((a) -> this.getStorageType(a) != StorageType.FORGOTTEN).iterator());
 				});
 	}
 
@@ -471,7 +527,7 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 	public Map<IKnowledgeBase, Float> getSocialBondValueCheckParents(IConcept from, ISocialBondTrait trait,
 			IConcept to) {
 		Map<IKnowledgeBase, Float> types = new LinkedHashMap<>();
-		types.put(this, conceptGraph.getProperty(new ConceptNode(from), UniqueInterrelationType.HAS_SOCIAL_BOND_TO,
+		types.put(this, conceptGraph.getProperty(new ConceptNode(from), ProfileInterrelationType.HAS_SOCIAL_BOND_TO,
 				new ConceptNode(to), trait, false));
 		for (IKnowledgeBase para : parents) {
 			if (para instanceof IIndividualKnowledgeBase ikb) {
@@ -485,8 +541,9 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 
 	@Override
 	public void setSocialBondValue(IConcept from, ISocialBondTrait trait, IConcept to, float value) {
-		conceptGraph.setProperty(new ConceptNode(from), UniqueInterrelationType.HAS_SOCIAL_BOND_TO, new ConceptNode(to),
-				trait, value);
+		conceptGraph.addEdge(new ConceptNode(from), ProfileInterrelationType.HAS_SOCIAL_BOND_TO, new ConceptNode(to));
+		conceptGraph.setProperty(new ConceptNode(from), ProfileInterrelationType.HAS_SOCIAL_BOND_TO,
+				new ConceptNode(to), trait, value);
 	}
 
 	@Override
@@ -504,12 +561,28 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 
 	@Override
 	public void addConceptNodeSubgraph(IRelationGraph<? extends IConceptNode, IConceptRelationType> graph) {
-		conceptGraph.addAll(graph);
+		conceptGraph.addAll((IRelationGraph) graph);
+		graph.edgeIterator().forEachRemaining((trip) -> {
+			if (conceptGraph.getProperty(trip.getFirst(), trip.getSecond(), trip.getThird(),
+					RelationProperties.STORAGE_TYPE) == StorageType.FORGOTTEN) {
+				conceptGraph.setProperty(trip.getFirst(), trip.getSecond(), trip.getThird(),
+						RelationProperties.STORAGE_TYPE,
+						(StorageType) ((IRelationGraph) graph).getProperty(trip.getFirst(), trip.getSecond(),
+								trip.getThird(), RelationProperties.STORAGE_TYPE));
+			}
+		});
 	}
 
 	@Override
 	public void learnConceptSubgraph(IRelationGraph<IConcept, IConceptRelationType> graph) {
 		conceptGraph.addAll(graph.mapCopy(ConceptNode::new, Functions.identity()));
+		graph.edgeIterator().forEachRemaining((trip) -> {
+			if (getStorageTypeOfRelation(trip.getFirst(), trip.getSecond(), trip.getThird()) == StorageType.FORGOTTEN) {
+				setStorageTypeOfRelation(trip.getFirst(), trip.getSecond(), trip.getThird(),
+						(StorageType) graph.getProperty(trip.getFirst(), trip.getSecond(), trip.getThird(),
+								RelationProperties.STORAGE_TYPE));
+			}
+		});
 	}
 
 	@Override

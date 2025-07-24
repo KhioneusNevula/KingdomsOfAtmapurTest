@@ -1,12 +1,44 @@
 package thinker.concepts.general_types;
 
 import java.util.Collection;
-import java.util.Set;
+import java.util.Collections;
 import java.util.UUID;
 
 import things.interfaces.UniqueType;
+import thinker.concepts.profile.IProfile;
 
 public interface IWhQuestionConcept extends IDescriptiveConcept {
+
+	/**
+	 * A question type that can be asked by a wh-question.
+	 * 
+	 * @author borah
+	 *
+	 */
+	public static interface IQuestionType {
+		/**
+		 * Return what UniqueType this QuestionType matches
+		 * 
+		 * @return
+		 */
+		public UniqueType getUniqueType();
+
+		/**
+		 * Returns a "question word" to represent this question
+		 * 
+		 * @return
+		 */
+		public String getQuestionWord();
+
+		/**
+		 * Return the output of {@link #getUniqueType()} as a collection
+		 * 
+		 * @return
+		 */
+		public default Collection<UniqueType> getMatchableTypes() {
+			return Collections.singleton(getUniqueType());
+		}
+	}
 
 	/**
 	 * Indicates any possible question
@@ -25,11 +57,11 @@ public interface IWhQuestionConcept extends IDescriptiveConcept {
 
 		@Override
 		public ConceptType getConceptType() {
-			return ConceptType.WH_QUESTION;
+			return ConceptType.C_WH_QUESTION;
 		}
 
 		@Override
-		public QuestionType getQuestionType() {
+		public IQuestionType getQuestionType() {
 			return QuestionType.ANY;
 		}
 
@@ -40,7 +72,7 @@ public interface IWhQuestionConcept extends IDescriptiveConcept {
 
 		@Override
 		public Collection<UniqueType> getDescriptiveTypes() {
-			return QuestionType.ANY.matchableTypes;
+			return QuestionType.ANY.getMatchableTypes();
 		}
 	};
 
@@ -56,113 +88,42 @@ public interface IWhQuestionConcept extends IDescriptiveConcept {
 	 * 
 	 * @return
 	 */
-	public QuestionType getQuestionType();
+	public IQuestionType getQuestionType();
 
 	@Override
 	default Collection<UniqueType> getDescriptiveTypes() {
-		return this.getQuestionType().matchableTypes;
+		return this.getQuestionType().getMatchableTypes();
 	}
 
 	/**
-	 * Creates a WHAT question, i.e. {@link QuestionType#ENTITY}
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public static IWhQuestionConcept what(UUID id) {
-		return new WhQuestionConcept(id, QuestionType.ENTITY);
-	}
-
-	/**
-	 * Creates a WHAT_PART question, i.e. {@link QuestionType#PART}
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public static IWhQuestionConcept whatPart(UUID id) {
-		return new WhQuestionConcept(id, QuestionType.PART);
-	}
-
-	/**
-	 * Creates a WHAT_PHENOMENON question, i.e. {@link QuestionType#PHENOMENON}
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public static IWhQuestionConcept whatPhenomenon(UUID id) {
-		return new WhQuestionConcept(id, QuestionType.PHENOMENON);
-	}
-
-	/**
-	 * Creates a WHERE question, i.e. {@link QuestionType#PLACE}
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public static IWhQuestionConcept where(UUID id) {
-		return new WhQuestionConcept(id, QuestionType.PLACE);
-	}
-
-	/**
-	 * Creates a WHEN (timeline) question, i.e. {@link QuestionType#TIMELINE_TIME}
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public static IWhQuestionConcept whenTimeline(UUID id) {
-		return new WhQuestionConcept(id, QuestionType.TIMELINE_TIME);
-	}
-
-	/**
-	 * Creates a WHEN (clock) question, i.e. {@link QuestionType#CLOCK_TIME}
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public static IWhQuestionConcept whenClock(UUID id) {
-		return new WhQuestionConcept(id, QuestionType.CLOCK_TIME);
-	}
-
-	/**
-	 * Creates a WHAT (event) question, i.e. {@link QuestionType#EVENT}
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public static IWhQuestionConcept whatEvent(UUID id) {
-		return new WhQuestionConcept(id, QuestionType.EVENT);
-	}
-
-	/**
-	 * Creates a WHAT (action) question, i.e. {@link QuestionType#ACTION}
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public static IWhQuestionConcept whatAction(UUID id) {
-		return new WhQuestionConcept(id, QuestionType.ACTION);
-	}
-
-	/**
-	 * Create a question concept
+	 * Create a question concept for a general question type
 	 * 
 	 * @param id
 	 * @param type
 	 * @return
 	 */
 	public static IWhQuestionConcept create(UUID id, QuestionType type) {
-		return new WhQuestionConcept(id, type);
+		return new NonProfileWhQuestionConcept(id, type);
 	}
 
-	public enum QuestionType {
-		/** A question type that represents an entity, item, or group */
-		ENTITY("what", UniqueType.FIGURE, UniqueType.FORM, UniqueType.COLLECTIVE),
-		/** A question type that represents a part */
-		PART("what_part", UniqueType.PART),
-		/** A question type that represents a phenomenon */
-		PHENOMENON("what_phenomenon", UniqueType.PHENOMENON),
-		/** A question type that represents a location */
-		PLACE("where", UniqueType.PLACE),
+	/**
+	 * Create a question concept for a unique type
+	 * 
+	 * @param id
+	 * @param type
+	 * @return
+	 */
+	public static IWhQuestionConcept create(UUID id, UniqueType type) {
+		return new WhQuestionProfile(type, id);
+	}
+
+	/**
+	 * Question types that are not profilable
+	 * 
+	 * @author borah
+	 *
+	 */
+	public enum QuestionType implements IQuestionType {
 		/** A question type representing a time in history */
 		TIMELINE_TIME("when_timeline"),
 		/** A question type representing a cyclic time */
@@ -182,11 +143,19 @@ public interface IWhQuestionConcept extends IDescriptiveConcept {
 		ANY("whatever");
 
 		public final String name;
-		private Set<UniqueType> matchableTypes;
 
-		private QuestionType(String name, UniqueType... cvT) {
+		private QuestionType(String name) {
 			this.name = name;
-			this.matchableTypes = Set.of(cvT);
+		}
+
+		@Override
+		public UniqueType getUniqueType() {
+			return UniqueType.N_A;
+		}
+
+		@Override
+		public String getQuestionWord() {
+			return name;
 		}
 	}
 }

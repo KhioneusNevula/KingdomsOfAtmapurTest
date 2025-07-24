@@ -47,7 +47,7 @@ import thinker.concepts.profile.IProfile;
 import thinker.knowledge.IKnowledgeMedium;
 import thinker.mind.perception.sensation.DamageSensationReceptor;
 import thinker.mind.perception.sensation.Sensation;
-import thinker.mind.util.IMindAccess;
+import thinker.mind.util.IBeingAccess;
 
 public class StandardComponentPart implements IComponentPart {
 
@@ -348,7 +348,7 @@ public class StandardComponentPart implements IComponentPart {
 					+ IPartHealth.Standard.INTEGRITY.health(body, this)
 					+ ". A damage receptor now SHOULD detect integrity as "
 					+ new DamageSensationReceptor(IPartHealth.Standard.INTEGRITY).getSensationLevel(Sensation.PAIN,
-							IMindAccess.create(null, this, body.getPartGraph(), 0)));
+							IBeingAccess.create(null, this, body.getPartGraph(), 0)));
 		}
 		if (callUpdate && this.owner instanceof IForm<?>soma) {
 			soma.onPartShapeChange(this, fmat);

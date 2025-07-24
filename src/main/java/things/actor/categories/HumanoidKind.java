@@ -72,7 +72,7 @@ public class HumanoidKind extends FleshCreatureKind {
 							.setIdentifierName(s.getOwner().getProfile().getIdentifierName())));
 			LIFE_ENERGY_SYSTEM.getChannelSystemNeeds()
 					.forEach((need) -> ((Perception) soul.getPerception()).addBlockage(need));
-			soul.getPersonality().addTrait(PersonalityTraits.HANGRINESS_GEN
+			soul.getPersonality().addTendency(PersonalityTraits.HANGRINESS_GEN
 					.apply(s.getSystemByName(FOOD_SYSTEM_NAME).getChannelSystemNeeds().iterator().next()));
 			return soul;
 		}, FOOD_SYSTEM);

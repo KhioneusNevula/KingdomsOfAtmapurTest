@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
+import _utilities.UnimplementedException;
 import _utilities.collections.MappedSet;
 import _utilities.couplets.Triplet;
 import _utilities.graph.IRelationGraph;
@@ -347,11 +348,11 @@ public class FormCondition implements IFormCondition {
 			default: {
 
 				// TODO handle later
-				throw new UnsupportedOperationException("Cannot handle this relation yet");
+				throw new UnimplementedException("Cannot handle this relation yet");
 			}
 			}
 		}
-		throw new UnsupportedOperationException("Cannot handle this relation yet");
+		throw new UnimplementedException("Cannot handle this relation yet");
 	}
 
 	@Override

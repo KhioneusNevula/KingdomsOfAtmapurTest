@@ -7,6 +7,8 @@ import java.util.UUID;
 import things.interfaces.IUnique;
 import things.interfaces.UniqueType;
 import thinker.concepts.general_types.IDescriptiveConcept;
+import thinker.concepts.general_types.IPatternConcept;
+import thinker.concepts.general_types.IWhQuestionConcept;
 
 /**
  * A profile represents a unique individual thing in the world, which may be an
@@ -35,6 +37,11 @@ public interface IProfile extends IDescriptiveConcept {
 
 		@Override
 		public boolean isTypeProfile() {
+			return false;
+		}
+
+		@Override
+		public boolean isUniqueProfile() {
 			return false;
 		}
 
@@ -138,13 +145,29 @@ public interface IProfile extends IDescriptiveConcept {
 	public boolean isAnyMatcher();
 
 	/**
+	 * Whether this profile refers to a unique entity rather than a type;
+	 * 
+	 * @return
+	 */
+	public boolean isUniqueProfile();
+
+	/**
 	 * Whether this profile is indefinite, i.e. it can match a set of possible
 	 * things rather than just one unique thing. Equivalent to
 	 * "{@linkplain IProfile#isAnyMatcher()} ||
-	 * {@linkplain IProfile#isTypeProfile()}"
+	 * {@linkplain IProfile#isTypeProfile()} || {@linkplain IProfile#isPattern()}"
 	 */
 	public default boolean isIndefinite() {
-		return isAnyMatcher() || isTypeProfile();
+		return isAnyMatcher() || isTypeProfile() || isPattern();
+	}
+
+	/**
+	 * If this is just a profile pattern for a typeprofile
+	 * 
+	 * @return
+	 */
+	public default boolean isPattern() {
+		return this instanceof IPatternConcept;
 	}
 
 	/**
@@ -152,6 +175,10 @@ public interface IProfile extends IDescriptiveConcept {
 	 * distinctive properties
 	 */
 	public boolean isTypeProfile();
+
+	public default boolean isQuestion() {
+		return this instanceof IWhQuestionConcept;
+	}
 
 	/**
 	 * What type of thing this profile represents

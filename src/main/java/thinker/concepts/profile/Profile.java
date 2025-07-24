@@ -27,6 +27,11 @@ public class Profile implements IProfile {
 		return false;
 	}
 
+	@Override
+	public boolean isUniqueProfile() {
+		return true;
+	}
+
 	/**
 	 * Only used to make profiles easier to identify; not factored into equality
 	 * checks, hashcode, etc

@@ -21,7 +21,7 @@ import things.form.material.IMaterial;
 import things.form.material.condition.IMaterialCondition;
 import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
-import thinker.mind.util.IMindAccess;
+import thinker.mind.util.IBeingAccess;
 
 /**
  * Channel system to intake material and turn it into something else, e.g. food
@@ -105,7 +105,7 @@ public class FuelChannelSystem implements IChannelSystem {
 	}
 
 	@Override
-	public float getNeedLevel(IChannelNeed forNeed, IMindAccess info) {
+	public float getNeedLevel(IChannelNeed forNeed, IBeingAccess info) {
 		if (forNeed.equals(this.need)) {
 			Iterable<IComponentPart> parts = () -> info.partAccess().stream().map((x) -> (IComponentPart) x)
 					.filter((a) -> a.getAbilities().contains(this.stomachType)).iterator();

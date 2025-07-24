@@ -3,20 +3,17 @@ package thinker.mind.will;
 import java.util.Collection;
 import java.util.UUID;
 
-import thinker.mind.util.IMindAccess;
+import thinker.mind.util.IBeingAccess;
 import thinker.mind.will.thoughts.IThought;
 import thinker.mind.will.thoughts.IThought.ThoughtType;
 
-public interface IWill {
-
-	/**
-	 * Returns the chance that a focused thought will get deleted randomly each
-	 * tick. this should be 0 if the amount of focused thoughts is less than
-	 * {@link #focusedThoughtsCap()}, and the chance increases with more focused
-	 * thoughts above the cap (though it ought to never reach 1). It picks the
-	 * focused thought that has been around for the shortest time.
-	 */
-	public float getMindStrainChance();
+/**
+ * A will which can think with thoughts
+ * 
+ * @author borah
+ *
+ */
+public interface IThinkerWill extends IWill {
 
 	/**
 	 * the max number of focused thoughts allowed before they start getting deleted
@@ -90,6 +87,6 @@ public interface IWill {
 	 * @param inSpirit
 	 * @param ticks
 	 */
-	public void willTick(IMindAccess info);
+	public void willTick(IBeingAccess info);
 
 }

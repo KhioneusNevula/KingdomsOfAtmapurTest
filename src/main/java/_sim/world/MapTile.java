@@ -24,7 +24,7 @@ public class MapTile {
 	}
 
 	/**
-	 * New contiguous tile at position. Will be named as {@value #DEFAULT_NAME}
+	 * New contiguous tile at position. ThinkerWill be named as {@value #DEFAULT_NAME}
 	 * 
 	 * @param tag
 	 * @param r

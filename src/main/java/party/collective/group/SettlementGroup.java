@@ -11,6 +11,10 @@ import party.PartyRelationGraph;
 import party.kind.spawning.IKindSpawningContext;
 import things.form.kinds.IKind;
 import thinker.knowledge.base.noosphere.INoosphereKnowledgeBase;
+import thinker.mind.emotions.IFeeling;
+import thinker.mind.personality.IPersonality;
+import thinker.mind.personality.ITendencies;
+import thinker.mind.will.IWill;
 
 public class SettlementGroup extends AbstractGroup implements ISettlementGroup {
 
@@ -31,6 +35,30 @@ public class SettlementGroup extends AbstractGroup implements ISettlementGroup {
 		} else {
 			this.center = center.withTile(tile);
 		}
+	}
+
+	@Override
+	public IWill getWill() {
+		// TODO Group will
+		return null;
+	}
+
+	@Override
+	public ITendencies getPersonality() {
+		// TODO settlement personalty
+		return null;
+	}
+
+	@Override
+	public float getFeeling(IFeeling feeling) {
+		// TODO Group feelings
+		return 0;
+	}
+
+	@Override
+	public Collection<IFeeling> getFeelings() {
+		// TODO Group feeligns
+		return null;
 	}
 
 	@Override

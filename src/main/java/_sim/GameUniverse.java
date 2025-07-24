@@ -431,4 +431,8 @@ public class GameUniverse {
 		return rand;
 	}
 
+	public float random() {
+		return rand.nextFloat();
+	}
+
 }

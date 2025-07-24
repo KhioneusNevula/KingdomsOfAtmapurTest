@@ -51,7 +51,7 @@ public interface IModifiableRelationGraph<E, R extends IInvertibleRelationType> 
 
 	/**
 	 * Remove all edges coming from this node. Return false if no connections were
-	 * removed (because the node had none). Will throw exception if the node doesn't
+	 * removed (because the node had none). ThinkerWill throw exception if the node doesn't
 	 * exist
 	 * 
 	 * @param value

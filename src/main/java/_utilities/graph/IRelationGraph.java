@@ -12,6 +12,8 @@ import java.util.function.Predicate;
 
 import _utilities.couplets.Triplet;
 import _utilities.property.IProperty;
+import thinker.concepts.IConcept;
+import thinker.concepts.relations.IConceptRelationType;
 
 /**
  * An interface representing relations-graph with no writing functionality
@@ -527,5 +529,16 @@ public interface IRelationGraph<E, R extends IInvertibleRelationType> extends Se
 
 	/** All existing types of edges in this graph */
 	public Collection<R> getEdgeTypes();
+
+	/**
+	 * If this is a modifiable graph, return an immutable view of it; otherwise
+	 * return the graph itself
+	 */
+	public default IRelationGraph<E, R> immutable() {
+		if (this instanceof IModifiableRelationGraph a) {
+			return ImmutableGraphView.of(this);
+		}
+		return this;
+	}
 
 }

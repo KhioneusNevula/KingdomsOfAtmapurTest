@@ -160,7 +160,7 @@ public interface IChannelCenter extends IPartAbility {
 	}
 
 	/**
-	 * Create the appropriate resource given that this has a CREATE role, or retuern
+	 * Create the appropriate resource given that this has a GENERATION role, or retuern
 	 * null if not possible
 	 * 
 	 * @param body

@@ -18,7 +18,7 @@ public interface IConceptRelationType extends IInvertibleRelationType {
 	 * other end of this relation characterizes; return an empty set if not
 	 * applicable.
 	 */
-	public ConceptType getEndType();
+	public Collection<ConceptType> getEndTypes();
 
 	/**
 	 * Return what classes the endpoints of this concept relation can be; return
@@ -43,18 +43,15 @@ public interface IConceptRelationType extends IInvertibleRelationType {
 		if (this.getEndClasses().isEmpty()
 				|| this.getEndClasses().stream().anyMatch((clazz) -> clazz.isInstance(node))) {
 			if (node instanceof IConcept concept) {
-				if (concept instanceof IConnectorConcept cc
-						&& ConnectorType.logicalConnectors().contains(cc.getConnectorType())) {
-					return maxPermitted();
-				}
-				if (this.getEndType() == ConceptType.NONE || concept.getConceptType() == this.getEndType()) {
+				if (this.getEndTypes().isEmpty()
+						|| this.getEndTypes().stream().anyMatch((clazz) -> concept.getConceptType() == clazz)) {
 					return maxPermitted();
 				} else {
 					return "ConceptType of " + concept + " is " + concept.getConceptType() + ", but should be "
-							+ this.getEndType();
+							+ this.getEndTypes();
 				}
 			} else {
-				return node + " is not an instanceof " + IConcept.class.getSimpleName();
+				return node + " is not anc instanceof " + IConcept.class.getSimpleName();
 			}
 		} else {
 			return node + " is not an instanceof any of these classes: " + this.getEndClasses();

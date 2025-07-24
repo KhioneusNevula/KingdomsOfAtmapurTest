@@ -29,7 +29,7 @@ import thinker.concepts.general_types.IConnectorConcept.ConnectorType;
 import thinker.concepts.profile.IProfile;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.concepts.relations.descriptive.PropertyRelationType;
-import thinker.concepts.relations.descriptive.UniqueInterrelationType;
+import thinker.concepts.relations.descriptive.ProfileInterrelationType;
 import thinker.concepts.relations.technical.KnowledgeRelationType;
 import thinker.concepts.relations.util.RelationProperties;
 import thinker.knowledge.ConceptNodeGraph;
@@ -441,32 +441,6 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 		conceptGraph.getProperty(fromN, relation, toN, REL_GROUPS, true).add(group);
 		conceptGraph.getProperty(fromN, relation, toN, GROUP_BASED_PROPERTIES, true).put(group,
 				RelationProperties.STORAGE_TYPE, StorageType.TEMPORARY);
-		return added;
-	}
-
-	@Override
-	public boolean addUnknownRelation(IConcept from, IConcept to) {
-		GroupConceptNode fromN = new GroupConceptNode(from);
-		GroupConceptNode toN = new GroupConceptNode(to);
-
-		boolean added = this.conceptGraph.addEdge(fromN, KnowledgeRelationType.UNKNOWN, toN);
-		conceptGraph.setProperty(fromN, KnowledgeRelationType.UNKNOWN, toN, RelationProperties.STORAGE_TYPE,
-				StorageType.UNKNOWN);
-		return added;
-	}
-
-	@Override
-	public boolean groupAddUnknownRelation(IConcept from, IConcept to, IProfile group) {
-		GroupConceptNode fromN = new GroupConceptNode(from);
-		GroupConceptNode toN = new GroupConceptNode(to);
-		if (!groupKnowsConcept(from, group))
-			throw new NodeNotFoundException(from);
-		if (!groupKnowsConcept(to, group))
-			throw new NodeNotFoundException(to);
-		boolean added = this.conceptGraph.addEdge(fromN, KnowledgeRelationType.UNKNOWN, toN);
-		conceptGraph.getProperty(fromN, KnowledgeRelationType.UNKNOWN, toN, REL_GROUPS, true).add(group);
-		conceptGraph.getProperty(fromN, KnowledgeRelationType.UNKNOWN, toN, GROUP_BASED_PROPERTIES, true).put(group,
-				RelationProperties.STORAGE_TYPE, StorageType.UNKNOWN);
 		return added;
 	}
 
@@ -942,7 +916,7 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 
 	@Override
 	public float getSocialBondValue(IConcept from, ISocialBondTrait trait, IConcept to) {
-		Float f = conceptGraph.getProperty(new GroupConceptNode(from), UniqueInterrelationType.HAS_SOCIAL_BOND_TO,
+		Float f = conceptGraph.getProperty(new GroupConceptNode(from), ProfileInterrelationType.HAS_SOCIAL_BOND_TO,
 				new GroupConceptNode(to), RelationProperties.CONFIDENCE, false);
 		if (f == null)
 			return 1f;
@@ -951,7 +925,7 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 
 	@Override
 	public void setSocialBondValue(IConcept from, ISocialBondTrait trait, IConcept to, float value) {
-		conceptGraph.setProperty(new GroupConceptNode(from), UniqueInterrelationType.HAS_SOCIAL_BOND_TO,
+		conceptGraph.setProperty(new GroupConceptNode(from), ProfileInterrelationType.HAS_SOCIAL_BOND_TO,
 				new GroupConceptNode(to), trait, value);
 	}
 

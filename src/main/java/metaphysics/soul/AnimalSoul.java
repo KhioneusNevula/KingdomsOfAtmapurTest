@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import _sim.world.GameMap;
 import metaphysics.magic.ITether;
-import metaphysics.magic.ITether.TetherAbility;
 import metaphysics.magic.ITether.TetherType;
 import things.form.channelsystems.IChannelCenter.ChannelRole;
 import things.form.soma.IPartDestroyedCondition;
@@ -14,11 +13,12 @@ import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.status_effect.BasicStatusEffect;
 import things.status_effect.IPartStatusEffectInstance;
-import thinker.mind.memory.IMemoryBase;
+import thinker.mind.memory.IMindKnowledgeBase;
+import thinker.mind.personality.BasicTendency;
 import thinker.mind.personality.Personality;
 import thinker.mind.personality.PersonalityTraits;
-import thinker.mind.util.IMindAccess;
-import thinker.mind.will.Will;
+import thinker.mind.util.IBeingAccess;
+import thinker.mind.will.ThinkerWill;
 
 /**
  * Implementation of the soul of a mind that tethers to a physical body using
@@ -29,12 +29,13 @@ public class AnimalSoul extends AbstractSoul {
 	private boolean removed;
 
 	public AnimalSoul(UUID id, String idName, IPartDestroyedCondition whenDetach, IPartHealth healthTracker,
-			IMemoryBase mind) {
+			IMindKnowledgeBase mind) {
 		super(id, idName, whenDetach, healthTracker, mind);
-		setWill(new Will(0.005f, 5));
+		setWill(new ThinkerWill(0.005f, 5));
 		setPersonality(Personality.fromTraits(PersonalityTraits.WIMPINESS, PersonalityTraits.RETALIATION,
 				PersonalityTraits.PAIN_SENSITIVITY, PersonalityTraits.PAIN_DISTRACTION,
-				PersonalityTraits.DEMORALIZATION, PersonalityTraits.SHAME));
+				PersonalityTraits.DEMORALIZATION, PersonalityTraits.SHAME, BasicTendency.FORM_MUTABILITY,
+				BasicTendency.POSITION_MUTABILITY));
 	}
 
 	@Override
@@ -47,7 +48,7 @@ public class AnimalSoul extends AbstractSoul {
 
 	@Override
 	public void runTick(IComponentPart part, Collection<? extends IComponentPart> access, long ticks) {
-		IMindAccess info = IMindAccess.create(this, part, access, ticks);
+		IBeingAccess info = IBeingAccess.create(this, part, access, ticks);
 		this.perception.update(info);
 		this.will.willTick(info);
 		this.memory.tickMemoriesAndFeelings(info);
@@ -55,7 +56,7 @@ public class AnimalSoul extends AbstractSoul {
 
 	@Override
 	public void runUntetheredTick(GameMap world, long ticks) {
-		IMindAccess info = IMindAccess.create(this, ticks, world);
+		IBeingAccess info = IBeingAccess.create(this, ticks, world);
 		this.perception.update(info);
 		this.will.willTick(info);
 		this.memory.tickMemoriesAndFeelings(info);

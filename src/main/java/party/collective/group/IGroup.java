@@ -3,15 +3,16 @@ package party.collective.group;
 import java.util.Collection;
 
 import _sim.GameUniverse;
+import party.agent.IAgent;
 import party.collective.ICollective;
 import party.systems.IRole;
 import thinker.mind.needs.INeedConcept;
 
 /**
- * A kind of party that typically, among other things, acts as a
- * self-governing agent
+ * A kind of party that typically, among other things, acts as a self-governing
+ * agent
  */
-public interface IGroup extends ICollective {
+public interface IGroup extends ICollective, IAgent {
 
 	/**
 	 * Return all roles embedded in this group

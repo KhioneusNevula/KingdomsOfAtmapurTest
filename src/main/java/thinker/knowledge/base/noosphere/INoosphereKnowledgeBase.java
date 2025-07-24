@@ -239,16 +239,6 @@ public interface INoosphereKnowledgeBase extends IKnowledgeBase {
 	public boolean groupAddTemporaryRelation(IConcept from, IConceptRelationType relation, IConcept to, IProfile group);
 
 	/**
-	 * Adds an {@link KnowledgeRelationType#UNKNOWN} relation between these concepts
-	 * for the given group only
-	 * 
-	 * @param from
-	 * @param to
-	 * @return
-	 */
-	public boolean groupAddUnknownRelation(IConcept from, IConcept to, IProfile group);
-
-	/**
 	 * Remove the given relation only for the given group
 	 * 
 	 * @param from

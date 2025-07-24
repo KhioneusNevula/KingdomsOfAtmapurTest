@@ -1,21 +1,22 @@
 package thinker.actions;
 
+import java.util.Map;
+
+import _utilities.couplets.Pair;
 import _utilities.graph.IModifiableRelationGraph;
 import _utilities.graph.IRelationGraph;
 import _utilities.property.IProperty;
 import things.form.condition.IFormCondition;
 import things.interfaces.UniqueType;
+import thinker.actions.expectations.IActionInfo;
 import thinker.concepts.IConcept;
+import thinker.concepts.general_types.IPatternConcept;
 import thinker.concepts.general_types.IPrincipleConcept;
 import thinker.concepts.profile.IProfile;
-import thinker.concepts.profile.TypeProfile;
 import thinker.concepts.relations.IConceptRelationType;
-import thinker.concepts.relations.actional.EventRelationType;
-import thinker.concepts.relations.descriptive.UniqueInterrelationType;
-import thinker.concepts.relations.technical.KnowledgeRelationType;
-import thinker.goals.IGoalConcept;
+import thinker.knowledge.IKnowledgeRepresentation;
 import thinker.knowledge.base.IKnowledgeBase;
-import thinker.mind.util.IMindAccess;
+import thinker.mind.util.IBeingAccess;
 
 /** 
  * Action structure:
@@ -96,37 +97,6 @@ public interface IActionConcept extends IConcept, IPrincipleConcept {
 				return ConceptType.ACTION;
 			}
 
-			@Override
-			public IRelationGraph<IConcept, IConceptRelationType> generateIntendedResult(IKnowledgeBase knowledge) {
-				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
-			}
-
-			@Override
-			public IRelationGraph<IConcept, IConceptRelationType> generateCondition(IMindAccess info,
-					IRelationGraph<IConcept, IConceptRelationType> intention) {
-				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
-			}
-
-			@Override
-			public void executeTick(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention) {
-				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
-			}
-
-			@Override
-			public boolean canExecute(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention) {
-				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
-			}
-
-			@Override
-			public IFormCondition bodyConditions(IMindAccess info) {
-				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
-			}
-
-			@Override
-			public void abortAction(IMindAccess info) {
-				throw new UnsupportedOperationException("Cannot run generic anonymous action type..." + name);
-			}
-
 		};
 	}
 
@@ -135,9 +105,15 @@ public interface IActionConcept extends IConcept, IPrincipleConcept {
 	 */
 	public static final IActionConcept THIS_ACTION = createGenericActionConcept("this_action");
 
+	/**
+	 * Used by some methods to signify an action was not found or could not be foudn
+	 */
+	public static final IActionConcept NO_ACTION = createGenericActionConcept("no_action");
+
 	/** Incorporates an action's intention into a knowledge base */
 	public static void incorporateIntoKnowledgeBase(IActionConcept action, IKnowledgeBase base) {
-		IModifiableRelationGraph<IConcept, IConceptRelationType> intent = action.generateIntendedResult(base).editableOrCopy();
+		IModifiableRelationGraph<IConcept, IConceptRelationType> intent = action.initIntendedResult(base)
+				.getMappedConceptGraphView().editableCopy();
 		if (intent.contains(THIS_ACTION))
 			intent.set(THIS_ACTION, action);
 		base.learnConceptSubgraph(intent);
@@ -151,7 +127,9 @@ public interface IActionConcept extends IConcept, IPrincipleConcept {
 	 * 
 	 * @return
 	 */
-	public IRelationGraph<IConcept, IConceptRelationType> generateIntendedResult(IKnowledgeBase knowledge);
+	public default IKnowledgeRepresentation initIntendedResult(IKnowledgeBase bas) {
+		throw new UnsupportedOperationException(this.toString() + ": unavailable");
+	}
 
 	/**
 	 * Return an {@link IFormCondition} of what is expected of the given body to
@@ -166,34 +144,35 @@ public interface IActionConcept extends IConcept, IPrincipleConcept {
 	 * @param ticks
 	 * @return
 	 */
-	public IFormCondition bodyConditions(IMindAccess info);
+	public default IFormCondition bodyConditions(IActionInfo info) {
+		throw new UnsupportedOperationException(this.toString() + ": unavailable");
+	}
 
 	/**
 	 * Called if a body condition suddenly returns false and the action is
 	 * physically prevented from continuing
 	 */
-	public void abortAction(IMindAccess info);
+	public default void abortAction(IActionInfo info) {
+		throw new UnsupportedOperationException(this.toString() + ": unavailable");
+	}
 
 	/**
 	 * If this action can currently execute. If not, first check
-	 * {@link #bodyConditions(IMindAccess)}, then call
+	 * {@link #bodyConditions(IBeingAccess)}, then call
 	 * {@link #generateCondition(IRelationGraph, IRelationGraph)} and/or
 	 * {@link #generateKnowledgeCondition(IRelationGraph, IRelationGraph)}. Returns
 	 * true as long as the action can execute;
 	 * 
-	 * @param forSpirit
-	 * @param inWill
-	 * @param inPart
 	 * @param access
-	 * @param intention          the intention being satisfied
-	 * @param knowledgeIntention the knowledge-intention being satisfied
-	 * @param ticks
+	 * @param expectation the Expectation being satisfied
 	 * @return
 	 */
-	public boolean canExecute(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention);
+	public default boolean canExecute(IActionInfo info) {
+		throw new UnsupportedOperationException(this.toString() + ": unavailable");
+	}
 
 	/**
-	 * Execute this action. Includes whatever intentions were used to create this
+	 * Execute this action. Includes whatever Expectation was used to create this
 	 * action
 	 * 
 	 * @param forSpirit
@@ -203,35 +182,38 @@ public interface IActionConcept extends IConcept, IPrincipleConcept {
 	 * @param ticks
 	 * @return
 	 */
-	public void executeTick(IMindAccess info, IRelationGraph<IConcept, IConceptRelationType> intention);
+	public default void executeTick(IActionInfo info) {
+		throw new UnsupportedOperationException(this.toString() + ": unavailable");
+	}
 
 	/**
-	 * Creates a condition for this action based on the given intention. A condition
-	 * uses OR-matching. Conditions may only have some selection of these
-	 * components:
-	 * <ol>
-	 * <li>A {@link IGoalConcept#SATISFIER} role, which is linked by
-	 * {@link EventRelationType}s to some concept
-	 * <li>A profile extending from an {@link #TARGETS} role, which is linked by
-	 * {@link KnowledgeRelationType}s to {@link TypeProfile}s, which may themselves
-	 * be linked by {@link UniqueInterrelationType}s to still other
-	 * {@link TypeProfile}s
-	 * <li>A {@link #ACTION_DOER} role, which is linked by
-	 * {@link KnowledgeRelationType}s to {@link TypeProfile}s
-	 * <li>A {@link #MEANS} role, linked by {@link KnowledgeRelationType}s to
-	 * {@link TypeProfile}s
-	 * <li>A {@link #PARTS_USED} role, linked by {@link KnowledgeRelationType}s to
-	 * other {@link TypeProfile}s
-	 * </ol>
+	 * Creates a condition for this action based on the given Expectation.
+	 * Conditions create relations between profiles.
+	 * 
+	 * Two things are returned: the condition, and a map
+	 * 
+	 * A Map is given to indicate which of the profiles in the given Intention are
+	 * equivalent to the profiles in the output condition. IS relations can be drawn
+	 * between these.
+	 * 
+	 * @param expectation the Expectation this action is satisfying
 	 * 
 	 * @return
 	 */
-	public IRelationGraph<IConcept, IConceptRelationType> generateCondition(IMindAccess info,
-			IRelationGraph<IConcept, IConceptRelationType> intention);
+	public default Pair<IKnowledgeRepresentation, Map<IProfile, IProfile>> generateCondition(IActionInfo info) {
+		throw new UnsupportedOperationException(this.toString() + ": unavailable");
+	}
 
 	@Override
 	default boolean isEventType() {
 		return true;
+	}
+
+	/**
+	 * Whether this concept is merely a pattern for an action, not an action itself
+	 */
+	public default boolean isPattern() {
+		return this instanceof IPatternConcept;
 	}
 
 	/** Used to change the {@linkplain Obligation}s of conditional relationships */
