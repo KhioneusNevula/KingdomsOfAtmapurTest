@@ -23,6 +23,7 @@ import party.relations.social_bonds.ISocialBondTrait;
 import thinker.concepts.IConcept;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.concepts.relations.descriptive.ProfileInterrelationType;
+import thinker.concepts.relations.technical.KnowledgeRelationType;
 import thinker.concepts.relations.util.RelationProperties;
 import thinker.knowledge.ConceptNodeGraph;
 import thinker.knowledge.base.IKnowledgeBase;
@@ -203,7 +204,7 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 
 	@Override
 	public boolean removeRelation(IConcept from, IConceptRelationType type, IConcept to) {
-		if (this.hasRelationCheckParent(from, type, to) != this) {
+		if (this.hasAnyValenceRelationCheckParent(from, type, to) != this) {
 			this.conceptGraph.addEdge(new ConceptNode(from), type, new ConceptNode(to));
 			if (this.getStorageTypeOfRelation(from, type, to) == StorageType.FORGOTTEN) {
 				return false;
@@ -211,7 +212,7 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 			this.setStorageTypeOfRelation(from, type, to, StorageType.FORGOTTEN);
 			return true;
 		} else {
-			if (this.hasRelation(from, type, to)
+			if (this.hasAnyValenceRelation(from, type, to)
 					&& this.getStorageTypeOfRelation(from, type, to) == StorageType.FORGOTTEN) {
 				return false;
 			}
@@ -238,26 +239,26 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 	}
 
 	@Override
-	public boolean hasRelation(IConcept from, IConceptRelationType type, IConcept to) {
+	public boolean hasAnyValenceRelation(IConcept from, IConceptRelationType type, IConcept to) {
 		if (conceptGraph.containsEdge(new ConceptNode(from), type, new ConceptNode(to))
 				&& conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to),
 						RelationProperties.STORAGE_TYPE) == StorageType.FORGOTTEN) {
 			return false;
 		}
-		return hasRelationCheckParent(from, type, to) != null;
+		return hasAnyValenceRelationCheckParent(from, type, to) != null;
 	}
 
 	@Override
-	public IKnowledgeBase hasRelationCheckParent(IConcept from, IConceptRelationType type, IConcept to) {
+	public IKnowledgeBase hasAnyValenceRelationCheckParent(IConcept from, IConceptRelationType type, IConcept to) {
 		if (this.conceptGraph.containsEdge(from, type, to))
 			return this;
 		for (IKnowledgeBase parent : this.parents) {
 			if (parent instanceof IIndividualKnowledgeBase ikb) {
-				IKnowledgeBase par = ikb.hasRelationCheckParent(from, type, to);
+				IKnowledgeBase par = ikb.hasAnyValenceRelationCheckParent(from, type, to);
 				if (par != null)
 					return par;
 			} else {
-				if (parent.hasRelation(from, type, to)) {
+				if (parent.hasAnyValenceRelation(from, type, to)) {
 					return parent;
 				}
 			}
@@ -266,7 +267,7 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 	}
 
 	@Override
-	public boolean hasRelation(IConcept from, IConcept to) {
+	public boolean hasAnyValenceRelation(IConcept from, IConcept to) {
 		if (conceptGraph.containsEdge(new ConceptNode(from), new ConceptNode(to))) {
 			boolean foundx = false;
 			for (IConceptRelationType type : conceptGraph.getEdgeTypesBetween(new ConceptNode(from),
@@ -294,7 +295,7 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 				if (par != null)
 					return par;
 			} else {
-				if (parent.hasRelation(from, to)) {
+				if (parent.hasAnyValenceRelation(from, to)) {
 					return parent;
 				}
 			}
@@ -448,12 +449,41 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 			if (conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to), RelationProperties.NOT)) {
 				types.add(this);
 			}
+		} else {
+			types.add(this);
 		}
 		for (IKnowledgeBase para : parents) {
 			if (para instanceof IIndividualKnowledgeBase ikb)
 				types.addAll(ikb.isNotCheckParents(from, type, to));
 			else {
 				if (para.isNot(from, type, to)) {
+					types.add(para);
+				}
+			}
+		}
+		return types;
+	}
+
+	@Override
+	public boolean is(IConcept from, IConceptRelationType type, IConcept to) {
+		return !isCheckParents(from, type, to).isEmpty();
+	}
+
+	@Override
+	public Set<IKnowledgeBase> isCheckParents(IConcept from, IConceptRelationType type, IConcept to) {
+		Set<IKnowledgeBase> types = new HashSet<>();
+		if (conceptGraph.containsEdge(new ConceptNode(from), type, new ConceptNode(to))) {
+			if (!conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to), RelationProperties.NOT)
+					&& !conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to),
+							RelationProperties.OPPOSITE)) {
+				types.add(this);
+			}
+		}
+		for (IKnowledgeBase para : parents) {
+			if (para instanceof IIndividualKnowledgeBase ikb)
+				types.addAll(ikb.isNotCheckParents(from, type, to));
+			else {
+				if (para.is(from, type, to)) {
 					types.add(para);
 				}
 			}
@@ -544,6 +574,45 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 		conceptGraph.addEdge(new ConceptNode(from), ProfileInterrelationType.HAS_SOCIAL_BOND_TO, new ConceptNode(to));
 		conceptGraph.setProperty(new ConceptNode(from), ProfileInterrelationType.HAS_SOCIAL_BOND_TO,
 				new ConceptNode(to), trait, value);
+	}
+
+	@Override
+	public void setOpposite(IConcept focus, IConceptRelationType hasTrait, IConcept key) {
+		conceptGraph.addEdge(new ConceptNode(focus), hasTrait, new ConceptNode(key));
+		conceptGraph.setProperty(new ConceptNode(focus), hasTrait, new ConceptNode(key), RelationProperties.OPPOSITE,
+				true);
+	}
+
+	@Override
+	public float getDistance(IConcept prf) {
+		return getDistanceCheckParents(prf).values().stream().findFirst().orElse(-1f);
+	}
+
+	@Override
+	public Map<IKnowledgeBase, Float> getDistanceCheckParents(IConcept prf) {
+		Map<IKnowledgeBase, Float> types = new LinkedHashMap<>();
+		if (conceptGraph.containsEdge(new ConceptNode(prf), KnowledgeRelationType.EXISTS_IN,
+				new ConceptNode(IConcept.ENVIRONMENT))) {
+			types.put(this, conceptGraph.getProperty(new ConceptNode(prf), KnowledgeRelationType.EXISTS_IN,
+					new ConceptNode(IConcept.ENVIRONMENT), RelationProperties.DISTANCE));
+		}
+		for (IKnowledgeBase para : parents) {
+			if (para instanceof IIndividualKnowledgeBase ikb) {
+				types.putAll(ikb.getDistanceCheckParents(prf));
+			} else {
+				types.put(para, para.getDistance(prf));
+			}
+		}
+		return types;
+	}
+
+	@Override
+	public void setDistance(IConcept prf, float distance) {
+		conceptGraph.add(new ConceptNode(IConcept.ENVIRONMENT));
+		conceptGraph.addEdge(new ConceptNode(prf), KnowledgeRelationType.EXISTS_IN,
+				new ConceptNode(IConcept.ENVIRONMENT));
+		conceptGraph.setProperty(new ConceptNode(prf), KnowledgeRelationType.EXISTS_IN,
+				new ConceptNode(IConcept.ENVIRONMENT), RelationProperties.DISTANCE, distance);
 	}
 
 	@Override

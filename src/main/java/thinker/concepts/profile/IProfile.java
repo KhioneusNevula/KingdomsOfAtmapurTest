@@ -83,8 +83,8 @@ public interface IProfile extends IDescriptiveConcept {
 	}
 
 	/** Creates a type profile */
-	public static IProfile typeOf(UniqueType t, String name) {
-		return new TypeProfile(t, name);
+	public static IProfile typeOf(UniqueType t, UUID id, String name) {
+		return new TypeProfile(t, id, name);
 	}
 
 	/**

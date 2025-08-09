@@ -181,4 +181,18 @@ public class Triplet<A, B, C> implements Table.Cell<A, B, C> {
 		return this.third;
 	}
 
+	/** Return the item at teh given index */
+	public <T> T get(int index) {
+		switch (index) {
+		case 0:
+			return (T) first;
+		case 1:
+			return (T) second;
+		case 2:
+			return (T) third;
+		default:
+			throw new IndexOutOfBoundsException();
+		}
+	}
+
 }

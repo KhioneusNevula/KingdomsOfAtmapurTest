@@ -86,7 +86,7 @@ public interface IIndividualKnowledgeBase extends IKnowledgeBase {
 	 * @param to
 	 * @return
 	 */
-	public IKnowledgeBase hasRelationCheckParent(IConcept from, IConceptRelationType type, IConcept to);
+	public IKnowledgeBase hasAnyValenceRelationCheckParent(IConcept from, IConceptRelationType type, IConcept to);
 
 	/**
 	 * Return self if any relation exists between these concepts, or a parent
@@ -175,16 +175,25 @@ public interface IIndividualKnowledgeBase extends IKnowledgeBase {
 	public IIndividualKnowledgeBase clone();
 
 	/**
-	 * See {@link #isNot(IConcept, IConceptRelationType, IConcept)}. This also
-	 * checks parents
+	 * See {@link #isNot(IConcept, IConceptRelationType, IConcept)}.
 	 */
 	Set<IKnowledgeBase> isNotCheckParents(IConcept from, IConceptRelationType type, IConcept to);
 
 	/**
-	 * See {@link #isOpposite(IConcept, IConceptRelationType, IConcept)}. This also
-	 * checks parents.
+	 * See {@link #isOpposite(IConcept, IConceptRelationType, IConcept)}.
 	 */
 	Set<IKnowledgeBase> isOppositeCheckParents(IConcept from, IConceptRelationType type, IConcept to);
+
+	/**
+	 * Whether a relation exists that is positive. See
+	 * {@link #is(IConcept, IConceptRelationType, IConcept)}.
+	 * 
+	 * @param from
+	 * @param type
+	 * @param to
+	 * @return
+	 */
+	Set<IKnowledgeBase> isCheckParents(IConcept from, IConceptRelationType type, IConcept to);
 
 	/**
 	 * Returns an iterator of outgoing edges from the given concept, checking the
@@ -212,5 +221,14 @@ public interface IIndividualKnowledgeBase extends IKnowledgeBase {
 		}
 		return new GraphCombinedView<>(visited);
 	}
+
+	/**
+	 * Returns the distance, but checks parents. How {@link #getDistance(IConcept)}
+	 * is implemented for this version
+	 * 
+	 * @param prf
+	 * @return
+	 */
+	Map<IKnowledgeBase, Float> getDistanceCheckParents(IConcept prf);
 
 }

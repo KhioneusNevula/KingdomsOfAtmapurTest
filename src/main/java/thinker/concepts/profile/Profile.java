@@ -95,7 +95,8 @@ public class Profile implements IProfile {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof IProfile iprof) {
-			return this.uuid.equals(iprof.getUUID()) && this.type == iprof.getDescriptiveType();
+			return iprof.isUniqueProfile() && this.uuid.equals(iprof.getUUID())
+					&& this.type == iprof.getDescriptiveType();
 		}
 		return super.equals(obj);
 	}

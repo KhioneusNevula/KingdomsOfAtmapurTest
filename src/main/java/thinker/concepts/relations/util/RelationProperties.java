@@ -55,6 +55,12 @@ public class RelationProperties {
 	 * {@link #STORAGE_TYPE} is {@link StorageType#TEMPORARY}
 	 */
 	public static final IProperty<Float> CONFIDENCE = IProperty.make("confidence", float.class, 1f);
+
+	/**
+	 * The "distance" to a concept (i.e. to a profile) used to determine how
+	 * accessible it is. Can represent different ideas, usually physical distance
+	 */
+	public static final IProperty<Float> DISTANCE = IProperty.make("distance", float.class, 0f);
 	/**
 	 * The level of likelihood of this relation being true, as an enum
 	 */

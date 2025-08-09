@@ -554,19 +554,19 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 	}
 
 	@Override
-	public boolean hasRelation(IConcept from, IConceptRelationType type, IConcept to) {
+	public boolean hasAnyValenceRelation(IConcept from, IConceptRelationType type, IConcept to) {
 		return conceptGraph.containsEdge(new GroupConceptNode(from), type, new GroupConceptNode(to));
 	}
 
 	@Override
-	public boolean groupHasRelation(IConcept from, IConceptRelationType type, IConcept to, IProfile group) {
+	public boolean groupHasAnyValenceRelation(IConcept from, IConceptRelationType type, IConcept to, IProfile group) {
 		GroupConceptNode froma = new GroupConceptNode(from);
 		GroupConceptNode toa = new GroupConceptNode(to);
 		if (!groupKnowsConcept(from, group))
 			return false;
 		if (!groupKnowsConcept(to, group))
 			return false;
-		if (hasRelation(from, type, to)) {
+		if (hasAnyValenceRelation(from, type, to)) {
 			Set<IProfile> gros = conceptGraph.getProperty(froma, type, toa, REL_GROUPS);
 			if (gros == null)
 				return false;
@@ -576,7 +576,7 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 	}
 
 	@Override
-	public boolean hasRelation(IConcept from, IConcept to) {
+	public boolean hasAnyValenceRelation(IConcept from, IConcept to) {
 		return conceptGraph.containsEdge(new ConceptNode(from), new ConceptNode(to));
 	}
 
@@ -589,7 +589,7 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 			return false;
 		if (!groupKnowsConcept(to, group))
 			return false;
-		if (hasRelation(from, to)) {
+		if (hasAnyValenceRelation(from, to)) {
 			return conceptGraph.getEdgeTypesBetween(froma, toa).stream().anyMatch((type) -> {
 				Set<IProfile> gros = conceptGraph.getProperty(froma, type, toa, REL_GROUPS);
 				return gros != null && gros.contains(group);
@@ -749,6 +749,12 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 		}
 		return conceptGraph.getProperty(new GroupConceptNode(from), type, new GroupConceptNode(to),
 				RelationProperties.OPPOSITE);
+	}
+
+	@Override
+	public boolean groupIs(IConcept from, IConceptRelationType type, IConcept to, IProfile group) {
+		return this.groupHasAnyValenceRelation(from, type, to, group) && !this.groupIsNot(from, type, to, group)
+				&& !this.groupIsOpposite(from, type, to, group);
 	}
 
 	@Override
@@ -927,6 +933,27 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 	public void setSocialBondValue(IConcept from, ISocialBondTrait trait, IConcept to, float value) {
 		conceptGraph.setProperty(new GroupConceptNode(from), ProfileInterrelationType.HAS_SOCIAL_BOND_TO,
 				new GroupConceptNode(to), trait, value);
+	}
+
+	@Override
+	public void setOpposite(IConcept focus, IConceptRelationType hasTrait, IConcept key) {
+		conceptGraph.addEdge(new GroupConceptNode(focus), hasTrait, new GroupConceptNode(key));
+		conceptGraph.setProperty(new GroupConceptNode(focus), hasTrait, new GroupConceptNode(key),
+				RelationProperties.OPPOSITE, true);
+	}
+
+	@Override
+	public void groupSetOpposite(IConcept from, IConceptRelationType type, IConcept to, IProfile group) {
+		GroupConceptNode froma = new GroupConceptNode(from);
+		GroupConceptNode toa = new GroupConceptNode(to);
+		if (!groupKnowsConcept(from, group))
+			throw new NodeNotFoundException(from);
+		if (!groupKnowsConcept(to, group))
+			throw new NodeNotFoundException(to);
+		if (!this.groupHasAnyValenceRelation(from, type, to, group))
+			this.groupAddConfidentRelation(from, type, to, group);
+		conceptGraph.getProperty(froma, type, toa, GROUP_BASED_PROPERTIES, true).put(group, RelationProperties.OPPOSITE,
+				true);
 	}
 
 	@Override

@@ -1,7 +1,11 @@
 package metaphysics.soul;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
+
+import com.google.common.collect.Lists;
 
 import _sim.world.GameMap;
 import metaphysics.magic.ITether;
@@ -13,6 +17,7 @@ import things.form.soma.ISoma;
 import things.form.soma.component.IComponentPart;
 import things.status_effect.BasicStatusEffect;
 import things.status_effect.IPartStatusEffectInstance;
+import thinker.actions.searching.RelationMutability;
 import thinker.mind.memory.IMindKnowledgeBase;
 import thinker.mind.personality.BasicTendency;
 import thinker.mind.personality.Personality;
@@ -31,7 +36,9 @@ public class AnimalSoul extends AbstractSoul {
 	public AnimalSoul(UUID id, String idName, IPartDestroyedCondition whenDetach, IPartHealth healthTracker,
 			IMindKnowledgeBase mind) {
 		super(id, idName, whenDetach, healthTracker, mind);
-		setWill(new ThinkerWill(0.005f, 5));
+		List<RelationMutability> relmut = Lists.newArrayList(RelationMutability.values());
+		Collections.reverse(relmut);
+		setWill(new ThinkerWill(0.005f, 5, relmut));
 		setPersonality(Personality.fromTraits(PersonalityTraits.WIMPINESS, PersonalityTraits.RETALIATION,
 				PersonalityTraits.PAIN_SENSITIVITY, PersonalityTraits.PAIN_DISTRACTION,
 				PersonalityTraits.DEMORALIZATION, PersonalityTraits.SHAME, BasicTendency.FORM_MUTABILITY,

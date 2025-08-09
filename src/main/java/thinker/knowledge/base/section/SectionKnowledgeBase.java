@@ -140,12 +140,12 @@ public class SectionKnowledgeBase implements ISectionKnowledgeBase {
 	}
 
 	@Override
-	public boolean hasRelation(IConcept from, IConceptRelationType type, IConcept to) {
-		return noosphere.groupHasRelation(from, type, to, self);
+	public boolean hasAnyValenceRelation(IConcept from, IConceptRelationType type, IConcept to) {
+		return noosphere.groupHasAnyValenceRelation(from, type, to, self);
 	}
 
 	@Override
-	public boolean hasRelation(IConcept from, IConcept to) {
+	public boolean hasAnyValenceRelation(IConcept from, IConcept to) {
 		return noosphere.groupHasRelation(from, to, self);
 	}
 
@@ -239,9 +239,14 @@ public class SectionKnowledgeBase implements ISectionKnowledgeBase {
 	}
 
 	@Override
+	public void setOpposite(IConcept focus, IConceptRelationType hasTrait, IConcept key) {
+		this.noosphere.groupSetOpposite(focus, hasTrait, key, self);
+	}
+
+	@Override
 	public IRelationGraph<IGroupConceptNode, IConceptRelationType> getUnmappedConceptGraphView() {
 		return (this.noosphere.getUnmappedConceptGraphView()).subgraph((node) -> node.knownByGroup(self), (edge) -> this
-				.hasRelation(edge.getFirst().getConcept(), edge.getSecond(), edge.getThird().getConcept()));
+				.hasAnyValenceRelation(edge.getFirst().getConcept(), edge.getSecond(), edge.getThird().getConcept()));
 	}
 
 	/**

@@ -682,7 +682,6 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 	 * allows the addition of properties, making sure to add the given nodes
 	 * beforehand, and returns the graph object
 	 */
-	@SafeVarargs
 	public final RelationGraph<E, R> plusEdge(E node, R edge, E node2,
 			@SuppressWarnings("unchecked") Pair<IProperty<?>, Object>... properties) {
 		this.add(node);

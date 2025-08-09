@@ -276,7 +276,7 @@ public interface INoosphereKnowledgeBase extends IKnowledgeBase {
 	 * @param to
 	 * @return
 	 */
-	public boolean groupHasRelation(IConcept from, IConceptRelationType type, IConcept to, IProfile group);
+	public boolean groupHasAnyValenceRelation(IConcept from, IConceptRelationType type, IConcept to, IProfile group);
 
 	/**
 	 * Whether these two concepts have any relation
@@ -491,6 +491,18 @@ public interface INoosphereKnowledgeBase extends IKnowledgeBase {
 	boolean groupIsOpposite(IConcept from, IConceptRelationType type, IConcept to, IProfile group);
 
 	/**
+	 * See {@link #is(IConcept, IConceptRelationType, IConcept)}. This version
+	 * checks if the given group recognizes this property.
+	 * 
+	 * @param from
+	 * @param type
+	 * @param to
+	 * @param group
+	 * @return
+	 */
+	boolean groupIs(IConcept from, IConceptRelationType type, IConcept to, IProfile group);
+
+	/**
 	 * Returns an iterator of the outgoing edges from this concept, from the
 	 * perspective of this Group
 	 */
@@ -502,4 +514,16 @@ public interface INoosphereKnowledgeBase extends IKnowledgeBase {
 	 * perspective of this Group
 	 */
 	Iterator<Triplet<IConcept, IConceptRelationType, IConcept>> groupGetOutgoingEdges(IConcept from, IProfile group);
+
+	/**
+	 * Equivalent to {@link #setOpposite(IConcept, IConceptRelationType, IConcept)}
+	 * but for group
+	 * 
+	 * @param from
+	 * @param type
+	 * @param to
+	 * @param group
+	 */
+	void groupSetOpposite(IConcept from, IConceptRelationType type, IConcept to, IProfile group);
+
 }

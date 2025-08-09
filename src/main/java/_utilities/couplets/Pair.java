@@ -123,6 +123,21 @@ public class Pair<A, B> implements Map.Entry<A, B>, Cloneable {
 		return s;
 	}
 
+	/**
+	 * Get element of pair at given index
+	 * 
+	 * @param <T>
+	 * @param index
+	 * @return
+	 */
+	public <T> T get(int index) {
+		if (index == 0)
+			return (T) first;
+		if (index == 1)
+			return (T) second;
+		throw new IndexOutOfBoundsException();
+	}
+
 	@Override
 	public int hashCode() {
 		return (first != null ? first.hashCode() : 0) + (second != null ? second.hashCode() : 0);
