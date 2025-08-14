@@ -14,11 +14,12 @@ import thinker.concepts.IConcept;
 import thinker.concepts.general_types.ITypePatternConcept;
 import thinker.concepts.general_types.IWhQuestionConcept;
 import thinker.concepts.profile.IProfile;
-import thinker.concepts.profile.Profile;
 import thinker.concepts.relations.descriptive.IProfileInterrelationType;
 import thinker.concepts.relations.technical.KnowledgeRelationType;
 import thinker.goals.IGoalConcept;
+import thinker.helpers.ConceptRelationsMap;
 import thinker.helpers.RelationsHelper;
+import thinker.helpers.RelationsHelper.RelationValence;
 
 /**
  * Implementation of {@link IProfileFinder}
@@ -30,6 +31,11 @@ public class ProfileFinder implements IProfileFinder {
 
 	private List<RelationMutability> relmut;
 
+	/**
+	 * not sure what to do with this anywayy
+	 */
+	private static final float DIST_PH = 0f;
+
 	public ProfileFinder(List<RelationMutability> relmutH) {
 		this.relmut = new ArrayList<>(relmutH);
 	}
@@ -37,24 +43,32 @@ public class ProfileFinder implements IProfileFinder {
 	@Override
 	public Map<IWhQuestionConcept, IProfile> matchProfiles(IAgentAccess info, IWhQuestionConcept startQuestion,
 			int attempts, float endChance) {
+		ConceptRelationsMap qMap = new ConceptRelationsMap(startQuestion, info.knowledge(), RelationValence.IS);
 		if (startQuestion.getQuestionType() instanceof UniqueType uniqueType) {
 			Map<IWhQuestionConcept, IProfile> ret = new HashMap<>();
-			IProfile qProfile = new Profile(startQuestion.getQuestionID(), uniqueType); // profile corresponding to
-																						// the question
+			IProfile qProfile = qMap.get(KnowledgeRelationType.WH_REFERENCES_TYPE).stream()
+					.filter(IProfile.class::isInstance).map(IProfile.class::cast).findAny().orElse(null); // profile
+																											// corresponding
+																											// to
+			// the question
+			if (qProfile == null) {
+				throw new IllegalStateException("? " + qMap);
+			}
 
 			Set<IProfile> profilePossibilities = new HashSet<>(); // possible profiles based on their traits
 			Stream<ITypePatternConcept> patterns = RelationsHelper.getProfilePatterns(qProfile, info.knowledge());
 			for (ITypePatternConcept pattern : (Iterable<ITypePatternConcept>) () -> patterns.iterator()) {
-				RelationsHelper.findProfilesWithSubsetOf(pattern, info.knowledge())
-						.forEach((a) -> profilePossibilities.add(a));
+				RelationsHelper.findProfilesWithSubsetOf(pattern, info.knowledge(), DIST_PH)
+						.filter((a) -> a.isUniqueProfile()).forEach((a) -> profilePossibilities.add(a));
 			}
 
-			for (IConcept conc : info.knowledge().getConnectedConcepts(startQuestion,
-					KnowledgeRelationType.P_ASKED_BY)) {
-				// TODO get all conditions
+			for (IConcept conc : qMap.get(KnowledgeRelationType.P_ASKED_BY)) {
 
 				if (conc instanceof IGoalConcept goal) { // for each goal concept, find fitters
 					for (RelationMutability mut : relmut) {
+						ConceptRelationsMap relmap = new ConceptRelationsMap(qProfile, goal.getConditionsGraph());
+						ConceptRelationsMap negrelmap = new ConceptRelationsMap(qProfile, goal.getConditionsGraph(),
+								RelationValence.OPPOSITE);
 						// TODO profile finding
 						for (IProfileInterrelationType ptype : mut.getRelationTypes()) {
 

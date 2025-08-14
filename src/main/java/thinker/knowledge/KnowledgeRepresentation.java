@@ -102,6 +102,8 @@ public class KnowledgeRepresentation implements IKnowledgeRepresentation {
 	public boolean addConfidentRelation(IConcept from, IConceptRelationType relation, IConcept to) {
 		boolean rela = graph.addEdge(n(from), relation, n(to));
 		graph.setProperty(n(from), relation, n(to), RelationProperties.STORAGE_TYPE, StorageType.CONFIDENT);
+		graph.setProperty(n(from), relation, n(to), RelationProperties.OPPOSITE, false);
+		graph.setProperty(n(from), relation, n(to), RelationProperties.NOT, false);
 		return rela;
 	}
 
@@ -110,6 +112,8 @@ public class KnowledgeRepresentation implements IKnowledgeRepresentation {
 		boolean rela = graph.addEdge(n(from), relation, n(to));
 		graph.setProperty(n(from), relation, n(to), RelationProperties.STORAGE_TYPE, StorageType.DUBIOUS);
 		graph.setProperty(n(from), relation, n(to), RelationProperties.CONFIDENCE, confidence);
+		graph.setProperty(n(from), relation, n(to), RelationProperties.OPPOSITE, false);
+		graph.setProperty(n(from), relation, n(to), RelationProperties.NOT, false);
 		return rela;
 	}
 
@@ -117,6 +121,8 @@ public class KnowledgeRepresentation implements IKnowledgeRepresentation {
 	public boolean addTemporaryRelation(IConcept from, IConceptRelationType relation, IConcept to) {
 		boolean rela = graph.addEdge(n(from), relation, n(to));
 		graph.setProperty(n(from), relation, n(to), RelationProperties.STORAGE_TYPE, StorageType.TEMPORARY);
+		graph.setProperty(n(from), relation, n(to), RelationProperties.OPPOSITE, false);
+		graph.setProperty(n(from), relation, n(to), RelationProperties.NOT, false);
 		return rela;
 	}
 
@@ -148,6 +154,11 @@ public class KnowledgeRepresentation implements IKnowledgeRepresentation {
 	@Override
 	public Set<? extends IConceptRelationType> getRelationTypesFrom(IConcept from) {
 		return graph.getOutgoingEdgeTypes(n(from));
+	}
+
+	@Override
+	public Iterable<? extends IConceptRelationType> getRelationTypesBetween(IConcept from, IConcept to) {
+		return graph.getEdgeTypesBetween(n(from), n(to));
 	}
 
 	@Override

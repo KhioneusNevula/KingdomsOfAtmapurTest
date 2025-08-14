@@ -24,11 +24,8 @@ import _utilities.graph.NodeNotFoundException;
 import _utilities.property.IProperty;
 import party.relations.social_bonds.ISocialBondTrait;
 import thinker.concepts.IConcept;
-import thinker.concepts.IConcept.ConceptType;
-import thinker.concepts.general_types.IConnectorConcept.ConnectorType;
 import thinker.concepts.profile.IProfile;
 import thinker.concepts.relations.IConceptRelationType;
-import thinker.concepts.relations.descriptive.PropertyRelationType;
 import thinker.concepts.relations.descriptive.ProfileInterrelationType;
 import thinker.concepts.relations.technical.KnowledgeRelationType;
 import thinker.concepts.relations.util.RelationProperties;
@@ -357,6 +354,8 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 		GroupConceptNode toN = new GroupConceptNode(to);
 
 		boolean added = this.conceptGraph.addEdge(fromN, relation, toN);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.OPPOSITE, false);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.NOT, false);
 		return added;
 	}
 
@@ -372,6 +371,12 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 			throw new NodeNotFoundException(to);
 		boolean added = this.conceptGraph.addEdge(fromN, relation, toN);
 		conceptGraph.getProperty(fromN, relation, toN, REL_GROUPS, true).add(group);
+		Table<IProfile, IProperty<?>, Object> gbp = conceptGraph.getProperty(fromN, relation, toN,
+				GROUP_BASED_PROPERTIES, false);
+		if (gbp != null) {
+			gbp.remove(group, RelationProperties.OPPOSITE);
+			gbp.remove(group, RelationProperties.NOT);
+		}
 		return added;
 	}
 
@@ -389,6 +394,9 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 		boolean added = this.conceptGraph.addEdge(fromN, relation, toN);
 		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE, StorageType.DUBIOUS);
 		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.CONFIDENCE, confidence);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.OPPOSITE, false);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.NOT, false);
+
 		return added;
 	}
 
@@ -411,10 +419,13 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 			throw new NodeNotFoundException(to);
 		boolean added = this.conceptGraph.addEdge(fromN, relation, toN);
 		conceptGraph.getProperty(fromN, relation, toN, REL_GROUPS, true).add(group);
-		conceptGraph.getProperty(fromN, relation, toN, GROUP_BASED_PROPERTIES, true).put(group,
-				RelationProperties.STORAGE_TYPE, StorageType.DUBIOUS);
-		conceptGraph.getProperty(fromN, relation, toN, GROUP_BASED_PROPERTIES, true).put(group,
-				RelationProperties.CONFIDENCE, confidence);
+		Table<IProfile, IProperty<?>, Object> gbp = conceptGraph.getProperty(fromN, relation, toN,
+				GROUP_BASED_PROPERTIES, true);
+		gbp.put(group, RelationProperties.STORAGE_TYPE, StorageType.DUBIOUS);
+		gbp.put(group, RelationProperties.CONFIDENCE, confidence);
+		gbp.remove(group, RelationProperties.OPPOSITE);
+		gbp.remove(group, RelationProperties.NOT);
+
 		return added;
 	}
 
@@ -424,6 +435,8 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 		GroupConceptNode toN = new GroupConceptNode(to);
 		boolean added = this.conceptGraph.addEdge(fromN, relation, toN);
 		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE, StorageType.TEMPORARY);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.OPPOSITE, false);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.NOT, false);
 		return added;
 	}
 
@@ -439,8 +452,11 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 			throw new NodeNotFoundException(to);
 		boolean added = this.conceptGraph.addEdge(fromN, relation, toN);
 		conceptGraph.getProperty(fromN, relation, toN, REL_GROUPS, true).add(group);
-		conceptGraph.getProperty(fromN, relation, toN, GROUP_BASED_PROPERTIES, true).put(group,
-				RelationProperties.STORAGE_TYPE, StorageType.TEMPORARY);
+		Table<IProfile, IProperty<?>, Object> gbp = conceptGraph.getProperty(fromN, relation, toN,
+				GROUP_BASED_PROPERTIES, true);
+		gbp.put(group, RelationProperties.STORAGE_TYPE, StorageType.TEMPORARY);
+		gbp.remove(group, RelationProperties.OPPOSITE);
+		gbp.remove(group, RelationProperties.NOT);
 		return added;
 	}
 
@@ -461,6 +477,11 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 			Set<IProfile> groupa = conceptGraph.getProperty(froma, type, toa, REL_GROUPS);
 			if (groupa == null) {
 				return false;
+			}
+			Table<IProfile, IProperty<?>, Object> gbp = conceptGraph.getProperty(froma, type, toa,
+					GROUP_BASED_PROPERTIES);
+			if (gbp != null) {
+				gbp.row(group).clear();
 			}
 			return groupa.remove(group);
 		}
@@ -483,6 +504,12 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 			boolean dela = groupa.remove(group);
 			if (groupa.isEmpty()) {
 				conceptGraph.removeEdge(froma, type, toa);
+			} else {
+				Table<IProfile, IProperty<?>, Object> gbp = conceptGraph.getProperty(froma, type, toa,
+						GROUP_BASED_PROPERTIES);
+				if (gbp != null) {
+					gbp.row(group).clear();
+				}
 			}
 			return dela;
 		}
@@ -581,7 +608,7 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 	}
 
 	@Override
-	public boolean groupHasRelation(IConcept from, IConcept to, IProfile group) {
+	public boolean groupHasAnyValenceRelation(IConcept from, IConcept to, IProfile group) {
 
 		GroupConceptNode froma = new GroupConceptNode(from);
 		GroupConceptNode toa = new GroupConceptNode(to);
@@ -615,6 +642,28 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 				Set<IProfile> gros = conceptGraph.getProperty(froma, type, toa, REL_GROUPS);
 				return gros != null && gros.contains(group);
 			});
+		}).iterator();
+	}
+
+	@Override
+	public Iterable<? extends IConceptRelationType> getRelationTypesBetween(IConcept from, IConcept to) {
+		return conceptGraph.getEdgeTypesBetween(new GroupConceptNode(from), new GroupConceptNode(to));
+	}
+
+	@Override
+	public Iterable<? extends IConceptRelationType> groupGetRelationTypesBetween(IConcept from, IConcept to,
+			IProfile group) {
+
+		GroupConceptNode froma = new GroupConceptNode(from);
+		GroupConceptNode toa = new GroupConceptNode(to);
+		if (!groupKnowsConcept(from, group))
+			throw new NodeNotFoundException(from);
+		if (!groupKnowsConcept(to, group))
+			throw new NodeNotFoundException(to);
+		return () -> conceptGraph.getEdgeTypesBetween(froma, toa).stream().filter((type) -> {
+			Set<IProfile> gros = conceptGraph.getProperty(froma, type, toa, REL_GROUPS);
+			return gros != null && gros.contains(group);
+
 		}).iterator();
 	}
 
@@ -954,6 +1003,60 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 			this.groupAddConfidentRelation(from, type, to, group);
 		conceptGraph.getProperty(froma, type, toa, GROUP_BASED_PROPERTIES, true).put(group, RelationProperties.OPPOSITE,
 				true);
+	}
+
+	@Override
+	public float groupGetDistance(IConcept prf, IProfile group) {
+		if (groupIs(prf, KnowledgeRelationType.EXISTS_IN, IConcept.ENVIRONMENT, group)) {
+			Object val = conceptGraph
+					.getProperty(new GroupConceptNode(prf), KnowledgeRelationType.EXISTS_IN,
+							new GroupConceptNode(IConcept.ENVIRONMENT), GROUP_BASED_PROPERTIES)
+					.get(group, RelationProperties.DISTANCE);
+			if (val instanceof Float) {
+				return (Float) val;
+			}
+		}
+
+		return -1;
+
+	}
+
+	@Override
+	public float getDistance(IConcept prf) {
+		if (conceptGraph.containsEdge(new GroupConceptNode(prf), KnowledgeRelationType.EXISTS_IN,
+				new GroupConceptNode(IConcept.ENVIRONMENT))) {
+			return conceptGraph.getProperty(new GroupConceptNode(prf), KnowledgeRelationType.EXISTS_IN,
+					new GroupConceptNode(IConcept.ENVIRONMENT), RelationProperties.DISTANCE);
+		}
+		return -1;
+	}
+
+	@Override
+	public void groupSetDistance(IConcept prf, float distance, IProfile group) {
+
+		GroupConceptNode fromN = new GroupConceptNode(IConcept.ENVIRONMENT);
+		GroupConceptNode toN = new GroupConceptNode(prf);
+		if (!this.conceptGraph.contains(fromN))
+			this.conceptGraph.add(fromN);
+		if (!this.conceptGraph.contains(toN))
+			this.conceptGraph.add(toN);
+
+		this.conceptGraph.addEdge(toN, KnowledgeRelationType.EXISTS_IN, fromN);
+		conceptGraph.getProperty(toN, KnowledgeRelationType.EXISTS_IN, fromN, REL_GROUPS, true).add(group);
+		conceptGraph.getProperty(toN, KnowledgeRelationType.EXISTS_IN, fromN, GROUP_BASED_PROPERTIES, true).put(group,
+				RelationProperties.STORAGE_TYPE, StorageType.CONFIDENT);
+		conceptGraph.getProperty(toN, KnowledgeRelationType.EXISTS_IN, fromN, GROUP_BASED_PROPERTIES, true).put(group,
+				RelationProperties.DISTANCE, distance);
+
+	}
+
+	@Override
+	public void setDistance(IConcept prf, float distance) {
+		conceptGraph.add(new GroupConceptNode(IConcept.ENVIRONMENT));
+		conceptGraph.addEdge(new GroupConceptNode(prf), KnowledgeRelationType.EXISTS_IN,
+				new GroupConceptNode(IConcept.ENVIRONMENT));
+		conceptGraph.setProperty(new GroupConceptNode(prf), KnowledgeRelationType.EXISTS_IN,
+				new GroupConceptNode(IConcept.ENVIRONMENT), RelationProperties.DISTANCE, distance);
 	}
 
 	@Override

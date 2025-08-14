@@ -2,18 +2,17 @@ package thinker.helpers;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Streams;
 
+import _utilities.StringUtils;
 import _utilities.UnimplementedException;
 import _utilities.couplets.Pair;
+import _utilities.couplets.Triplet;
 import thinker.concepts.IConcept;
 import thinker.concepts.general_types.IConnectorConcept;
 import thinker.concepts.general_types.IPropertyConcept;
@@ -21,6 +20,7 @@ import thinker.concepts.general_types.IValueConcept;
 import thinker.concepts.profile.IProfile;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.concepts.relations.descriptive.PropertyRelationType;
+import thinker.helpers.RelationsHelper.RelationValence;
 import thinker.knowledge.IKnowledgeRepresentation;
 
 /**
@@ -34,36 +34,28 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 
 	private IProfile focus;
 	private IKnowledgeRepresentation base;
-	private boolean neg;
-	private boolean pos;
+	private RelationValence valence;
+	private ValueCol valuecol = new ValueCol();
+	private EntrySet entryset = new EntrySet();
+	private KeySet keyset = new KeySet();
 
-	ProfilePropertyMap(IProfile focus, IKnowledgeRepresentation base, boolean pos, boolean opp) {
+	ProfilePropertyMap(IProfile focus, IKnowledgeRepresentation base, RelationValence valence) {
 		this.focus = focus;
 		this.base = base;
-		this.pos = pos;
-		this.neg = opp;
+		this.valence = valence;
 	}
 
 	/**
-	 * Whether this map can query opposite relations
+	 * What positivity (positive, not, opposite) this queries
 	 * 
 	 * @return
 	 */
-	public boolean queriesOpposite() {
-		return neg;
-	}
-
-	/**
-	 * Whether this map can query positive relations
-	 * 
-	 * @return
-	 */
-	public boolean queriesPositive() {
-		return pos;
+	public RelationValence getValence() {
+		return valence;
 	}
 
 	private boolean is(IConcept first, IConceptRelationType re, IConcept sec) {
-		return (pos && base.is(first, re, sec)) || (neg && base.isOpposite(first, re, sec));
+		return valence.checkRelation(Triplet.of(first, re, sec), base);
 	}
 
 	/**
@@ -157,16 +149,16 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 		if (!base.knowsConcept(value)) {
 			base.learnConcept(value);
 		}
-		if (value == IValueConcept.PRESENT || value == IValueConcept.ABSENT) {
-			base.addConfidentRelation(focus, PropertyRelationType.HAS_TRAIT, key);
-			if (value == IValueConcept.ABSENT)
-				base.setOpposite(focus, PropertyRelationType.HAS_TRAIT, key);
+		if (value == IValueConcept.PRESENT) {
+			valence.establishRelation(Triplet.of(focus, PropertyRelationType.HAS_TRAIT, key), base);
+		} else if (value == IValueConcept.ABSENT) {
+			valence.invertRelation(Triplet.of(focus, PropertyRelationType.HAS_TRAIT, key), base);
 		} else {
 			IConnectorConcept conne = IConnectorConcept.propertyAndValue();
 			base.learnConcept(conne);
-			base.addConfidentRelation(focus, PropertyRelationType.HAS_TRAIT, conne);
-			base.addConfidentRelation(conne, PropertyRelationType.HAS_TRAIT, key);
-			base.addConfidentRelation(conne, PropertyRelationType.HAS_VALUE, value);
+			valence.establishRelation(Triplet.of(focus, PropertyRelationType.HAS_TRAIT, conne), base);
+			valence.establishRelation(Triplet.of(conne, PropertyRelationType.HAS_TRAIT, key), base);
+			valence.establishRelation(Triplet.of(conne, PropertyRelationType.HAS_VALUE, value), base);
 		}
 		return vc;
 	}
@@ -174,15 +166,9 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 	@Override
 	public IValueConcept remove(Object key) {
 		if (key instanceof IConcept ckey) {
-			if (base.is(focus, PropertyRelationType.HAS_TRAIT, ckey)) {
-				base.removeRelation(focus, PropertyRelationType.HAS_TRAIT, ckey);
+			if (is(focus, PropertyRelationType.HAS_TRAIT, ckey)) {
+				valence.removeRelation(Triplet.of(focus, PropertyRelationType.HAS_TRAIT, ckey), base);
 				return IValueConcept.PRESENT;
-			} else if (base.isOpposite(focus, PropertyRelationType.HAS_TRAIT, ckey)) {
-				base.removeRelation(focus, PropertyRelationType.HAS_TRAIT, ckey);
-				return IValueConcept.ABSENT;
-			} else if (base.isNot(focus, PropertyRelationType.HAS_TRAIT, ckey)) {
-				base.removeRelation(focus, PropertyRelationType.HAS_TRAIT, ckey);
-				return null;
 			} else {
 				Pair<IConnectorConcept, IValueConcept> targa = Streams
 						.stream(base.getConnectedConcepts(focus, PropertyRelationType.HAS_TRAIT))
@@ -193,8 +179,18 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 								.map((a) -> Pair.of(cc, a)))
 						.filter((p) -> p.getSecond() instanceof IValueConcept)
 						.map((a) -> Pair.of(a.getFirst(), (IValueConcept) a.getSecond())).findAny().orElse(null);
-				base.forgetConcept(targa.getFirst());
-				return targa.getSecond();
+				if (targa == null) {
+					return null;
+				} else {
+					valence.removeRelation(Triplet.of(focus, PropertyRelationType.HAS_TRAIT, targa.getFirst()), base);
+					valence.removeRelation(Triplet.of(targa.getFirst(), PropertyRelationType.HAS_TRAIT, ckey), base);
+					valence.removeRelation(
+							Triplet.of(targa.getFirst(), PropertyRelationType.HAS_VALUE, targa.getSecond()), base);
+					if (base.countConnectedConcepts(targa.getFirst()) == 0) {
+						base.forgetConcept(targa.getFirst());
+					}
+					return targa.getSecond();
+				}
 			}
 		}
 		return null;
@@ -214,7 +210,7 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 
 	@Override
 	public Set<IPropertyConcept> keySet() {
-		return new KeySet();
+		return keyset;
 
 	}
 
@@ -238,7 +234,7 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 
 	@Override
 	public Collection<IValueConcept> values() {
-		return new ValueList();
+		return valuecol;
 	}
 
 	public Iterable<IValueConcept> valueIterable() {
@@ -284,7 +280,28 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 
 	@Override
 	public Set<Entry<IPropertyConcept, IValueConcept>> entrySet() {
-		return new EntrySet();
+		return entryset;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this)
+			return true;
+		if (obj instanceof Map m) {
+			return m.size() == this.size()
+					&& this.keyStream().allMatch((o) -> m.containsKey(o) && m.get(o).equals(get(o)));
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return focus.hashCode() + this.base.hashCode() + this.valence.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return StringUtils.formatAsSetFromStream(this.entryStream());
 	}
 
 	private class EntrySet implements Set<Entry<IPropertyConcept, IValueConcept>> {
@@ -368,6 +385,26 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 			ProfilePropertyMap.this.clear();
 		}
 
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this)
+				return true;
+			if (obj instanceof Collection c) {
+				return this.size() == c.size() && c.containsAll(this);
+			}
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return ProfilePropertyMap.this.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return StringUtils.formatAsSetFromStream(entryStream());
+		}
+
 	}
 
 	private class KeySet implements Set<IPropertyConcept> {
@@ -445,9 +482,29 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 			ProfilePropertyMap.this.clear();
 		}
 
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this)
+				return true;
+			if (obj instanceof Collection c) {
+				return this.size() == c.size() && c.containsAll(this);
+			}
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return ProfilePropertyMap.this.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return StringUtils.formatAsSetFromStream(keyStream());
+		}
+
 	}
 
-	private class ValueList implements List<IValueConcept> {
+	private class ValueCol implements Collection<IValueConcept> {
 
 		@Override
 		public int size() {
@@ -515,11 +572,6 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 		}
 
 		@Override
-		public boolean addAll(int index, Collection<? extends IValueConcept> c) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
 		public boolean removeAll(Collection<?> c) {
 			boolean o = false;
 			for (Object x : c) {
@@ -539,48 +591,23 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 		}
 
 		@Override
-		public IValueConcept get(int index) {
-			throw new UnsupportedOperationException();
+		public boolean equals(Object obj) {
+			if (obj == this)
+				return true;
+			if (obj instanceof Collection c) {
+				return this.size() == c.size() && c.containsAll(this);
+			}
+			return false;
 		}
 
 		@Override
-		public IValueConcept set(int index, IValueConcept element) {
-			throw new UnsupportedOperationException();
+		public int hashCode() {
+			return ProfilePropertyMap.this.hashCode();
 		}
 
 		@Override
-		public void add(int index, IValueConcept element) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public IValueConcept remove(int index) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public int indexOf(Object o) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public int lastIndexOf(Object o) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public ListIterator<IValueConcept> listIterator() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public ListIterator<IValueConcept> listIterator(int index) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public List<IValueConcept> subList(int fromIndex, int toIndex) {
-			throw new UnsupportedOperationException();
+		public String toString() {
+			return StringUtils.formatAsSetFromStream(valueStream());
 		}
 
 	}

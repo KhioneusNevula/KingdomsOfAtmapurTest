@@ -231,4 +231,15 @@ public interface IIndividualKnowledgeBase extends IKnowledgeBase {
 	 */
 	Map<IKnowledgeBase, Float> getDistanceCheckParents(IConcept prf);
 
+	/**
+	 * Same as {@link #getRelationTypesBetween(IConcept, IConcept)} but checks
+	 * parents and all that
+	 * 
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	IMultiKnowledgeBaseIterator<? extends IConceptRelationType> getRelationTypesBetweenCheckParent(IConcept from,
+			IConcept to);
+
 }

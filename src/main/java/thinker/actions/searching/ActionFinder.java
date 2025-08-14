@@ -3,7 +3,6 @@ package thinker.actions.searching;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,7 +21,6 @@ import party.util.IAgentAccess;
 import thinker.actions.IActionConcept;
 import thinker.concepts.IConcept;
 import thinker.concepts.general_types.IPropertyConcept;
-import thinker.concepts.general_types.IValueConcept;
 import thinker.concepts.profile.IProfile;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.concepts.relations.actional.IEventRelationType;
@@ -30,6 +28,7 @@ import thinker.concepts.relations.descriptive.ProfileInterrelationType;
 import thinker.goals.IGoalConcept;
 import thinker.helpers.ProfilePropertyMap;
 import thinker.helpers.RelationsHelper;
+import thinker.helpers.RelationsHelper.RelationValence;
 
 /**
  * Basic implementation of {@link IActionFinder}
@@ -78,13 +77,13 @@ public class ActionFinder implements IActionFinder {
 					throw new UnimplementedException(
 							"UniqueProfileInCondition not implemented (" + expectedTargetConcept + ")");
 				} else if (targetProfile.isTypeProfile()) { // if this expectation targets a type of thing
-					ProfilePropertyMap targetProperties = RelationsHelper.getProfilePositiveProperties(targetProfile,
-							info.knowledge());
+					ProfilePropertyMap targetProperties = RelationsHelper.getProfileProperties(targetProfile,
+							info.knowledge(), RelationValence.IS);
 
 					// cycle through properties of expected target
 					for (IPropertyConcept targetProperty : targetProperties.keyIterable()) {
 						Stream<IProfile> profilesMatchingTargetProperty = RelationsHelper.profilesWithTrait(
-								targetProperty, targetProperties.get(targetProperty), info.knowledge());
+								targetProperty, targetProperties.get(targetProperty), info.knowledge(), -1f);
 						// for each property, find all profiles with this property
 						for (IProfile profileMatchingProperty : (Iterable<IProfile>) () -> profilesMatchingTargetProperty
 								.filter((a) -> !alreadyCheckedProfiles.contains(a)).iterator()) {

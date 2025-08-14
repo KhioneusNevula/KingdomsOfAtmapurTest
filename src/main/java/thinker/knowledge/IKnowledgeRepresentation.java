@@ -200,6 +200,15 @@ public interface IKnowledgeRepresentation extends Cloneable {
 	public Iterable<? extends IConceptRelationType> getRelationTypesFrom(IConcept from);
 
 	/**
+	 * Get all relation type from this concept to the other (in a set-style unique
+	 * element format)
+	 * 
+	 * @param from
+	 * @return
+	 */
+	public Iterable<? extends IConceptRelationType> getRelationTypesBetween(IConcept from, IConcept to);
+
+	/**
 	 * Get all concepts this concept has a relation to
 	 * 
 	 * @param from

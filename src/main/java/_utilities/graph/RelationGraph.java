@@ -272,6 +272,13 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		 */
 		public String convertToString(Function<NType, String> converter, Function<RType, String> econverter);
 
+		/**
+		 * Removes a property from internal propery map
+		 * 
+		 * @param prop
+		 */
+		public void removePropertyValue(IProperty<?> prop);
+
 	}
 
 	private class Edge implements IInvertibleEdge<E, R> {
@@ -327,6 +334,11 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		@Override
 		public <F> void setPropertyValue(IProperty<F> prop, F value) {
 			properties.put(prop, value);
+		}
+
+		@Override
+		public void removePropertyValue(IProperty<?> prop) {
+			properties.remove(prop);
 		}
 
 		@Override
@@ -426,6 +438,11 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			@Override
 			public <X> void setPropertyValue(IProperty<X> prop, X value) {
 				Edge.this.setPropertyValue(prop, value);
+			}
+
+			@Override
+			public void removePropertyValue(IProperty<?> prop) {
+				Edge.this.removePropertyValue(prop);
 			}
 
 			@Override
@@ -1260,7 +1277,13 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			throw new IllegalArgumentException("No edge of type " + type + " between " + one + " and " + two);
 		}
 		X obj = edge.getPropertyValue(prop);
-		edge.setPropertyValue(prop, val);
+		if (prop.defaultValue().equals(val)) {
+			if (obj != null) {
+				edge.removePropertyValue(prop);
+			}
+		} else {
+			edge.setPropertyValue(prop, val);
+		}
 		return obj;
 	}
 

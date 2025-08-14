@@ -281,7 +281,7 @@ public interface INoosphereKnowledgeBase extends IKnowledgeBase {
 	/**
 	 * Whether these two concepts have any relation
 	 */
-	public boolean groupHasRelation(IConcept from, IConcept to, IProfile group);
+	public boolean groupHasAnyValenceRelation(IConcept from, IConcept to, IProfile group);
 
 	/**
 	 * Get all relation types from this concept (in a set-style unique element
@@ -525,5 +525,33 @@ public interface INoosphereKnowledgeBase extends IKnowledgeBase {
 	 * @param group
 	 */
 	void groupSetOpposite(IConcept from, IConceptRelationType type, IConcept to, IProfile group);
+
+	/**
+	 * Same as {@link #getDistance(IConcept)} but for a group
+	 * 
+	 * @param prf
+	 * @param group
+	 * @return
+	 */
+	float groupGetDistance(IConcept prf, IProfile group);
+
+	/**
+	 * Same as {@link #setDistance(IConcept, float)}
+	 * 
+	 * @param prf
+	 * @param distance
+	 * @param group
+	 */
+	void groupSetDistance(IConcept prf, float distance, IProfile group);
+
+	/**
+	 * Same as {@link #getRelationTypesBetween(IConcept, IConcept)}
+	 * 
+	 * @param from
+	 * @param to
+	 * @param group
+	 * @return
+	 */
+	Iterable<? extends IConceptRelationType> groupGetRelationTypesBetween(IConcept from, IConcept to, IProfile group);
 
 }

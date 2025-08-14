@@ -146,12 +146,17 @@ public class SectionKnowledgeBase implements ISectionKnowledgeBase {
 
 	@Override
 	public boolean hasAnyValenceRelation(IConcept from, IConcept to) {
-		return noosphere.groupHasRelation(from, to, self);
+		return noosphere.groupHasAnyValenceRelation(from, to, self);
 	}
 
 	@Override
 	public Iterable<? extends IConceptRelationType> getRelationTypesFrom(IConcept from) {
 		return noosphere.groupGetRelationTypesFrom(from, self);
+	}
+
+	@Override
+	public Iterable<? extends IConceptRelationType> getRelationTypesBetween(IConcept from, IConcept to) {
+		return noosphere.groupGetRelationTypesBetween(from, to, self);
 	}
 
 	@Override
@@ -241,6 +246,16 @@ public class SectionKnowledgeBase implements ISectionKnowledgeBase {
 	@Override
 	public void setOpposite(IConcept focus, IConceptRelationType hasTrait, IConcept key) {
 		this.noosphere.groupSetOpposite(focus, hasTrait, key, self);
+	}
+
+	@Override
+	public float getDistance(IConcept prf) {
+		return this.noosphere.groupGetDistance(prf, self);
+	}
+
+	@Override
+	public void setDistance(IConcept prf, float distance) {
+		this.noosphere.groupSetDistance(prf, distance, self);
 	}
 
 	@Override

@@ -158,6 +158,8 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 		ConceptNode fromN = new ConceptNode(from);
 		ConceptNode toN = new ConceptNode(to);
 		this.conceptGraph.addEdge(fromN, relation, toN);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.OPPOSITE, false);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.NOT, false);
 		return conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE,
 				StorageType.CONFIDENT) == StorageType.CONFIDENT;
 	}
@@ -177,6 +179,8 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 		StorageType stype = conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE,
 				StorageType.DUBIOUS);
 		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.CONFIDENCE, confidence);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.OPPOSITE, false);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.NOT, false);
 		return stype == StorageType.DUBIOUS;
 	}
 
@@ -187,6 +191,8 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 		this.conceptGraph.addEdge(fromN, relation, toN);
 		StorageType stype = conceptGraph.setProperty(fromN, relation, toN, RelationProperties.STORAGE_TYPE,
 				StorageType.TEMPORARY);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.OPPOSITE, false);
+		conceptGraph.setProperty(fromN, relation, toN, RelationProperties.NOT, false);
 		return stype == StorageType.TEMPORARY;
 	}
 
@@ -306,6 +312,27 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 	@Override
 	public Collection<IConceptRelationType> getRelationTypesFrom(IConcept from) {
 		return new CollectionFromIterator<>(() -> getRelationTypesFromCheckParent(from));
+	}
+
+	@Override
+	public Collection<IConceptRelationType> getRelationTypesBetween(IConcept from, IConcept to) {
+		return new CollectionFromIterator<>(() -> getRelationTypesBetweenCheckParent(from, to));
+	}
+
+	@Override
+	public IMultiKnowledgeBaseIterator<IConceptRelationType> getRelationTypesBetweenCheckParent(IConcept from,
+			IConcept to) {
+		return new ConceptStorageParentIterator<IConceptRelationType>(
+				() -> conceptGraph.getEdgeTypesBetween(new ConceptNode(from), new ConceptNode(to)).iterator(),
+				(parent) -> {
+					if (parent instanceof IIndividualKnowledgeBase ikb)
+						return ikb.getRelationTypesBetweenCheckParent(from, to);
+					else
+						return new SingleParentConceptStorageParentIterator<>(parent,
+								Streams.stream(parent.getRelationTypesBetween(from, to)).filter((
+										trip) -> this.getStorageTypeOfRelation(from, trip, to) != StorageType.FORGOTTEN)
+										.distinct().iterator());
+				});
 	}
 
 	@Override
