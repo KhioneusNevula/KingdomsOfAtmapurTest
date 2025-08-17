@@ -159,7 +159,7 @@ public class GoalsToActionsThought implements IThought {
 			info.knowledge().addTemporaryRelation(focusGoal, KnowledgeRelationType.QUICK_ACCESS, process);
 		} else {
 			Table<IActionConcept, IActionCriterion, Float> actionTable = owner.getActionFinder().findAction(info,
-					focusGoal, this.getProcessID());
+					focusGoal, this.getProcessID(), true);
 			Set<IActionConcept> blacklisted = Streams
 					.stream(info.knowledge().getConnectedConcepts(focusGoal, KnowledgeRelationType.P_FAILED_BY))
 					.map((a) -> (IActionConcept) a).collect(Collectors.toSet());

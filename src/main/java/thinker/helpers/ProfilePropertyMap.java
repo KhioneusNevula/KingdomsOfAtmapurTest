@@ -20,7 +20,6 @@ import thinker.concepts.general_types.IValueConcept;
 import thinker.concepts.profile.IProfile;
 import thinker.concepts.relations.IConceptRelationType;
 import thinker.concepts.relations.descriptive.PropertyRelationType;
-import thinker.helpers.RelationsHelper.RelationValence;
 import thinker.knowledge.IKnowledgeRepresentation;
 
 /**
@@ -65,6 +64,48 @@ public class ProfilePropertyMap implements Map<IPropertyConcept, IValueConcept> 
 	 */
 	public IProfile getFocusProfile() {
 		return focus;
+	}
+
+	/**
+	 * Return the number of times the relation of this property has been accessed,
+	 * or 0 if it is not a real relation
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public long getMemoryAccessCount(IPropertyConcept key) {
+		if (this.containsKey(key)) {
+			return base.getMemoryAccessCount(focus, PropertyRelationType.HAS_TRAIT, key);
+		}
+		return 0;
+	}
+
+	/**
+	 * Alias of
+	 * {@link IKnowledgeRepresentation#access(IConcept, IConceptRelationType, IConcept)}
+	 * for the focus of this map, the {@link PropertyRelationType#HAS_TRAIT}, and
+	 * the {@link IPropertyConcept} given
+	 * 
+	 * @param key
+	 * @param value
+	 */
+	public void access(IPropertyConcept key) {
+		if (this.containsKey(key)) {
+			if (this.get(key) != IValueConcept.PRESENT) {
+				Streams.stream(base.getConnectedConcepts(focus, PropertyRelationType.HAS_TRAIT)).map((cc) -> {
+					base.access(focus, PropertyRelationType.HAS_TRAIT, cc);
+					return cc;
+				}).forEach((cc) -> {
+					base.getConnectedConcepts(cc, PropertyRelationType.HAS_TRAIT)
+							.forEach((a) -> base.access(cc, PropertyRelationType.HAS_TRAIT, a));
+					base.getConnectedConcepts(cc, PropertyRelationType.HAS_VALUE)
+							.forEach((a) -> base.access(cc, PropertyRelationType.HAS_VALUE, a));
+				});
+			} else {
+				base.access(focus, PropertyRelationType.HAS_TRAIT, key);
+			}
+		}
 	}
 
 	@Override

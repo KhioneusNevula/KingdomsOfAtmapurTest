@@ -231,6 +231,21 @@ public class SectionKnowledgeBase implements ISectionKnowledgeBase {
 	}
 
 	@Override
+	public void accessNTimes(IConcept from, IConceptRelationType type, IConcept to, int times) {
+		noosphere.groupAccessNTimes(from, type, to, times, self);
+	}
+
+	@Override
+	public long getMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to) {
+		return noosphere.groupGetMemoryAccessCount(from, type, to, self);
+	}
+
+	@Override
+	public void setMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to, long amount) {
+		noosphere.groupSetMemoryAccessCount(from, type, to, amount, self);
+	}
+
+	@Override
 	public float getSocialBondValue(IConcept from, ISocialBondTrait trait, IConcept to) {
 		Float f = this.socialbonds.get(Pair.of(from, to), trait);
 		if (f == null)

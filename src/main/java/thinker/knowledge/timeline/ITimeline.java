@@ -27,6 +27,14 @@ public interface ITimeline {
 		 * @return
 		 */
 		public long getHistoricalTick();
+
+		/**
+		 * Overriden as true
+		 */
+		@Override
+		default boolean doDecayChecks() {
+			return true;
+		}
 	}
 
 	/**

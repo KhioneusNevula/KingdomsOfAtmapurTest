@@ -31,4 +31,12 @@ public interface INeedConcept extends IConcept {
 	/** Name of this need in simple terms */
 	public String getSimpleName();
 
+	/**
+	 * Overriden as true
+	 */
+	@Override
+	default boolean doDecayChecks() {
+		return true;
+	}
+
 }

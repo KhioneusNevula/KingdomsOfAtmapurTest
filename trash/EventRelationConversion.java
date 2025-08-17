@@ -42,7 +42,8 @@ public class EventRelationConversion {
 		erconverters.put(reltype.invert(), type, (l, r) -> converter.convertRelation(r, l));
 	}
 
-	private static void nreger(IDescriptiveRelationType reltype, EventCategory type, IEventRelationConverter converter) {
+	private static void nreger(IDescriptiveRelationType reltype, EventCategory type,
+			IEventRelationConverter converter) {
 		if (nerconverters.contains(reltype.invert(), type)) {
 			throw new IllegalArgumentException(
 					"Already present for " + type + ": inverse of " + reltype + ": " + reltype.invert());

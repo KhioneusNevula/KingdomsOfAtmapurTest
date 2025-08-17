@@ -12,7 +12,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.base.Predicates;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
@@ -25,8 +24,9 @@ import _utilities.couplets.Pair;
 import _utilities.couplets.Triplet;
 import thinker.concepts.IConcept;
 import thinker.concepts.relations.IConceptRelationType;
-import thinker.helpers.RelationsHelper.RelationValence;
 import thinker.knowledge.IKnowledgeRepresentation;
+import thinker.mind.memory.StorageType;
+import thinker.mind.memory.TruthType;
 
 /**
  * A multimap that presents relation types radiating out from a focus object as
@@ -187,6 +187,74 @@ public class ConceptRelationsMap implements Multimap<IConceptRelationType, IConc
 	 */
 	private Stream<IConcept> valueStream() {
 		return edgeStream().map(Triplet::getThird);
+	}
+
+	/**
+	 * Return the storage type of this relaton, or null if it is not present
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public StorageType getStorageType(IConceptRelationType key, IConcept value) {
+		if (this.containsEntry(key, value)) {
+			return base.getStorageTypeOfRelation(focus, key, value);
+		}
+		return null;
+	}
+
+	/**
+	 * Return the confidence of this relation, or -1f if it is not available
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public float getConfidence(IConceptRelationType key, IConcept value) {
+		if (this.containsEntry(key, value)) {
+			return base.getConfidence(focus, key, value);
+		}
+		return -1f;
+	}
+
+	/**
+	 * Return the number of times this relation has been accessed, or 0 if it is not
+	 * a real relation
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public long getMemoryAccessCount(IConceptRelationType key, IConcept value) {
+		if (this.containsEntry(key, value)) {
+			return base.getMemoryAccessCount(focus, key, value);
+		}
+		return 0;
+	}
+
+	/**
+	 * Alias of
+	 * {@link IKnowledgeRepresentation#access(IConcept, IConceptRelationType, IConcept)}
+	 * 
+	 * @param key
+	 * @param value
+	 */
+	public void access(IConceptRelationType key, IConcept value) {
+		base.access(focus, key, value);
+	}
+
+	/**
+	 * Return the truth type of this relation, or null if not present
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public TruthType getTruthType(IConceptRelationType key, IConcept value) {
+		if (this.containsEntry(key, value)) {
+			return base.getTruthTypeOfRelation(focus, key, value);
+		}
+		return null;
 	}
 
 	@Override
@@ -443,7 +511,7 @@ public class ConceptRelationsMap implements Multimap<IConceptRelationType, IConc
 	}
 
 	/**
-	 * Internal implementation for the colletion returned by "get"
+	 * Internal implementation for the collection returned by "get"
 	 * 
 	 * @author borah
 	 *

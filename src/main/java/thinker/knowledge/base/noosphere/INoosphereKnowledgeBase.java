@@ -554,4 +554,43 @@ public interface INoosphereKnowledgeBase extends IKnowledgeBase {
 	 */
 	Iterable<? extends IConceptRelationType> groupGetRelationTypesBetween(IConcept from, IConcept to, IProfile group);
 
+	/**
+	 * Same idea as
+	 * {@link #setMemoryAccessCount(IConcept, IConceptRelationType, IConcept, int)}
+	 * but for groups
+	 * 
+	 * @param from
+	 * @param type
+	 * @param to
+	 * @param val
+	 * @param group
+	 */
+	void groupSetMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to, long val, IProfile group);
+
+	/**
+	 * Same idea as
+	 * {@link #getMemoryAccessCount(IConcept, IConceptRelationType, IConcept)} but
+	 * for groups
+	 * 
+	 * @param from
+	 * @param type
+	 * @param to
+	 * @param group
+	 * @return
+	 */
+	long groupGetMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to, IProfile group);
+
+	/**
+	 * Same idea as
+	 * {@link #accessNTimes(IConcept, IConceptRelationType, IConcept, int)} but for
+	 * groups
+	 * 
+	 * @param from
+	 * @param type
+	 * @param to
+	 * @param times
+	 * @param group
+	 */
+	void groupAccessNTimes(IConcept from, IConceptRelationType type, IConcept to, int times, IProfile group);
+
 }

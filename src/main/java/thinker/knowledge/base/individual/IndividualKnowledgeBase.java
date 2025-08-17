@@ -17,8 +17,10 @@ import com.google.common.collect.Streams;
 
 import _utilities.collections.CollectionFromIterator;
 import _utilities.couplets.Triplet;
+import _utilities.graph.EdgeNotFoundException;
 import _utilities.graph.IRelationGraph;
 import _utilities.graph.ImmutableGraphView;
+import _utilities.graph.NodeNotFoundException;
 import party.relations.social_bonds.ISocialBondTrait;
 import thinker.concepts.IConcept;
 import thinker.concepts.relations.IConceptRelationType;
@@ -571,7 +573,33 @@ public class IndividualKnowledgeBase implements IIndividualKnowledgeBase {
 
 	@Override
 	public void setConfidence(IConcept from, IConceptRelationType type, IConcept to, float val) {
+		if (val < 0f) {
+			throw new IllegalArgumentException("Cannot have nonpositive confidence value");
+		}
+		if (val > 1f) {
+			throw new IllegalArgumentException("Cannot have confidence value > 1");
+		}
 		conceptGraph.setProperty(new ConceptNode(from), type, new ConceptNode(to), RelationProperties.CONFIDENCE, val);
+	}
+
+	@Override
+	public long getMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to) {
+		return conceptGraph.getProperty(new ConceptNode(from), type, new ConceptNode(to),
+				RelationProperties.ACCESS_COUNT, false);
+	}
+
+	@Override
+	public void setMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to, long val) {
+		conceptGraph.setProperty(new ConceptNode(from), type, new ConceptNode(to), RelationProperties.ACCESS_COUNT,
+				val);
+	}
+
+	@Override
+	public void accessNTimes(IConcept from, IConceptRelationType type, IConcept to, int times) {
+		this.setMemoryAccessCount(from, type, to, Math.max(0, this.getMemoryAccessCount(from, type, to) + times));
+		for (IKnowledgeBase parent : this.parents) {
+			parent.accessNTimes(from, type, to, times);
+		}
 	}
 
 	@Override

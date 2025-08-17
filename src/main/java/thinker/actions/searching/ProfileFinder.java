@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+
 import party.util.IAgentAccess;
 import things.interfaces.UniqueType;
 import thinker.concepts.IConcept;
@@ -18,8 +21,9 @@ import thinker.concepts.relations.descriptive.IProfileInterrelationType;
 import thinker.concepts.relations.technical.KnowledgeRelationType;
 import thinker.goals.IGoalConcept;
 import thinker.helpers.ConceptRelationsMap;
+import thinker.helpers.RelationValence;
 import thinker.helpers.RelationsHelper;
-import thinker.helpers.RelationsHelper.RelationValence;
+import thinker.knowledge.KnowledgeRepresentation;
 
 /**
  * Implementation of {@link IProfileFinder}
@@ -42,7 +46,7 @@ public class ProfileFinder implements IProfileFinder {
 
 	@Override
 	public Map<IWhQuestionConcept, IProfile> matchProfiles(IAgentAccess info, IWhQuestionConcept startQuestion,
-			int attempts, float endChance) {
+			int attempts, float endChance, boolean doAccesses) {
 		ConceptRelationsMap qMap = new ConceptRelationsMap(startQuestion, info.knowledge(), RelationValence.IS);
 		if (startQuestion.getQuestionType() instanceof UniqueType uniqueType) {
 			Map<IWhQuestionConcept, IProfile> ret = new HashMap<>();
@@ -58,10 +62,10 @@ public class ProfileFinder implements IProfileFinder {
 			Set<IProfile> profilePossibilities = new HashSet<>(); // possible profiles based on their traits
 			Stream<ITypePatternConcept> patterns = RelationsHelper.getProfilePatterns(qProfile, info.knowledge());
 			for (ITypePatternConcept pattern : (Iterable<ITypePatternConcept>) () -> patterns.iterator()) {
-				RelationsHelper.findProfilesWithSubsetOf(pattern, info.knowledge(), DIST_PH)
+				RelationsHelper.findProfilesWithSubsetOf(pattern, info.knowledge(), DIST_PH, doAccesses)
 						.filter((a) -> a.isUniqueProfile()).forEach((a) -> profilePossibilities.add(a));
 			}
-
+			Multimap<IProfile, KnowledgeRepresentation> contenders = MultimapBuilder.hashKeys().hashSetValues().build();
 			for (IConcept conc : qMap.get(KnowledgeRelationType.P_ASKED_BY)) {
 
 				if (conc instanceof IGoalConcept goal) { // for each goal concept, find fitters

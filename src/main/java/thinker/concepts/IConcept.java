@@ -38,6 +38,10 @@ public interface IConcept {
 		PROPERTY,
 		/** the value of a property, or a numeric count */
 		VALUE,
+		/** A vector of position or somethin else */
+		VECTOR,
+		/** Concept representing a map tile */
+		MAP_TILE,
 		/**
 		 * a profile representing something that can have traits and may or may not be
 		 * unique.
@@ -376,6 +380,14 @@ public interface IConcept {
 	 */
 	public default IConnectorConcept asLogic() {
 		return (IConnectorConcept) this;
+	}
+
+	/**
+	 * Return true if this concept should be checked for memory decay. Mainly
+	 * applies to {@link IProfile}s and {@link IPrincipleConcept}s
+	 */
+	public default boolean doDecayChecks() {
+		return false;
 	}
 
 }

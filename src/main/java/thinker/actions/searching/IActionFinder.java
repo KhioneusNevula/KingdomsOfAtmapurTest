@@ -29,9 +29,11 @@ public interface IActionFinder {
 	 * Finds a suitable set of actions to satisfy a condition, and sets criterion
 	 * values based on how good the action is for a goal. Return an empty table if
 	 * no actions woere found
+	 * 
+	 * @param doAccesses whether to perform "access" actions while checking
 	 */
 	public Table<IActionConcept, IActionCriterion, Float> findAction(IAgentAccess info, IGoalConcept expectation,
-			UUID processID);
+			UUID processID, boolean doAccesses);
 
 	// TODO learnActionInfo
 

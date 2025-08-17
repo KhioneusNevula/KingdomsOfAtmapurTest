@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import things.interfaces.IUnique;
 import things.interfaces.UniqueType;
+import thinker.concepts.IConcept;
 import thinker.concepts.general_types.IDescriptiveConcept;
 import thinker.concepts.general_types.IPatternConcept;
 import thinker.concepts.general_types.IWhQuestionConcept;
@@ -143,6 +144,15 @@ public interface IProfile extends IDescriptiveConcept {
 	 * @return
 	 */
 	public boolean isAnyMatcher();
+
+	/**
+	 * Overriding {@link IConcept#doDecayChecks()}: return true;
+	 */
+	@Override
+	default boolean doDecayChecks() {
+
+		return true;
+	}
 
 	/**
 	 * Whether this profile refers to a unique entity rather than a type;

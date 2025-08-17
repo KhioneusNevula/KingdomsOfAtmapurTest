@@ -2,6 +2,10 @@ package _sim.world;
 
 import _sim.dimension.IDimensionTag;
 
+/**
+ * A class representing a piece of information to represent an individual tile
+ * on a map
+ */
 public class MapTile {
 
 	/** default name of contiguous map tiles */
@@ -24,7 +28,8 @@ public class MapTile {
 	}
 
 	/**
-	 * New contiguous tile at position. ThinkerWill be named as {@value #DEFAULT_NAME}
+	 * New contiguous tile at position. ThinkerWill be named as
+	 * {@value #DEFAULT_NAME}
 	 * 
 	 * @param tag
 	 * @param r
@@ -84,6 +89,20 @@ public class MapTile {
 		} else {
 
 			return "|[N=" + this.name + ",D=" + this.dimension.getId() + "]|";
+		}
+	}
+
+	/**
+	 * Returns just the basic info of this map tile in (...,...,...) or (...,...)
+	 * format
+	 * 
+	 * @return
+	 */
+	public String bareString() {
+		if (this.isContiguous) {
+			return "(" + row + "," + col + "," + this.dimension.getId() + ")";
+		} else {
+			return "(" + name + "," + dimension.getId() + ")";
 		}
 	}
 

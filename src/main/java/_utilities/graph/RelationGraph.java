@@ -1274,7 +1274,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		IInvertibleEdge<E, R> edge = node(one, 1).getEdge(two, type);
 		node(two, 2);
 		if (edge == null) {
-			throw new IllegalArgumentException("No edge of type " + type + " between " + one + " and " + two);
+			throw new EdgeNotFoundException(Triplet.of(one, type, two));
 		}
 		X obj = edge.getPropertyValue(prop);
 		if (prop.defaultValue().equals(val)) {
@@ -1297,7 +1297,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 		}
 		IInvertibleEdge<E, R> edge = node(first).getEdge(third, second);
 		if (edge == null) {
-			throw new IllegalArgumentException("No edge (" + first + ")[" + second + "](" + third + ")");
+			throw new EdgeNotFoundException(Triplet.of(first, second, third));
 		}
 		if (includeEnds) {
 			return edge.toString();
@@ -2665,7 +2665,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			check(one);
 			check(two);
 			if (!edgepred.test(Triplet.of(one, type, two))) {
-				throw new IllegalArgumentException("No such edge");
+				throw new EdgeNotFoundException(Triplet.of(one, type, two));
 			}
 			return self.getProperty(one, type, two, prop);
 		}
@@ -2793,7 +2793,7 @@ public class RelationGraph<E, R extends IInvertibleRelationType> implements IMod
 			check(one);
 			check(two);
 			if (!edgepred.test(Triplet.of(one, type, two))) {
-				throw new IllegalArgumentException("No such edge");
+				throw new EdgeNotFoundException(Triplet.of(one, type, two));
 			}
 			return self.setProperty(one, type, two, prop, val);
 		}

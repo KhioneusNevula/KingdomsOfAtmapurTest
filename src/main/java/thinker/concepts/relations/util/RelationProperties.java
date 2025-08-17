@@ -61,15 +61,15 @@ public class RelationProperties {
 	 * accessible it is. Can represent different ideas, usually physical distance
 	 */
 	public static final IProperty<Float> DISTANCE = IProperty.make("distance", float.class, 0f);
-	/**
-	 * The level of likelihood of this relation being true, as an enum
-	 */
-	public static final IProperty<Likelihood> LIKELIHOOD = IProperty.make("likelihood", Likelihood.class,
-			Likelihood.CERTAIN);
 
 	/** Stores the set of all groups which recognize the given relation */
 	public static final IProperty<Set<IProfile>> KNOWN_BY_GROUPS = IProperty.make("knowers", Set.class,
 			new HashSet<>());
+
+	/**
+	 * Stores the number of times a relation was accessed in memory
+	 */
+	public static final IProperty<Long> ACCESS_COUNT = IProperty.make("access_count", long.class, 0L);
 
 	public static enum Likelihood {
 		IMPOSSIBLE, UNLIKELY, LIKELY, CERTAIN

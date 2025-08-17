@@ -11,6 +11,14 @@ public interface IRecipeConcept extends IConcept, IConceptAssociationInfo {
 	/** Whether this recipe is correct? idk */
 	public boolean isCorrect();
 
+	/**
+	 * Overriden as true
+	 */
+	@Override
+	default boolean doDecayChecks() {
+		return true;
+	}
+
 	@Override
 	default ConceptType getConceptType() {
 		return ConceptType.RECIPE;

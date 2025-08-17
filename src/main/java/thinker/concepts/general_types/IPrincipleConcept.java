@@ -45,4 +45,12 @@ public interface IPrincipleConcept extends IConcept {
 	 * @return
 	 */
 	public boolean isEventType();
+
+	/**
+	 * Overriding {@link IConcept#doDecayChecks()}: Returns true.
+	 */
+	@Override
+	default boolean doDecayChecks() {
+		return true;
+	}
 }

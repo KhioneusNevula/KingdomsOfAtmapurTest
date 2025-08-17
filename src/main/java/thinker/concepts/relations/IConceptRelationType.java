@@ -7,11 +7,22 @@ import thinker.concepts.IConcept;
 import thinker.concepts.IConcept.ConceptType;
 import thinker.concepts.general_types.IConnectorConcept;
 import thinker.concepts.general_types.IConnectorConcept.ConnectorType;
+import thinker.concepts.relations.technical.KnowledgeRelationType;
 
 public interface IConceptRelationType extends IInvertibleRelationType {
 
 	@Override
 	public IConceptRelationType invert();
+
+	/**
+	 * Whether this relation is immune to memory decay; mostly only applies to
+	 * certain {@link KnowledgeRelationType}s.
+	 * 
+	 * @return
+	 */
+	public default boolean immuneToDecay() {
+		return false;
+	}
 
 	/**
 	 * Return what {@link ConceptType}s must apply to whatever the concept on the

@@ -115,7 +115,7 @@ public class CheckConditionsThought implements IThought {
 				IWhQuestionConcept focusQuestion = focusQuestions.get(0);
 
 				Map<IWhQuestionConcept, IProfile> matchedProfiles = pfinder.matchProfiles(info, focusQuestion,
-						owner.focusedThoughtsCap(), owner.getMindStrainChance());
+						owner.focusedThoughtsCap(), owner.getMindStrainChance(), true);
 				for (IWhQuestionConcept question : matchedProfiles.keySet()) { // record that these profiles are
 																				// answered
 					if (matchedProfiles.get(question) != null) {

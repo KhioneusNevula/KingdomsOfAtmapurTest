@@ -1,27 +1,22 @@
 package thinker.helpers;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
-import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Streams;
 
-import _utilities.couplets.Triplet;
-import _utilities.function.TriPredicate;
+import _sim.world.MapTile;
+import _utilities.couplets.Pair;
 import thinker.actions.IActionConcept;
 import thinker.concepts.IConcept;
 import thinker.concepts.general_types.IConnectorConcept;
+import thinker.concepts.general_types.IMapTileConcept;
 import thinker.concepts.general_types.IPropertyConcept;
 import thinker.concepts.general_types.ITypePatternConcept;
 import thinker.concepts.general_types.IValueConcept;
+import thinker.concepts.general_types.IVectorConcept;
 import thinker.concepts.profile.IProfile;
-import thinker.concepts.relations.IConceptRelationType;
 import thinker.concepts.relations.actional.EventCategory;
 import thinker.concepts.relations.actional.IEventRelationType;
 import thinker.concepts.relations.descriptive.PropertyRelationType;
@@ -37,178 +32,6 @@ import thinker.knowledge.base.IKnowledgeBase;
  */
 public class RelationsHelper {
 	private RelationsHelper() {
-	}
-
-	private static final BiConsumer<Triplet<Set<IConcept>, Set<IConcept>, Set<IConcept>>, Triplet<Set<IConcept>, Set<IConcept>, Set<IConcept>>> unrelations_biconsumer = (
-			trip1, trip2) -> {
-		trip1.getFirst().addAll(trip2.getFirst());
-		trip1.getSecond().addAll(trip2.getSecond());
-		trip1.getThird().addAll(trip2.getThird());
-	};
-
-	private static BiConsumer<Triplet<Set<IConcept>, Set<IConcept>, Set<IConcept>>, IConcept> makeunrelaccum(
-			TriPredicate<IConcept, IConceptRelationType, IConcept> notcheck,
-			TriPredicate<IConcept, IConceptRelationType, IConcept> oppcheck, IConcept source,
-			IConceptRelationType type) {
-		return (trip, con) -> {
-			if (notcheck.test(source, type, con)) {
-				trip.getSecond().add(con);
-			} else if (notcheck.test(source, type, con)) {
-				trip.getThird().add(con);
-			} else {
-				trip.getFirst().add(con);
-			}
-		};
-	}
-
-	/**
-	 * Relation valences for edges
-	 * 
-	 * @author borah
-	 *
-	 */
-	public static enum RelationValence {
-		IS((edge, base) -> base.is(edge.getFirst(), edge.getSecond(), edge.getThird()),
-				(edge, base) -> base.addConfidentRelation(edge.getFirst(), edge.getSecond(), edge.getThird()),
-				(edge, base) -> base.removeRelation(edge.getFirst(), edge.getSecond(), edge.getThird()),
-				(edge, base) -> {
-					base.addConfidentRelation(edge.getFirst(), edge.getSecond(), edge.getThird());
-					base.setOpposite(edge.getFirst(), edge.getSecond(), edge.getThird());
-				}),
-		OPPOSITE((edge, base) -> base.isOpposite(edge.getFirst(), edge.getSecond(), edge.getThird()), IS.oppose,
-				(edge, base) -> base.removeRelation(edge.getFirst(), edge.getSecond(), edge.getThird()), IS.set),
-		NOT((edge, base) -> base.isNot(edge.getFirst(), edge.getSecond(), edge.getThird()),
-				(edge, base) -> base.removeRelation(edge.getFirst(), edge.getSecond(), edge.getThird()),
-				(edge, base) -> base.addConfidentRelation(edge.getFirst(), edge.getSecond(), edge.getThird()), IS.set),
-		IS_AND_OPPOSITE(IS, OPPOSITE), OPPOSITE_AND_NOT(OPPOSITE, NOT), IS_AND_NOT(IS, NOT), ALL(IS, OPPOSITE, NOT);
-
-		private Set<RelationValence> valences = Collections.singleton(this);
-		BiPredicate<Triplet<IConcept, IConceptRelationType, IConcept>, IKnowledgeRepresentation> pre = null;
-		BiConsumer<Triplet<IConcept, IConceptRelationType, IConcept>, IKnowledgeRepresentation> set = null;
-		BiConsumer<Triplet<IConcept, IConceptRelationType, IConcept>, IKnowledgeRepresentation> remove = null;
-		BiConsumer<Triplet<IConcept, IConceptRelationType, IConcept>, IKnowledgeRepresentation> oppose = null;
-
-		private RelationValence(RelationValence... others) {
-			valences = ImmutableSet.copyOf(others);
-		}
-
-		private RelationValence(
-				BiPredicate<Triplet<IConcept, IConceptRelationType, IConcept>, IKnowledgeRepresentation> pre,
-				BiConsumer<Triplet<IConcept, IConceptRelationType, IConcept>, IKnowledgeRepresentation> set,
-				BiConsumer<Triplet<IConcept, IConceptRelationType, IConcept>, IKnowledgeRepresentation> remove,
-				BiConsumer<Triplet<IConcept, IConceptRelationType, IConcept>, IKnowledgeRepresentation> oppose) {
-			this.pre = pre;
-			this.set = set;
-			this.remove = remove;
-			this.oppose = oppose;
-		}
-
-		/**
-		 * Check a relation's valence
-		 * 
-		 * @param edge
-		 * @param base
-		 * @return
-		 */
-		public boolean checkRelation(Triplet<IConcept, IConceptRelationType, IConcept> edge,
-				IKnowledgeRepresentation base) {
-			if (pre == null) {
-				return valences.stream().allMatch((a) -> a.pre.test(edge, base));
-			}
-			return pre.test(edge, base);
-		}
-
-		/**
-		 * Change relation's valence and create it if needed
-		 * 
-		 * @param edge
-		 * @param base
-		 */
-		public void establishRelation(Triplet<IConcept, IConceptRelationType, IConcept> edge,
-				IKnowledgeRepresentation base) {
-			if (set == null) {
-				throw new UnsupportedOperationException(
-						"Cannot set a relation when there are two or more conflicting valence types");
-			}
-			set.accept(edge, base);
-		}
-
-		/**
-		 * Remove relation; if this is "NOT", then it creates the relation instead
-		 * 
-		 * @param edge
-		 * @param base
-		 */
-		public void removeRelation(Triplet<IConcept, IConceptRelationType, IConcept> edge,
-				IKnowledgeRepresentation base) {
-			if (remove == null) {
-				throw new UnsupportedOperationException(
-						"Cannot remove a relation when there are two or more conflicting valence types");
-			}
-			remove.accept(edge, base);
-		}
-
-		/**
-		 * For {@link #IS}, this method turns a relationship into an OPPOSITE
-		 * relationship. For {@link #OPPOSITE} and {@link #NOT}, it turns the
-		 * reelationship into an IS relationship
-		 * 
-		 * @param edge
-		 * @param base
-		 */
-		public void invertRelation(Triplet<IConcept, IConceptRelationType, IConcept> edge,
-				IKnowledgeRepresentation base) {
-			if (oppose == null) {
-				throw new UnsupportedOperationException(
-						"Cannot invert a relation when there are two or more conflicting valence types");
-			}
-			oppose.accept(edge, base);
-		}
-
-		/**
-		 * Return true if there are multiple valence types here
-		 * 
-		 * @return
-		 */
-		public boolean isMulti() {
-			return valences.size() > 1;
-		}
-
-		/**
-		 * Return what 'smaller' valences compose this one
-		 * 
-		 * @return
-		 */
-		public Set<RelationValence> getValences() {
-			return valences;
-		}
-	}
-
-	/**
-	 * Returns connected concepts to the given source knowledgebase, but divides NOT
-	 * relations and OPPOSITE relations into the second and third parts of the
-	 * triplet
-	 * 
-	 * @param source
-	 * @param iterable
-	 * @return
-	 */
-	public static Triplet<Stream<IConcept>, Stream<IConcept>, Stream<IConcept>> getConnectedConceptsAndUnrelations(
-			IConcept source, IConceptRelationType type, IKnowledgeRepresentation relt) {
-
-		return Triplet.of(
-				Streams.stream(relt.getConnectedConcepts(source, type)).filter((a) -> relt.is(source, type, a))
-						.map(Functions.identity()),
-				Streams.stream(relt.getConnectedConcepts(source, type)).filter((a) -> relt.isNot(source, type, a))
-						.map(Functions.identity()),
-				Streams.stream(relt.getConnectedConcepts(source, type)).filter((a) -> relt.isOpposite(source, type, a))
-						.map(Functions.identity()));
-		/*
-		 * return Streams.stream(relt.getConnectedConcepts(source, type)).collect( () ->
-		 * Triplet.of(new HashSet<>(), new HashSet<>(), new HashSet<>()),
-		 * makeunrelaccum(relt::isNot, relt::isOpposite, source, type),
-		 * unrelations_biconsumer);
-		 */
 	}
 
 	/**
@@ -263,16 +86,16 @@ public class RelationsHelper {
 	public static Stream<IProfile> profilesWithTrait(IPropertyConcept property, IKnowledgeRepresentation base,
 			double distance) {
 		if (distance >= 0) {
-			Stream<IProfile> stream = getConnectedConceptsAndUnrelations(IConcept.ENVIRONMENT,
-					KnowledgeRelationType.EXISTS_IN, base).getFirst().filter((a) -> a instanceof IProfile)
-							.map((con) -> (IProfile) con);
+			Stream<IProfile> stream = new ConceptRelationsMap(IConcept.ENVIRONMENT, base)
+					.get(KnowledgeRelationType.THERE_EXISTS).stream().filter((a) -> a instanceof IProfile)
+					.map((con) -> (IProfile) con);
 			if (distance > 0) {
 				stream = stream.filter((c) -> base.getDistance(c) <= distance);
 			}
 			return stream.filter((c) -> getProfileProperties(c, base, RelationValence.IS).containsKey(property));
 		}
 
-		return getConnectedConceptsAndUnrelations(property, PropertyRelationType.IS_TRAIT_OF, base).getFirst()
+		return new ConceptRelationsMap(property, base).get(PropertyRelationType.IS_TRAIT_OF).stream()
 				.filter((con) -> con instanceof IProfile).map((con) -> (IProfile) con);
 	}
 
@@ -285,12 +108,14 @@ public class RelationsHelper {
 	 * 
 	 * @param otherProfile
 	 * @param base
+	 * @param access       whether to mark each property relation utilized as
+	 *                     "accessed"
 	 * @return
 	 */
 	public static Stream<IProfile> findProfilesWithSubsetOf(IProfile otherProfile, IKnowledgeRepresentation base,
-			double distance) {
+			double distance, boolean access) {
 		return profilesWithTraits(base, getProfileProperties(otherProfile, base, RelationValence.IS),
-				getProfileProperties(otherProfile, base, RelationValence.OPPOSITE), distance);
+				getProfileProperties(otherProfile, base, RelationValence.OPPOSITE), distance, access);
 	}
 
 	/**
@@ -303,11 +128,13 @@ public class RelationsHelper {
 	 * @param base
 	 * @param posProperties traits the profiles included must have
 	 * @param negProperties traits the profiles included must not have
+	 * @param access        whether to mark each property relation utilized as
+	 *                      "accessed"
 	 * @return
 	 */
 	public static Stream<IProfile> profilesWithTraits(IKnowledgeRepresentation base,
 			Map<IPropertyConcept, IValueConcept> posProperties, Map<IPropertyConcept, IValueConcept> negProperties,
-			double distance) {
+			double distance, boolean access) {
 		if (posProperties.isEmpty())
 			throw new IllegalArgumentException("PosProperties is empty");
 		IPropertyConcept firstCheck = posProperties.keySet().iterator().next();
@@ -317,10 +144,22 @@ public class RelationsHelper {
 				continue;
 			profiles = profiles.filter((prof) -> getProfileProperties(prof, base, RelationValence.IS).contains(prop,
 					posProperties.get(prop)));
+			if (access) {
+				profiles = profiles.map((a) -> {
+					getProfileProperties(a, base, RelationValence.IS).access(prop);
+					return a;
+				});
+			}
 		}
 		for (IPropertyConcept prop : negProperties.keySet()) {
 			profiles = profiles.filter((prof) -> !getProfileProperties(prof, base, RelationValence.IS).contains(prop,
 					negProperties.get(prop)));
+			if (access) {
+				profiles = profiles.map((a) -> {
+					getProfileProperties(a, base, RelationValence.IS).access(prop);
+					return a;
+				});
+			}
 		}
 		return profiles;
 	}
@@ -333,6 +172,7 @@ public class RelationsHelper {
 	 * @param property
 	 * @param value
 	 * @param base
+	 * @param access
 	 * @return
 	 */
 	public static Stream<IProfile> profilesWithTrait(IPropertyConcept property, IValueConcept value,
@@ -341,12 +181,12 @@ public class RelationsHelper {
 			return profilesWithTrait(property, base, distance);
 		}
 		if (distance >= 0) {
-			return getConnectedConceptsAndUnrelations(IConcept.ENVIRONMENT, KnowledgeRelationType.EXISTS_IN, base)
-					.getFirst().filter((a) -> a instanceof IProfile).map((con) -> (IProfile) con)
+			return new ConceptRelationsMap(IConcept.ENVIRONMENT, base).get(KnowledgeRelationType.THERE_EXISTS).stream()
+					.filter((a) -> a instanceof IProfile).map((con) -> (IProfile) con)
 					.filter((c) -> base.getDistance(c) <= distance)
 					.filter((c) -> getProfileProperties(c, base, RelationValence.IS).contains(property, value));
 		}
-		return getConnectedConceptsAndUnrelations(property, PropertyRelationType.IS_TRAIT_OF, base).getFirst()
+		return new ConceptRelationsMap(property, base).get(PropertyRelationType.IS_TRAIT_OF).stream()
 				.filter((a) -> a instanceof IConnectorConcept icc && (icc.isPropertyAndValue()
 						&& base.hasAnyValenceRelation(icc, PropertyRelationType.HAS_VALUE, value)))
 				.flatMap((a) -> Streams.stream(base.getConnectedConcepts(a, PropertyRelationType.IS_TRAIT_OF)))
@@ -364,8 +204,8 @@ public class RelationsHelper {
 	 * @param eventType
 	 * @return
 	 */
-	public static Multimap<IConceptRelationType, IConcept> getObjectsOfAction(IActionConcept action,
-			IKnowledgeRepresentation base, EventCategory eventType, RelationValence valence) {
+	public static ConceptRelationsMap getObjectsOfAction(IActionConcept action, IKnowledgeRepresentation base,
+			EventCategory eventType, RelationValence valence) {
 		return new ConceptRelationsMap(action, base, valence, (a) -> a.getEdgeType() instanceof IEventRelationType ev
 				&& ev.getEventType() == eventType); /*
 													 * Streams.stream(base.getOutgoingEdges(action)) .filter((a) ->
@@ -375,6 +215,48 @@ public class RelationsHelper {
 													 * edge.getEdgeEnd())) .collect(Collectors.toMap(Pair::getKey,
 													 * Pair::getValue));
 													 */
+	}
+
+	/**
+	 * Returns the possible positions of a profile as {@link IVectorConcept}s and
+	 * the confidence value of the relations for each possible position as floats
+	 * 
+	 * @param profile
+	 * @param base
+	 * @return
+	 */
+	public static Map<IVectorConcept, Float> getPossiblePositionsOfProfile(IProfile profile,
+			IKnowledgeRepresentation base) {
+		Map<IVectorConcept, Float> vectra = new HashMap<>();
+		ConceptRelationsMap map = new ConceptRelationsMap(profile, base, RelationValence.IS);
+		map.get(KnowledgeRelationType.L_POSITION_AT).stream()
+				.map((a) -> Pair.of(((IVectorConcept) a), map.getConfidence(KnowledgeRelationType.L_POSITION_AT, a)))
+				.forEach((a) -> {
+					vectra.put(a.getKey(), a.getValue());
+				});
+		return vectra;
+	}
+
+	/**
+	 * Returns the possible map tile positions of a profile as
+	 * {@link IMapTileConcept}s and the confidence value of the relations for each
+	 * possible tile as floats
+	 * 
+	 * @param profile
+	 * @param base
+	 * @return
+	 */
+	public static Map<IMapTileConcept, Float> getPossibleTilesOfProfile(IProfile profile,
+			IKnowledgeRepresentation base) {
+		Map<IMapTileConcept, Float> vectra = new HashMap<>();
+		ConceptRelationsMap map = new ConceptRelationsMap(profile, base, RelationValence.IS);
+		map.get(KnowledgeRelationType.L_IN_MAP).stream()
+				.map((a) -> Pair.of(((IMapTileConcept) a), map.getConfidence(KnowledgeRelationType.L_IN_MAP, a)))
+				.forEach((a) -> {
+					vectra.put(a.getKey(), a.getValue());
+				});
+		return vectra;
+
 	}
 
 	/**
@@ -393,10 +275,11 @@ public class RelationsHelper {
 	 * 
 	 * @param superset
 	 * @param subset
+	 * @param whether  to mark all utilized relations as "accessed"
 	 * @return
 	 */
 	public static boolean areProfileTraitsSuperset(IProfile check, IProfile superset,
-			IKnowledgeRepresentation checkBase, IKnowledgeRepresentation superbase) {
+			IKnowledgeRepresentation checkBase, IKnowledgeRepresentation superbase, boolean access) {
 		ProfilePropertyMap checkerMap = getProfileProperties(check, checkBase, RelationValence.IS);
 		// TODO getProfileGreaterThanProperties
 		// getProfileLessThanProperties
@@ -406,17 +289,31 @@ public class RelationsHelper {
 		// getProfileLessThanProperties
 		ProfilePropertyMap superOppMap = getProfileProperties(superset, superbase, RelationValence.OPPOSITE);
 		for (IPropertyConcept proco : superMap.keyIterable()) { // check normal traits
+
 			if (!checkerMap.containsKey(proco)) {
 				return false;
+			}
+			if (access) {
+				checkerMap.access(proco);
+				if (superMap != checkerMap) {
+					superMap.access(proco);
+				}
 			}
 			if (!superMap.get(proco).equals(checkerMap.get(proco))) {
 				return false;
 			} // TODO and also check greater/less/idk
+
 		}
 		for (IPropertyConcept proco : superOppMap.keyIterable()) { // check opposite traits
 			if (!checkerOppMap.containsKey(proco)) { // if the checker does not have the trait, we dont have to
 														// wrory about it
 				continue;
+			}
+			if (access) {
+				checkerOppMap.access(proco);
+				if (superOppMap != checkerOppMap) {
+					superOppMap.access(proco);
+				}
 			}
 			if (superOppMap.get(proco).equals(checkerOppMap.get(proco))) {
 				return false;

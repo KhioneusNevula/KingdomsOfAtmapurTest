@@ -227,7 +227,34 @@ public class KnowledgeRepresentation implements IKnowledgeRepresentation {
 	}
 
 	@Override
+	public long getMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to) {
+		if (this.hasAnyValenceRelation(from, type, to)) {
+			return graph.getProperty(n(from), type, n(to), RelationProperties.ACCESS_COUNT);
+		}
+		return 0;
+	}
+
+	@Override
+	public void setMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to, long val) {
+		if (this.hasAnyValenceRelation(from, type, to)) {
+			graph.setProperty(n(from), type, n(to), RelationProperties.ACCESS_COUNT, val);
+		}
+	}
+
+	@Override
+	public void accessNTimes(IConcept from, IConceptRelationType type, IConcept to, int times) {
+
+		this.setMemoryAccessCount(from, type, to, Math.max(0, this.getMemoryAccessCount(from, type, to) + times));
+	}
+
+	@Override
 	public void setConfidence(IConcept from, IConceptRelationType type, IConcept to, float val) {
+		if (val < 0f) {
+			throw new IllegalArgumentException("Cannot have nonpositive confidence value");
+		}
+		if (val > 1f) {
+			throw new IllegalArgumentException("Cannot have confidence value > 1");
+		}
 		graph.setProperty(n(from), type, n(to), RelationProperties.CONFIDENCE, val);
 	}
 

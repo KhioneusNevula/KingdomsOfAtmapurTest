@@ -952,13 +952,93 @@ public class NoosphereKnowledgeBase implements INoosphereKnowledgeBase {
 	}
 
 	@Override
+	public long getMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to) {
+		Long f = conceptGraph.getProperty(new GroupConceptNode(from), type, new GroupConceptNode(to),
+				RelationProperties.ACCESS_COUNT, false);
+		if (f == null)
+			return 0;
+		return f;
+	}
+
+	@Override
+	public long groupGetMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to, IProfile group) {
+		GroupConceptNode froma = new GroupConceptNode(from);
+		GroupConceptNode toa = new GroupConceptNode(to);
+		if (!groupKnowsConcept(from, group))
+			throw new NodeNotFoundException(from);
+		if (!groupKnowsConcept(to, group))
+			throw new NodeNotFoundException(to);
+		Table<IProfile, IProperty<?>, Object> props = conceptGraph.getProperty(froma, type, toa, GROUP_BASED_PROPERTIES,
+				false);
+		if (props == null)
+			return 0;
+		Integer f = (Integer) props.get(group, RelationProperties.ACCESS_COUNT);
+		if (f == null)
+			return 0;
+		return f;
+	}
+
+	@Override
+	public void setMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to, long amount) {
+		conceptGraph.setProperty(new GroupConceptNode(from), type, new GroupConceptNode(to),
+				RelationProperties.ACCESS_COUNT, amount);
+	}
+
+	@Override
+	public void groupSetMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to, long val,
+			IProfile group) {
+
+		GroupConceptNode froma = new GroupConceptNode(from);
+		GroupConceptNode toa = new GroupConceptNode(to);
+		if (!groupKnowsConcept(from, group))
+			throw new NodeNotFoundException(from);
+		if (!groupKnowsConcept(to, group))
+			throw new NodeNotFoundException(to);
+		conceptGraph.getProperty(froma, type, toa, GROUP_BASED_PROPERTIES, true).put(group,
+				RelationProperties.ACCESS_COUNT, val);
+	}
+
+	@Override
+	public void accessNTimes(IConcept from, IConceptRelationType type, IConcept to, int times) {
+		this.setMemoryAccessCount(from, type, to, Math.max(0, this.getMemoryAccessCount(from, type, to) + times));
+	}
+
+	@Override
+	public void groupAccessNTimes(IConcept from, IConceptRelationType type, IConcept to, int times, IProfile group) {
+		GroupConceptNode froma = new GroupConceptNode(from);
+		GroupConceptNode toa = new GroupConceptNode(to);
+		if (!groupKnowsConcept(from, group))
+			throw new NodeNotFoundException(from);
+		if (!groupKnowsConcept(to, group))
+			throw new NodeNotFoundException(to);
+		Table<IProfile, IProperty<?>, Object> props = conceptGraph.getProperty(froma, type, toa, GROUP_BASED_PROPERTIES,
+				true);
+		Integer oldCount = (Integer) props.get(group, RelationProperties.ACCESS_COUNT);
+		if (oldCount == null)
+			oldCount = 0;
+		props.put(group, RelationProperties.ACCESS_COUNT, oldCount + times);
+	}
+
+	@Override
 	public void setConfidence(IConcept from, IConceptRelationType type, IConcept to, float val) {
+		if (val < 0f) {
+			throw new IllegalArgumentException("Cannot have nonpositive confidence value");
+		}
+		if (val > 1f) {
+			throw new IllegalArgumentException("Cannot have confidence value > 1");
+		}
 		conceptGraph.setProperty(new GroupConceptNode(from), type, new GroupConceptNode(to),
 				RelationProperties.CONFIDENCE, val);
 	}
 
 	@Override
 	public void groupSetConfidence(IConcept from, IConceptRelationType type, IConcept to, float val, IProfile group) {
+		if (val < 0f) {
+			throw new IllegalArgumentException("Cannot have nonpositive confidence value");
+		}
+		if (val > 1f) {
+			throw new IllegalArgumentException("Cannot have confidence value > 1");
+		}
 		GroupConceptNode froma = new GroupConceptNode(from);
 		GroupConceptNode toa = new GroupConceptNode(to);
 		if (!groupKnowsConcept(from, group))

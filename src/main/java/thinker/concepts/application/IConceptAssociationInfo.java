@@ -10,4 +10,5 @@ public interface IConceptAssociationInfo extends IConcept {
 
 	/** Return the application predicate of this concept */
 	public <T extends IConceptApplier> T getApplier();
+
 }

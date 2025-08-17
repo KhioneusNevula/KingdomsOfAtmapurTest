@@ -43,6 +43,14 @@ public interface IGoalConcept extends IConcept {
 	}
 
 	/**
+	 * Overriden as true
+	 */
+	@Override
+	default boolean doDecayChecks() {
+		return true;
+	}
+
+	/**
 	 * Whether this concept is an Expectation, i.e. an {@link IGoalConcept} which
 	 * indicates an expected kind of action (as opposed to a goal which expects some
 	 * circumstance) using {@link IEventRelationType}s

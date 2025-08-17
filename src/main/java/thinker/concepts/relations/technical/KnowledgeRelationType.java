@@ -15,11 +15,13 @@ import thinker.concepts.general_types.IActionPatternConcept;
 import thinker.concepts.general_types.IConnectorConcept;
 import thinker.concepts.general_types.IConnectorConcept.ConnectorType;
 import thinker.concepts.general_types.IDescriptiveConcept;
+import thinker.concepts.general_types.IMapTileConcept;
 import thinker.concepts.general_types.IMemoryConcept;
 import thinker.concepts.general_types.IPrincipleConcept;
 import thinker.concepts.general_types.IProcessConcept;
 import thinker.concepts.general_types.IPropertyConcept;
 import thinker.concepts.general_types.ITypePatternConcept;
+import thinker.concepts.general_types.IVectorConcept;
 import thinker.concepts.general_types.IWhQuestionConcept;
 import thinker.concepts.profile.IProfile;
 import thinker.concepts.relations.IConceptRelationType;
@@ -38,12 +40,12 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * this profile or event at a specific time. {@linkplain #bidirectional()
 	 * Bidirectional}, since it doesn't matter what direction it is.
 	 */
-	WAS(RelationPredicates.requireConnectorConceptType(ConnectorType.EVENTIVE), IConnectorConcept.class),
+	WAS(false, RelationPredicates.requireConnectorConceptType(ConnectorType.EVENTIVE), IConnectorConcept.class),
 	/**
 	 * A relation where some concept has to be quick access to the FOCUS. Inverse of
 	 * {@link #QUICKLY_ACCESSIBLE_TO}.
 	 */
-	QUICK_ACCESS,
+	QUICK_ACCESS(false),
 	/** Inverse of {@link #QUICK_ACCESS} */
 	QUICKLY_ACCESSIBLE_TO(QUICK_ACCESS, RelationPredicates.requireExactConcept(IConcept.FOCUS),
 			IPrincipleConcept.class),
@@ -52,7 +54,7 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * Used to indicate that the connected action concept is an action ready to
 	 * execute
 	 */
-	A_READY(IActionConcept.class),
+	A_READY(false, IActionConcept.class),
 	/** Inverse of {@link #A_READY} */
 	A_READY_inv(A_READY, RelationPredicates.requireExactConcept(IConcept.FOCUS), IPrincipleConcept.class),
 
@@ -62,7 +64,7 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * {@link IConcept#RELEVANCE} so that it is known as something accessible or
 	 * otherwise part of one's memory
 	 */
-	THERE_EXISTS,
+	THERE_EXISTS(false),
 	/** Inverse of {@link #S_THERE_EXISTS} */
 	EXISTS_IN(THERE_EXISTS,
 			RelationPredicates.requireExactConcept(IConcept.SENSING, IConcept.RELEVANCE, IConcept.ENVIRONMENT),
@@ -72,15 +74,33 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * this memory concept. E.g. a {@link IGoalMemoryConcept} must have one of these
 	 * to the goal it represents. Inverse of {@link #M_TOPIC_OF}
 	 */
-	M_ABOUT,
+	M_ABOUT(false),
 	/** Inverse of {@link #M_ABOUT} */
 	M_TOPIC_OF(M_ABOUT, IMemoryConcept.class),
+
+	/**
+	 * Indicates a profile is located at the vector at the other end, inverse of
+	 * {@link #L_IS_POSITION_OF}
+	 */
+	L_POSITION_AT(false, IVectorConcept.class),
+	/**
+	 * Inverse of {@link #L_POSITION_AT}
+	 */
+	L_IS_POSITION_OF(L_POSITION_AT, IProfile.class),
+
+	/**
+	 * Indicates a profile is located at the given map tile, inverse of
+	 * {@link #L_IS_MAP_OF}
+	 */
+	L_IN_MAP(false, IMapTileConcept.class),
+	/** Inverse of {@link #L_IN_MAP} */
+	L_IS_MAP_OF(L_IN_MAP, IProfile.class),
 
 	/**
 	 * A possible pattern an action can use with roles; link {@link #A_PATTERN_OF}.
 	 * An inherently "or-like" relation
 	 */
-	A_HAS_PATTERN(IActionPatternConcept.class),
+	A_HAS_PATTERN(true, IActionPatternConcept.class),
 
 	/**
 	 * Inverse of {@link #A_HAS_PATTERN}
@@ -90,7 +110,7 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * A possible pattern of traits that a type profile can have; an inherently
 	 * or-like relation. Inverse of {@link #T_PATTERN_OF}
 	 */
-	T_HAS_PATTERN(ITypePatternConcept.class),
+	T_HAS_PATTERN(true, ITypePatternConcept.class),
 	/**
 	 * Inverse of {@link #T_HAS_PATTERN}
 	 */
@@ -101,21 +121,21 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * of another profile, so they can reference something else. Inverse of
 	 * {@link #WH_IS_REFERENCE_TYPE_OF}
 	 */
-	WH_REFERENCES_TYPE(RelationPredicates.requireIndefiniteProfile(), IProfile.class),
+	WH_REFERENCES_TYPE(false, RelationPredicates.requireIndefiniteProfile(), IProfile.class),
 	/** Inverse of {@link #WH_REFERENCES_TYPE} */
 	WH_IS_REFERENCE_TYPE_OF(WH_REFERENCES_TYPE, IWhQuestionConcept.class),
 	/**
 	 * Indicates that X is referred to by the word or name Y. Inverse of
 	 * {@link #NAME_OF}
 	 */
-	NAMED(ILemmaWord.class),
+	NAMED(false, ILemmaWord.class),
 	/** inverse of {@link #NAMED} */
 	NAME_OF(NAMED, RelationPredicates.requireNonUtilityConcept(), IConcept.class),
 	/**
 	 * Another kind of "is" relation where X is a descriptive concept that is a
 	 * supertype of Y. Inverse of {@link #IS_SUBTYPE_OF}.
 	 */
-	IS_SUPERTYPE_OF(IPropertyConcept.class),
+	IS_SUPERTYPE_OF(false, IPropertyConcept.class),
 	/** Inverse of {@link #IS_SUPERTYPE_OF} */
 	IS_SUBTYPE_OF(IS_SUPERTYPE_OF, IPropertyConcept.class),
 	/**
@@ -123,7 +143,7 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * type {@link IConceptAssociationInfo} Inverse of
 	 * {@link #C_ASSOCIATOR_CHECKED_BY}
 	 */
-	C_CHECKS_ASSOCIATOR(1, IConceptAssociationInfo.class),
+	C_CHECKS_ASSOCIATOR(false, 1, IConceptAssociationInfo.class),
 	/** Inverse of {@link #C_CHECKS_ASSOCIATOR} */
 	C_ASSOCIATOR_CHECKED_BY(C_CHECKS_ASSOCIATOR,
 			IDescriptiveConcept.matchesAnyUniqueTypesPredicate(UniqueType.FORM, UniqueType.PLACE, UniqueType.PHENOMENON,
@@ -133,7 +153,7 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * Used to connect some concept X to a perceptor pseudo-concept Y (of type
 	 * {@link IConceptAssociationInfo} Inverse of {@link #C_PERCEPTOR_OF}
 	 */
-	C_ASSOCIATED_TO_PERCEPTOR(1, IConceptAssociationInfo.class),
+	C_ASSOCIATED_TO_PERCEPTOR(false, 1, IConceptAssociationInfo.class),
 	/** Inverse of {@link #C_ASSOCIATED_TO_PERCEPTOR} */
 	C_PERCEPTOR_OF(C_ASSOCIATED_TO_PERCEPTOR, 1),
 	/**
@@ -142,7 +162,8 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * than a form, to an associator of a form; basically linking the identity of a
 	 * Being to a Form. Inverse of {@link #C_FORM2BEING_ASSOCIATOR_CHECKED_BY}
 	 */
-	C_CHECKS_FORM2BEING_ASSOCIATOR(1, (e) -> ((IConceptAssociationInfo) e).getApplier().forType() == UniqueType.FORM,
+	C_CHECKS_FORM2BEING_ASSOCIATOR(false, 1,
+			(e) -> ((IConceptAssociationInfo) e).getApplier().forType() == UniqueType.FORM,
 			IConceptAssociationInfo.class),
 	/** Inverse of {@link #C_CHECKS_FORM2BEING_ASSOCIATOR} */
 	C_FORM2BEING_ASSOCIATOR_CHECKED_BY(C_CHECKS_FORM2BEING_ASSOCIATOR,
@@ -151,38 +172,38 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * Used for a {@link IGoalConcept} to represent that this goal concept involves
 	 * Y in some way. inverse of {@link #G_INVOLVED_IN}
 	 */
-	G_INVOLVES,
+	G_INVOLVES(false),
 	/** Inverse of {@link #G_INVOLVES} */
 	G_INVOLVED_IN(G_INVOLVES, IGoalConcept.class),
 	/**
 	 * Indicates that X is a Process or action that requires a given condition Y.
 	 * Inverse of {@link #P_REQUIRED_BY}
 	 */
-	P_REQUIRES(IGoalConcept.class),
+	P_REQUIRES(false, IGoalConcept.class),
 	/** Inverse of {@link #P_REQUIRES} */
 	P_REQUIRED_BY(P_REQUIRES, IProcessConcept.class, IActionConcept.class),
 	/**
 	 * An expected resolution of a goal used to generate actions. E.g.
 	 */
-	P_EXPECTS(IGoalConcept.class),
+	P_EXPECTS(false, IGoalConcept.class),
 	/** Inverse of {@link #P_EXPECTS} */
 	P_EXPECTED_BY(P_EXPECTS),
 	/** Indicates that X is a goal which is solved by some some action Y */
-	P_SOLVED_BY(IActionConcept.class, IActionPatternConcept.class),
+	P_SOLVED_BY(false, IActionConcept.class, IActionPatternConcept.class),
 	/** Inverse of {@link #P_SOLVED_BY} */
 	P_SOLVES(P_SOLVED_BY, IGoalConcept.class),
 	/**
 	 * Indicates a goal X has been failed by an action Y, i.e. the action failed to
 	 * address it
 	 */
-	P_FAILED_BY(IActionConcept.class, IActionPatternConcept.class),
+	P_FAILED_BY(false, IActionConcept.class, IActionPatternConcept.class),
 	/** Inverse of {@link #P_FAILED_BY} */
 	P_FAILS(P_FAILED_BY, IGoalConcept.class),
 	/**
 	 * Indicates that X is an action of a process which answered a knowledge
 	 * condition as Y
 	 */
-	P_ANSWERED(IGoalConcept.class),
+	P_ANSWERED(false, IGoalConcept.class),
 	/** Inverse of {@link #P_ANSWERED} */
 	P_ANSWERED_BY(P_ANSWERED, IActionConcept.class),
 
@@ -190,17 +211,17 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * Usded to indicate a question Y asked by X goal concept, inverse of
 	 * {@link #P_ASKED_BY}
 	 */
-	P_ASKS(IWhQuestionConcept.class),
+	P_ASKS(false, IWhQuestionConcept.class),
 	/** Inverse of {@link #P_ASKS} */
 	P_ASKED_BY(P_ASKS, IGoalConcept.class),
 	/** describes that X is done after Y, used for PROCESSES. */
-	P_FOLLOWS(IActionConcept.class, IProcessConcept.class),
+	P_FOLLOWS(false, IActionConcept.class, IProcessConcept.class),
 	/** inverse of {@link #P_FOLLOWS} */
 	P_PRECEDES(P_FOLLOWS, IActionConcept.class),
 	/**
 	 * Used to link a wh-question to its answer. Inverse of {@link #WH_ANSWERS}
 	 */
-	WH_ANSWERED_BY,
+	WH_ANSWERED_BY(false),
 	/** Inverse of {@link #Q_HAS_ANSWER} */
 	WH_ANSWERS(WH_ANSWERED_BY, IWhQuestionConcept.class),
 	/**
@@ -209,42 +230,48 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 	 * sexes) but can be perceived as such. {@linkplain #bidirectional()
 	 * Bidirectional.}
 	 */
-	MUTUALY_EXCLUSIVE_WITH(IDescriptiveConcept.class);
+	MUTUALY_EXCLUSIVE_WITH(false, IDescriptiveConcept.class);
 
 	private KnowledgeRelationType opposite;
 	private Set<ConceptType> endType = Set.of();
 	private Set<Class<?>> endClass = Set.of();
 	private Predicate<IConcept> pred = Predicates.alwaysTrue();
 	private Integer c = null;
+	private boolean decayImmune;
 
-	private KnowledgeRelationType(Class<? extends IConcept>... ec) {
+	private KnowledgeRelationType(boolean decayImmune, Class<? extends IConcept>... ec) {
 		opposite = this;
 		this.endClass = Set.of(ec);
+		this.decayImmune = decayImmune;
 	}
 
-	private KnowledgeRelationType(Integer c, Class<? extends IConcept>... ec) {
+	private KnowledgeRelationType(boolean di, Integer c, Class<? extends IConcept>... ec) {
 		opposite = this;
 		this.endClass = Set.of(ec);
 		this.c = c;
+		this.decayImmune = di;
 	}
 
-	private KnowledgeRelationType(Predicate<IConcept> p, Class<? extends IConcept>... ec) {
+	private KnowledgeRelationType(boolean di, Predicate<IConcept> p, Class<? extends IConcept>... ec) {
 		opposite = this;
 		this.endClass = Set.of(ec);
 		this.pred = p;
+		this.decayImmune = di;
 	}
 
-	private KnowledgeRelationType(Integer c, Predicate<IConcept> p, Class<? extends IConcept>... ec) {
+	private KnowledgeRelationType(boolean di, Integer c, Predicate<IConcept> p, Class<? extends IConcept>... ec) {
 		opposite = this;
 		this.endClass = Set.of(ec);
 		this.pred = p;
 		this.c = c;
+		this.decayImmune = di;
 	}
 
 	private KnowledgeRelationType(KnowledgeRelationType opposite, Class<? extends IConcept>... ec) {
 		this.opposite = opposite;
 		opposite.opposite = this;
 		this.endClass = Set.of(ec);
+		this.decayImmune = opposite.decayImmune;
 	}
 
 	private KnowledgeRelationType(KnowledgeRelationType opposite, Integer c, Class<? extends IConcept>... ec) {
@@ -252,6 +279,7 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 		opposite.opposite = this;
 		this.endClass = Set.of(ec);
 		this.c = c;
+		this.decayImmune = opposite.decayImmune;
 	}
 
 	private KnowledgeRelationType(KnowledgeRelationType opposite, Predicate<IConcept> p,
@@ -260,6 +288,7 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 		opposite.opposite = this;
 		this.endClass = Set.of(ec);
 		this.pred = p;
+		this.decayImmune = opposite.decayImmune;
 	}
 
 	private KnowledgeRelationType(KnowledgeRelationType opposite, Integer c, Predicate<IConcept> p,
@@ -269,6 +298,12 @@ public enum KnowledgeRelationType implements IConceptRelationType {
 		this.endClass = Set.of(ec);
 		this.pred = p;
 		this.c = c;
+		this.decayImmune = opposite.decayImmune;
+	}
+
+	@Override
+	public boolean immuneToDecay() {
+		return this.decayImmune;
 	}
 
 	@Override

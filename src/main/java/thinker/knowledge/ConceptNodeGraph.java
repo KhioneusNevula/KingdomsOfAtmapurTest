@@ -39,11 +39,12 @@ public class ConceptNodeGraph<E extends IConceptNode> extends RelationGraph<E, I
 		this.edgeProperties = Map.of(RelationProperties.CONFIDENCE, RelationProperties.CONFIDENCE::defaultValue,
 				RelationProperties.INFO_SOURCE, RelationProperties.INFO_SOURCE::defaultValue,
 				RelationProperties.KNOWN_BY_GROUPS, RelationProperties.KNOWN_BY_GROUPS::defaultValue,
-				RelationProperties.LIKELIHOOD, RelationProperties.LIKELIHOOD::defaultValue,
 				RelationProperties.STORAGE_TYPE, RelationProperties.STORAGE_TYPE::defaultValue,
 				RelationProperties.TRUTH_TYPE, RelationProperties.TRUTH_TYPE::defaultValue, RelationProperties.NOT,
 				RelationProperties.NOT::defaultValue, RelationProperties.OPPOSITE,
-				RelationProperties.OPPOSITE::defaultValue);
+				RelationProperties.OPPOSITE::defaultValue, RelationProperties.DISTANCE,
+				RelationProperties.DISTANCE::defaultValue, RelationProperties.ACCESS_COUNT,
+				RelationProperties.ACCESS_COUNT::defaultValue);
 	}
 
 	public ConceptNodeGraph(Set<? extends IProperty<?>> props) {

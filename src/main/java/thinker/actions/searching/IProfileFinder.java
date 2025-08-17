@@ -38,8 +38,10 @@ public interface IProfileFinder {
 	 * @param attempts
 	 * @param endChance     the chance that ths finder will stop trying to match
 	 *                      profiles after `attempts` attempts
+	 * @param doAccesses    whether to call "access" on the knowledge base when
+	 *                      searcing
 	 * @return
 	 */
 	public Map<IWhQuestionConcept, IProfile> matchProfiles(IAgentAccess info, IWhQuestionConcept startQuestion,
-			int attempts, float endChance);
+			int attempts, float endChance, boolean doAccesses);
 }

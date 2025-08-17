@@ -14,6 +14,7 @@ import thinker.concepts.relations.descriptive.PropertyRelationType;
 import thinker.concepts.relations.technical.KnowledgeRelationType;
 import thinker.concepts.relations.util.RelationProperties;
 import thinker.knowledge.base.IKnowledgeBase;
+import thinker.knowledge.base.individual.IIndividualKnowledgeBase;
 import thinker.knowledge.node.IConceptNode;
 import thinker.mind.memory.StorageType;
 import thinker.mind.memory.TruthType;
@@ -300,9 +301,8 @@ public interface IKnowledgeRepresentation extends Cloneable {
 	public void setTruthTypeOfRelation(IConcept from, IConceptRelationType type, IConcept to, TruthType ttype);
 
 	/**
-	 * Return the confidence of this relation. If this relation is
-	 * {@link StorageType#TEMPORARY} then this represents how unlikely it is to be
-	 * deleted
+	 * Return the confidence of this relation. If this relation is anything but
+	 * {@link StorageType#DUBIOUS} then this value will be 1
 	 * 
 	 * @param from
 	 * @param type
@@ -317,12 +317,13 @@ public interface IKnowledgeRepresentation extends Cloneable {
 	 * @param from
 	 * @param type
 	 * @param to
+	 * @param val  Must be >= 0f and <= 1.0f
 	 */
 	public void setConfidence(IConcept from, IConceptRelationType type, IConcept to, float val);
 
 	/**
 	 * Change the confidence value of this relation by the given amount; return the
-	 * overflow (i.e. how much it went over 1f or under 0f) or 0f if no overflow
+	 * overflow (i.e. how much it went over 1f or under 0f) or 0f if no overflow.
 	 * 
 	 * @param from
 	 * @param type
@@ -456,4 +457,53 @@ public interface IKnowledgeRepresentation extends Cloneable {
 	 * @return
 	 */
 	public void setDistance(IConcept prf, float distance);
+
+	/**
+	 * Return the amount of times a specific relation has been accessed in this
+	 * knowledge representation. Return 0 if the relation does not exist
+	 * 
+	 * @param focus
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public long getMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to);
+
+	/**
+	 * Set the number of times a relation has been accessed to the given value. If
+	 * set to a negative number, the relationship will never decay. Do nothing if
+	 * the relation does not exist
+	 * 
+	 * @param focus
+	 * @param key
+	 * @param value
+	 * @param amount
+	 */
+	public void setMemoryAccessCount(IConcept from, IConceptRelationType type, IConcept to, long amount);
+
+	/**
+	 * Increments amount of accesses to a given relation by 1. Calls
+	 * {@link #accessNTimes(IConcept, IConceptRelationType, IConcept, int)}.
+	 * 
+	 * @param focus
+	 * @param key
+	 * @param value
+	 */
+	public default void access(IConcept from, IConceptRelationType type, IConcept to) {
+		this.accessNTimes(from, type, to, 1);
+	}
+
+	/**
+	 * Increments amount of accesses to a given relation by the given amount (or
+	 * decreases, if negative). Lower-bounded at 0. Some implementations will
+	 * increment accesses in _other_ knowledgeBases, e.g. the
+	 * {@link IIndividualKnowledgeBase} implementation will also implement accesses
+	 * for parent bases
+	 * 
+	 * @param focus
+	 * @param key
+	 * @param value
+	 */
+	public void accessNTimes(IConcept from, IConceptRelationType type, IConcept to, int times);
+
 }
